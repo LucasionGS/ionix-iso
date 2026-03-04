@@ -108,6 +108,9 @@ power-profiles-daemon
 swww
 matugen
 
+# --- Calamares dependencies ---
+python-toml
+
 # --- Screenshot / Utilities ---
 grim
 slurp

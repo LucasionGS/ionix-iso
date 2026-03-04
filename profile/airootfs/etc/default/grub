@@ -1,0 +1,12 @@
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="Ionix"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet loglevel=3"
+GRUB_CMDLINE_LINUX=""
+
+# Disable os-prober: it requires an X display and is not needed for single-boot installs.
+# Enable it manually after install if you need dual-boot detection.
+GRUB_DISABLE_OS_PROBER=true
+
+GRUB_PRELOAD_MODULES="part_gpt part_msdos"
+GRUB_TERMINAL_INPUT=console
