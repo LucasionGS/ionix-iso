@@ -97,7 +97,7 @@ for pkg in "${AUR_PACKAGES[@]}"; do
         echo "==> Already built, skipping: $pkg"
         # Re-install from the file list stored in the marker so dependents resolve
         mapfile -t pkg_files < "$MARKER"
-        pacman -U --noconfirm "${pkg_files[@]}" 2>/dev/null || true
+        pacman -U --noconfirm --overwrite "*" --ask 4 "${pkg_files[@]}" || true
         continue
     fi
 
@@ -134,6 +134,7 @@ STUBEOF
         USER="$BUILD_USER" \
         LOGNAME="$BUILD_USER" \
         PATH="$PYTHON_WRAPPER_DIR:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+        PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig:/usr/share/pkgconfig" \
         TERM="${TERM:-xterm}" \
         makepkg -s --noconfirm --needed --noprogressbar
     popd > /dev/null
@@ -152,7 +153,7 @@ STUBEOF
     fi
 
     # Install the package locally so dependent AUR packages can find it
-    pacman -U --noconfirm "${pkg_files[@]}" 2>/dev/null || true
+    pacman -U --noconfirm --overwrite "*" --ask 4 "${pkg_files[@]}"
 
     # Write sentinel marker with the list of installed package files
     printf '%s\n' "${pkg_files[@]}" > "$MARKER"
