@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Ionix Post-Install Script
+# Called by Calamares shellprocess inside the installed system chroot.
+# This runs AFTER the user has been created and packages installed.
+
+set -euo pipefail
+
+# Find the first non-root user with UID >= 1000
+NEWUSER=$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "liveuser" {print $1; exit}' /etc/passwd)
+
+if [[ -n "$NEWUSER" ]]; then
+    # Set fish as default shell
+    chsh -s /usr/bin/fish "$NEWUSER" 2>/dev/null || true
+
+    # Ensure user home has correct ownership
+    if [[ -d "/home/$NEWUSER" ]]; then
+        chown -R "$NEWUSER:$NEWUSER" "/home/$NEWUSER"
+    fi
+fi
+
+# Set fish as root shell too
+chsh -s /usr/bin/fish root 2>/dev/null || true
+
+# Enable systemd services for the installed system
+systemctl enable greetd.service 2>/dev/null || true
+systemctl enable NetworkManager.service 2>/dev/null || true
+systemctl enable bluetooth.service 2>/dev/null || true
+
+# Remove live-session-only artifacts
+rm -f /etc/sudoers.d/10-ionix
+rm -f /usr/share/applications/ionix-install.desktop
+rm -f /etc/motd
+
+# Remove the live user
+userdel -r liveuser 2>/dev/null || true
+
+# Remove live-session systemd services
+rm -f /etc/systemd/system/choose-mirror.service
+rm -f /etc/systemd/system/etc-pacman.d-gnupg.mount
+rm -f /etc/systemd/system/pacman-init.service
+rm -f /etc/systemd/system/multi-user.target.wants/choose-mirror.service
+rm -f /etc/systemd/system/multi-user.target.wants/etc-pacman.d-gnupg.mount
+rm -f /etc/systemd/system/multi-user.target.wants/pacman-init.service
+
+# Remove archiso-specific hooks
+rm -f /etc/pacman.d/hooks/uncomment-mirrors.hook
+rm -f /etc/pacman.d/hooks/zzzz99-remove-custom-hooks-from-airootfs.hook
+
+# Remove archiso mkinitcpio config (use system defaults)
+rm -f /etc/mkinitcpio.conf.d/archiso.conf
+rm -f /etc/mkinitcpio.d/linux.preset
+
+# Regenerate initramfs with default config
+mkinitcpio -P 2>/dev/null || true
+
+# Remove ionix local repo from pacman.conf (no longer needed after install)
+sed -i '/^\[ionix\]/,/^Server/d' /etc/pacman.conf 2>/dev/null || true
+
+# Set proper sudo (wheel group requires password)
+cat > /etc/sudoers.d/10-wheel <<'SUDOERS'
+%wheel ALL=(ALL:ALL) ALL
+SUDOERS
+chmod 440 /etc/sudoers.d/10-wheel
+
+echo "Ionix post-install completed."

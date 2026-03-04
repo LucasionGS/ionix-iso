@@ -1,0 +1,152 @@
+# --- Base system ---
+base
+linux
+linux-firmware
+sof-firmware
+amd-ucode
+intel-ucode
+mkinitcpio
+mkinitcpio-archiso
+
+# --- Boot ---
+grub
+efibootmgr
+syslinux
+memtest86+
+memtest86+-efi
+edk2-shell
+
+# --- Filesystem tools ---
+btrfs-progs
+dosfstools
+e2fsprogs
+exfatprogs
+f2fs-tools
+ntfs-3g
+xfsprogs
+gptfdisk
+parted
+squashfs-tools
+mtools
+
+# --- Networking ---
+networkmanager
+iptables-nft
+iw
+iwd
+wpa_supplicant
+openssh
+bind
+dhcpcd
+
+# --- System utilities ---
+sudo
+less
+man-db
+man-pages
+git
+curl
+wget
+rsync
+unzip
+p7zip
+htop
+fastfetch
+bat
+ripgrep
+fd
+
+# --- Arch tools ---
+arch-install-scripts
+reflector
+pacman-contrib
+
+# --- Audio (PipeWire) ---
+pipewire
+pipewire-pulse
+pipewire-alsa
+pipewire-jack
+wireplumber
+
+# --- Bluetooth ---
+bluez
+bluez-utils
+blueman
+
+# --- Wayland / Hyprland ---
+hyprland
+hyprpaper
+hypridle
+hyprlock
+hyprpolkitagent
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+qt5-wayland
+qt6-wayland
+uwsm
+
+# --- Greeter ---
+greetd
+greetd-regreet
+
+# --- Terminal and Shell ---
+kitty
+fish
+neovim
+tree-sitter-cli
+
+# --- HyprPanel dependencies (official repos) ---
+dart-sass
+wl-clipboard
+upower
+gvfs
+libgtop
+gtksourceview3
+libsoup3
+brightnessctl
+power-profiles-daemon
+swww
+matugen
+
+# --- Screenshot / Utilities ---
+grim
+slurp
+wf-recorder
+hyprpicker
+
+# --- Fonts ---
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+ttf-jetbrains-mono-nerd
+ttf-font-awesome
+
+# --- Theming ---
+gtk3
+gtk4
+gnome-themes-extra
+papirus-icon-theme
+
+# --- Desktop utilities ---
+xdg-utils
+xdg-user-dirs
+polkit
+gnome-keyring
+
+# --- Misc hardware support ---
+broadcom-wl
+b43-fwcutter
+
+# --- AUR packages (from ionix local repo) ---
+yay
+google-chrome
+libastal-git
+libastal-4-git
+libastal-gjs-git
+libcava-git
+appmenu-glib-translator-git
+libastal-meta
+aylurs-gtk-shell-git
+ags-hyprpanel-git
+oh-my-posh-bin
+calamares

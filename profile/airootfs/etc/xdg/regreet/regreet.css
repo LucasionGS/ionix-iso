@@ -1,0 +1,70 @@
+/* Ionix ReGreet Theme - Purple/Violet Dark */
+
+window {
+    background-color: rgba(15, 10, 24, 0.85);
+}
+
+box {
+    background-color: rgba(26, 16, 37, 0.9);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(155, 89, 182, 0.3);
+}
+
+entry {
+    border-radius: 8px;
+    padding: 10px 14px;
+    border: 2px solid #7c3aed;
+    background-color: #1a1025;
+    color: #e2d9f3;
+    caret-color: #9b59b6;
+    font-size: 14px;
+}
+
+entry:focus {
+    border-color: #a855f7;
+    box-shadow: 0 0 12px rgba(155, 89, 182, 0.5);
+}
+
+button {
+    border-radius: 8px;
+    padding: 10px 20px;
+    background-color: #7c3aed;
+    color: #ffffff;
+    border: none;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+button:hover {
+    background-color: #9b59b6;
+}
+
+button:active {
+    background-color: #6c2bd9;
+}
+
+combobox,
+dropdown {
+    background-color: #1a1025;
+    color: #e2d9f3;
+    border: 1px solid #7c3aed;
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+label {
+    color: #c4b5fd;
+    font-size: 14px;
+}
+
+label.time {
+    color: #e2d9f3;
+    font-size: 48px;
+    font-weight: bold;
+}
+
+label.date {
+    color: #c4b5fd;
+    font-size: 16px;
+}

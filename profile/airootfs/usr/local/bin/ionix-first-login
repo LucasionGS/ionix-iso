@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Ionix First Login Setup
+# Runs on user's first Hyprland session to set up per-user configs.
+# Only runs once (checks for marker file).
+
+MARKER="$HOME/.local/share/ionix/first-login-done"
+
+if [[ -f "$MARKER" ]]; then
+    exit 0
+fi
+
+mkdir -p "$(dirname "$MARKER")"
+
+# Clone NvChad starter config if nvim config doesn't exist yet
+if [[ ! -d "$HOME/.config/nvim" ]]; then
+    git clone --depth 1 https://github.com/NvChad/starter "$HOME/.config/nvim" 2>/dev/null || true
+fi
+
+# Create standard XDG user directories
+xdg-user-dirs-update 2>/dev/null || true
+
+# Mark first login as complete
+touch "$MARKER"
