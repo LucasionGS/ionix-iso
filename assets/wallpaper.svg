@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="3840" height="2160">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0612"/>
+      <stop offset="30%" style="stop-color:#0f0a18"/>
+      <stop offset="60%" style="stop-color:#1a1025"/>
+      <stop offset="100%" style="stop-color:#12081e"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="30%" cy="40%" r="40%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="70%" cy="60%" r="35%">
+      <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:0.1"/>
+      <stop offset="100%" style="stop-color:#9b59b6;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="50%" cy="50%" r="25%">
+      <stop offset="0%" style="stop-color:#a855f7;stop-opacity:0.08"/>
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background gradient -->
+  <rect width="3840" height="2160" fill="url(#bg)"/>
+
+  <!-- Ambient glows -->
+  <rect width="3840" height="2160" fill="url(#glow1)"/>
+  <rect width="3840" height="2160" fill="url(#glow2)"/>
+  <rect width="3840" height="2160" fill="url(#glow3)"/>
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.03" stroke="#9b59b6" stroke-width="1">
+    <line x1="0" y1="540" x2="3840" y2="540"/>
+    <line x1="0" y1="1080" x2="3840" y2="1080"/>
+    <line x1="0" y1="1620" x2="3840" y2="1620"/>
+    <line x1="960" y1="0" x2="960" y2="2160"/>
+    <line x1="1920" y1="0" x2="1920" y2="2160"/>
+    <line x1="2880" y1="0" x2="2880" y2="2160"/>
+  </g>
+
+  <!-- Geometric accent shapes -->
+  <polygon points="1920,800 1980,880 1920,960 1860,880" fill="none" stroke="#7c3aed" stroke-width="2" opacity="0.2"/>
+  <circle cx="1920" cy="880" r="120" fill="none" stroke="#9b59b6" stroke-width="1" opacity="0.1"/>
+  <circle cx="1920" cy="880" r="180" fill="none" stroke="#7c3aed" stroke-width="1" opacity="0.05"/>
+
+  <!-- Ionix text -->
+  <text x="1920" y="1120" text-anchor="middle"
+        font-family="sans-serif" font-size="96" font-weight="bold"
+        fill="#e2d9f3" letter-spacing="16" opacity="0.9">
+    IONIX
+  </text>
+
+  <!-- Tagline -->
+  <text x="1920" y="1180" text-anchor="middle"
+        font-family="sans-serif" font-size="24" font-weight="300"
+        fill="#c4b5fd" letter-spacing="8" opacity="0.6">
+    ARCH-BASED OS
+  </text>
+
+  <!-- Bottom accent line -->
+  <line x1="1720" y1="1220" x2="2120" y2="1220" stroke="#7c3aed" stroke-width="2" opacity="0.3"/>
+</svg>

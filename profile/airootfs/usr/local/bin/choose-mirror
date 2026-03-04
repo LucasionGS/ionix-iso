@@ -1,0 +1,7 @@
+#!/bin/bash
+
+mirror=$(grep -oP '(?<=mirror=)\S+' /proc/cmdline)
+
+if [[ -n "$mirror" ]]; then
+    echo "Server = ${mirror}" > /etc/pacman.d/mirrorlist
+fi

@@ -1,0 +1,12 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Path
+Target = *
+
+[Action]
+Description = Removing custom hooks...
+When = PostTransaction
+Depends = coreutils
+Exec = /usr/bin/rm -f /etc/pacman.d/hooks/uncomment-mirrors.hook /etc/pacman.d/hooks/zzzz99-remove-custom-hooks-from-airootfs.hook

@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = pacman-mirrorlist
+
+[Action]
+Description = Uncommenting HTTPS mirrors...
+When = PostTransaction
+Depends = sed
+Exec = /usr/bin/sed -i 's/^#\(Server.*https\)/\1/' /etc/pacman.d/mirrorlist

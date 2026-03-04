@@ -1,0 +1,12 @@
+[Unit]
+Description=Choose mirror from kernel command line
+ConditionKernelCommandLine=mirror
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/choose-mirror
+
+[Install]
+WantedBy=multi-user.target

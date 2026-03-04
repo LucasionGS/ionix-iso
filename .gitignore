@@ -1,0 +1,6 @@
+work/
+out/
+localrepo/
+*.iso
+*.pkg.tar.zst
+*.pkg.tar.xz

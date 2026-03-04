@@ -1,0 +1,24 @@
+---
+componentName: ionix
+
+strings:
+    productName:         "Ionix"
+    shortProductName:    "Ionix"
+    version:             "2025.03"
+    shortVersion:        "2025.03"
+    versionedName:       "Ionix 2025.03"
+    shortVersionedName:  "Ionix 2025.03"
+    bootloaderEntryName: "Ionix"
+
+images:
+    productLogo:         "ionix-logo.png"
+    productIcon:         "ionix-logo.png"
+    productWelcome:      "ionix-logo.png"
+
+slideshow:               "show.qml"
+
+style:
+    sidebarBackground:    "#1a1025"
+    sidebarText:          "#e2d9f3"
+    sidebarTextSelect:    "#ffffff"
+    sidebarTextHighlight: "#9b59b6"
