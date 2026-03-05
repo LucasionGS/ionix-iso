@@ -6,4 +6,4 @@ sudo env \
     QT_QPA_PLATFORM=wayland \
     WAYLAND_DISPLAY="${WAYLAND_DISPLAY}" \
     XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR}" \
-    calamares
+    calamares -d 2>&1 | tee /tmp/calamares-debug.log
