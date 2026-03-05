@@ -27,6 +27,11 @@ RUN pacman-key --init \
   gobject-introspection \
   python-pip \
   python-setuptools \
-  python-gobjectcairo
+  python-gobject cairo \
+  libportal \
+  libportal-gtk4 \
+  muparser \
+  json-glib \
+  libgtop
 
 CMD ["/bin/bash"]
