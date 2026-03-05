@@ -19,7 +19,8 @@ fi
 # Create standard XDG user directories
 xdg-user-dirs-update 2>/dev/null || true
 
-sleep 2 && [[ -d /run/archiso ]] && ionix-install & disown
-
 # Mark first login as complete
 touch "$MARKER"
+
+kitty & disown
+sleep 2 && [[ -d /run/archiso ]] && ionix-install & disown
