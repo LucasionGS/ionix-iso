@@ -55,6 +55,11 @@ fastfetch
 bat
 ripgrep
 fd
+jq
+fzf
+chafa
+playerctl
+zenity
 
 # --- Arch tools ---
 arch-install-scripts
@@ -91,6 +96,7 @@ greetd-regreet
 
 # --- Terminal and Shell ---
 kitty
+foot
 fish
 neovim
 tree-sitter-cli
@@ -110,6 +116,11 @@ matugen
 
 # --- Calamares dependencies ---
 python-toml
+
+# --- Desktop apps ---
+nemo
+copyq
+rofi
 
 # --- Screenshot / Utilities ---
 grim
@@ -143,6 +154,8 @@ b43-fwcutter
 # --- AUR packages (from ionix local repo) ---
 yay
 google-chrome
+anyrun-bin
+tabby-bin
 libastal-git
 libastal-4-git
 libastal-gjs-git
