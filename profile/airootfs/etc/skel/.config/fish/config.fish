@@ -1,5 +1,10 @@
 # Ionix Fish Configuration
 
+# Auto-start Hyprland via UWSM on TTY1
+if status is-login; and test (tty) = /dev/tty1; and not set -q WAYLAND_DISPLAY
+    exec uwsm start -- Hyprland
+end
+
 # Initialize oh-my-posh with the blueish theme
 if type -q oh-my-posh
     oh-my-posh init fish --config /usr/share/oh-my-posh/themes/blueish.omp.json | source

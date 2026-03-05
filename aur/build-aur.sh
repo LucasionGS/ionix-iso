@@ -44,12 +44,11 @@ AUR_PACKAGES=(
     "libastal-battery-git"
     "libastal-bluetooth-git"
     "libastal-cava-git"
-    "libastal-greet-git"
     "libastal-hyprland-git"
     "libastal-mpris-git"
     "libastal-network-git"
     "libastal-notifd-git"
-    "libastal-power-profiles-git"
+    "libastal-powerprofiles-git"
     "libastal-river-git"
     "libastal-tray-git"
     "libastal-wireplumber-git"
@@ -57,7 +56,8 @@ AUR_PACKAGES=(
     "libastal-meta"
     # HyprPanel stack
     "aylurs-gtk-shell-git"
-    "ags-hyprpanel-git"
+    "ags-hyprpanel-git" # Primary shell
+    "morghulis-git" # Secondary shell
     "google-chrome"
 )
 
