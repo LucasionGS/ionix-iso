@@ -21,9 +21,19 @@ fi
 # Set fish as root shell too
 chsh -s /usr/bin/fish root 2>/dev/null || true
 
+# Configure autologin for the installed user
+if [[ -n "$NEWUSER" ]]; then
+    mkdir -p /etc/systemd/system/getty@tty1.service.d
+    cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << AUTOLOGIN
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $NEWUSER - \$TERM
+AUTOLOGIN
+fi
+
 # Enable systemd services for the installed system
-systemctl enable greetd.service 2>/dev/null || true
 systemctl enable NetworkManager.service 2>/dev/null || true
+systemctl enable power-profiles-daemon.service 2>/dev/null || true
 systemctl enable bluetooth.service 2>/dev/null || true
 
 # Remove live-session-only artifacts

@@ -16,6 +16,7 @@ RUN pacman-key --init \
   meson \
   python \
   cmake \
+  cmark \
   extra-cmake-modules \
   rust \
   go \
@@ -24,6 +25,8 @@ RUN pacman-key --init \
   git \
   nodejs npm \
   gobject-introspection \
- && pacman -S --noconfirm python-pip python-setuptools
+  python-pip \
+  python-setuptools \
+  python-gobjectcairo
 
 CMD ["/bin/bash"]
