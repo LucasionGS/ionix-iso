@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Wrapper for grub-install used by Calamares.
+# Adds --no-nvram so GRUB installs its EFI binary without attempting to write
+# EFI NVRAM boot entries — which fails inside a Calamares chroot because
+# /sys/firmware/efi/efivars is not bind-mounted. Boot discovery falls back to
+# the standard EFI/BOOT/bootx64.efi path instead.
+exec /usr/bin/grub-install --no-nvram "$@"

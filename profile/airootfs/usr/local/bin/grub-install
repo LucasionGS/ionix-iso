@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# PATH-priority wrapper: /usr/local/bin precedes /usr/bin, so this intercepts
+# any plain "grub-install" call (including from Calamares) and adds --no-nvram.
+# This prevents grub-install from trying to write EFI NVRAM boot entries, which
+# fails inside a Calamares chroot where /sys/firmware/efi/efivars is not mounted.
+exec /usr/bin/grub-install --no-nvram "$@"
