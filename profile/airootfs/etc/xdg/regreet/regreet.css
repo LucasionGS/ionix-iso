@@ -44,13 +44,10 @@ button:active {
     background-color: #6c2bd9;
 }
 
+/* Session selector hidden — UWSM+Hyprland is always used */
 combobox,
 dropdown {
-    background-color: #1a1025;
-    color: #e2d9f3;
-    border: 1px solid #7c3aed;
-    border-radius: 8px;
-    padding: 6px 10px;
+    display: none;
 }
 
 label {
