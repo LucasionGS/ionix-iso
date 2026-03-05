@@ -1,0 +1,5 @@
+/**
+ * Ionix - Rofi Colors
+ **/
+
+@import "~/.config/rofi/colors/onedark.rasi"

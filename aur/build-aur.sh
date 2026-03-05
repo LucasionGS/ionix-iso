@@ -31,6 +31,8 @@ AUR_PACKAGES=(
     "yay"
     "oh-my-posh-bin"
     "calamares"
+    "anyrun-bin"
+    "tabby-bin"
     # astal core (build order: io first, then base, then everything else)
     "libastal-io-git"
     "libastal-git"
