@@ -50,6 +50,7 @@ AUR_PACKAGES=(
     "libastal-notifd-git"
     "libastal-powerprofiles-git"
     "libastal-river-git"
+    "libastal-greet-git"
     "libastal-tray-git"
     "libastal-wireplumber-git"
     "libastal-gjs-git"
