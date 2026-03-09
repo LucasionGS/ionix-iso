@@ -5,7 +5,7 @@ qemu-system-x86_64 \
   -smp 4 \
   -cpu host \
   -drive file=ionix-test.qcow2,format=qcow2,if=virtio \
-  -cdrom /home/lun/development/ionix/out/ionix-*.iso \
+  -cdrom ./out/ionix-*.iso \
   -boot d \
   -device virtio-vga-gl \
   -display spice-app,gl=on
