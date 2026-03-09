@@ -56,9 +56,20 @@ rm -f /etc/systemd/system/multi-user.target.wants/pacman-init.service
 rm -f /etc/pacman.d/hooks/uncomment-mirrors.hook
 rm -f /etc/pacman.d/hooks/zzzz99-remove-custom-hooks-from-airootfs.hook
 
-# Remove archiso mkinitcpio config (use system defaults)
+# Remove archiso mkinitcpio config and replace the archiso-only preset
+# with a standard one before regenerating. Without this, mkinitcpio -P
+# would have no presets to build and leave the archiso initramfs (with
+# memdisk/archiso hooks) on the installed system, preventing boot.
 rm -f /etc/mkinitcpio.conf.d/archiso.conf
-rm -f /etc/mkinitcpio.d/linux.preset
+cat > /etc/mkinitcpio.d/linux.preset << 'PRESET'
+PRESETS=('default' 'fallback')
+ALL_kver='/boot/vmlinuz-linux'
+default_config='/etc/mkinitcpio.conf'
+default_image='/boot/initramfs-linux.img'
+fallback_config='/etc/mkinitcpio.conf'
+fallback_image='/boot/initramfs-linux-fallback.img'
+fallback_options='-S autodetect'
+PRESET
 
 # Regenerate initramfs with default config
 mkinitcpio -P 2>/dev/null || true
