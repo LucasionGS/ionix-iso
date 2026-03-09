@@ -1,0 +1,46 @@
+{
+    "custom/vpn": {
+        "icon": {
+            "connected": "󰖂",
+            "disconnected": "󰖐",
+            "default": "󰖂"
+        },
+        "label": "VPN",
+        "tooltip": "VPN Status: {}",
+        "truncationSize": -1,
+        "execute": "if oc s | grep -q 'connected to VPN'; then echo '{\"alt\": \"connected\", \"text\": \"Connected\"}'; else echo '{\"alt\": \"disconnected\", \"text\": \"Not Connected\"}'; fi",
+        "executeOnAction": "",
+        "interval": 5000,
+        "hideOnEmpty": false,
+        "scrollThreshold": 4,
+        "actions": {
+            "onLeftClick": "ags request -i ion-ags \"vpn\"",
+            "onRightClick": "oc s | notify-send 'VPN Status' \"$(cat)\"",
+            "onMiddleClick": "if oc dc; then notify-send 'VPN Disconnected' 'You have been disconnected from the VPN.'; else oc p && notify-send 'VPN Connected' 'Connected to primary VPN.'; fi",
+            "onScrollUp": "",
+            "onScrollDown": ""
+        }
+    },
+    "custom/ssh": {
+        "icon": "",
+        "label": "SSH",
+        "tooltip": "SSH panel",
+        "truncationSize": -1,
+        "hideOnEmpty": false,
+        "scrollThreshold": 4,
+        "actions": {
+            "onLeftClick": "ags request -i ion-ags \"ssh\""
+        }
+    },
+    "custom/docker": {
+        "icon": "",
+        "label": "Docker",
+        "tooltip": "Docker panel",
+        "truncationSize": -1,
+        "hideOnEmpty": false,
+        "scrollThreshold": 4,
+        "actions": {
+            "onLeftClick": "ags request -i ion-ags \"docker\""
+        }
+    }
+}
