@@ -21,6 +21,7 @@ PYTHON_WRAPPER_DIR="$(mktemp -d /tmp/ionix-python-wrapper.XXXXXX)"
 chmod 755 "$PYTHON_WRAPPER_DIR"
 ln -sf "$PYTHON_BUILD" "$PYTHON_WRAPPER_DIR/python"
 ln -sf "$PYTHON_BUILD" "$PYTHON_WRAPPER_DIR/python3"
+chmod +x "$PYTHON_WRAPPER_DIR/python" "$PYTHON_WRAPPER_DIR/python3"
 
 # AUR packages in dependency order
 # libastal-io-git is the foundation; all other astal libs depend on it.
@@ -60,6 +61,10 @@ AUR_PACKAGES=(
     "ags-hyprpanel-git" # Primary shell
     "morghulis-git" # Secondary shell
     "google-chrome"
+    # ionix tooling (openconnect-sso before ionix-openconnect-tools; ionix-openconnect-tools before ionix-shell)
+    "openconnect-sso"
+    "ionix-openconnect-tools"
+    "ionix-shell"
 )
 
 cleanup() {
