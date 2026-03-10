@@ -65,6 +65,10 @@ AUR_PACKAGES=(
     "openconnect-sso"
     "ionix-openconnect-tools"
     "ionix-shell"
+    # Gaming
+    "python-inputs"
+    "python-steam"
+    "protonup-qt"
 )
 
 cleanup() {

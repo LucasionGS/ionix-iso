@@ -95,6 +95,7 @@ xdg-desktop-portal-gtk
 qt5-wayland
 qt6-wayland
 uwsm
+nwg-displays
 
 # --- Greeter ---
 
@@ -156,6 +157,35 @@ gnome-keyring
 broadcom-wl
 b43-fwcutter
 
+# --- GPU Drivers (AMD/Intel) ---
+mesa
+vulkan-radeon
+vulkan-intel
+lib32-mesa
+lib32-vulkan-radeon
+lib32-vulkan-intel
+mesa-utils
+vulkan-tools
+
+# --- GPU Drivers (NVIDIA) ---
+nvidia-open
+nvidia-utils
+lib32-nvidia-utils
+egl-wayland
+
+# --- Gaming ---
+steam
+gamemode
+lib32-gamemode
+mangohud
+lib32-mangohud
+gamescope
+lutris
+obs-studio
+ananicy-cpp
+antimicrox
+lib32-libpulse
+
 # --- Other libraries ---
 libportal
 libportal-gtk4
@@ -181,3 +211,4 @@ calamares
 openconnect-sso
 ionix-openconnect-tools
 ionix-shell
+protonup-qt
