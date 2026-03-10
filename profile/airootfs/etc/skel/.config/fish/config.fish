@@ -2,7 +2,8 @@
 
 # Auto-start Hyprland via UWSM on TTY1
 if status is-login; and test (tty) = /dev/tty1
-    exec uwsm start -- Hyprland
+    # exec uwsm start -- Hyprland
+    uwsm start hyprland-uwsm.desktop
 end
 
 # Initialize oh-my-posh with the blueish theme

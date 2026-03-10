@@ -10,7 +10,7 @@
   "menus.clock.time.hideSeconds": true,
   "menus.clock.weather.enabled": false,
   "menus.clock.weather.unit": "metric",
-  "menus.dashboard.powermenu.avatar.image": "/home/lun/Pictures/ion.ico",
+  "menus.dashboard.powermenu.avatar.image": "~/.config/hyprpanel/avatar.ico",
   "menus.dashboard.powermenu.logout": "uwsm stop",
   "menus.dashboard.shortcuts.left.shortcut1.command": "google-chrome-stable",
   "theme.bar.buttons.modules.ram.enableBorder": false,
@@ -36,8 +36,7 @@
         "workspaces",
         "custom/vpn",
         "custom/ssh",
-        "custom/docker",
-        "windowtitle"
+        "custom/docker"
       ],
       "middle": [],
       "right": [

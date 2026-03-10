@@ -56,6 +56,12 @@ rm -f /etc/systemd/system/multi-user.target.wants/pacman-init.service
 rm -f /etc/pacman.d/hooks/uncomment-mirrors.hook
 rm -f /etc/pacman.d/hooks/zzzz99-remove-custom-hooks-from-airootfs.hook
 
+# Ensure kernel image is in /boot (archiso squashfs doesn't include it)
+KVER=$(ls /usr/lib/modules/ | sort -V | tail -1)
+if [[ ! -f /boot/vmlinuz-linux && -f "/usr/lib/modules/$KVER/vmlinuz" ]]; then
+    install -Dm644 "/usr/lib/modules/$KVER/vmlinuz" /boot/vmlinuz-linux
+fi
+
 # Remove archiso mkinitcpio config and replace the archiso-only preset
 # with a standard one before regenerating. Without this, mkinitcpio -P
 # would have no presets to build and leave the archiso initramfs (with

@@ -8,3 +8,4 @@ localrepo/
 profile/airootfs/etc/calamares/branding/ionix/ionix-logo.png
 profile/airootfs/usr/local/share/ionix/wallpaper.png
 ionix-test.qcow2
+ionix-test-efivars.fd
