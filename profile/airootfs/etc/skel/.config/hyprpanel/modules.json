@@ -14,7 +14,7 @@
         "hideOnEmpty": false,
         "scrollThreshold": 4,
         "actions": {
-            "onLeftClick": "ags request -i ion-ags \"vpn\"",
+            "onLeftClick": "ags request -i ionix-shell \"vpn\"",
             "onRightClick": "oc s | notify-send 'VPN Status' \"$(cat)\"",
             "onMiddleClick": "if oc dc; then notify-send 'VPN Disconnected' 'You have been disconnected from the VPN.'; else oc p && notify-send 'VPN Connected' 'Connected to primary VPN.'; fi",
             "onScrollUp": "",
@@ -29,7 +29,7 @@
         "hideOnEmpty": false,
         "scrollThreshold": 4,
         "actions": {
-            "onLeftClick": "ags request -i ion-ags \"ssh\""
+            "onLeftClick": "ags request -i ionix-shell \"ssh\""
         }
     },
     "custom/docker": {
@@ -40,7 +40,7 @@
         "hideOnEmpty": false,
         "scrollThreshold": 4,
         "actions": {
-            "onLeftClick": "ags request -i ion-ags \"docker\""
+            "onLeftClick": "ags request -i ionix-shell \"docker\""
         }
     }
 }

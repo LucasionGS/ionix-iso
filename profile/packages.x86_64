@@ -38,6 +38,8 @@ wpa_supplicant
 openssh
 bind
 dhcpcd
+socat
+openconnect
 
 # --- System utilities ---
 sudo
@@ -62,6 +64,8 @@ chafa
 playerctl
 zenity
 cmark
+docker
+zoxide
 
 # --- Arch tools ---
 arch-install-scripts
@@ -127,6 +131,7 @@ grim
 slurp
 wf-recorder
 hyprpicker
+hyprshot
 
 # --- Fonts ---
 noto-fonts
@@ -173,3 +178,6 @@ ags-hyprpanel-git
 morghulis-git
 oh-my-posh-bin
 calamares
+openconnect-sso
+ionix-openconnect-tools
+ionix-shell
