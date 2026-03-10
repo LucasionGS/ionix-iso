@@ -78,7 +78,7 @@ fallback_options='-S autodetect'
 PRESET
 
 # Regenerate initramfs with default config
-mkinitcpio -P 2>/dev/null || true
+mkinitcpio -P
 
 # Remove ionix local repo from pacman.conf (no longer needed after install)
 sed -i '/^\[ionix\]/,/^Server/d' /etc/pacman.conf 2>/dev/null || true

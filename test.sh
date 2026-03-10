@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Create the test disk if it doesn't exist
+if [ ! -f ionix-test.qcow2 ]; then
+  qemu-img create -f qcow2 ionix-test.qcow2 64G
+fi
+
 # Create a writable copy of OVMF_VARS for EFI variable storage (once)
 if [ ! -f ionix-test-efivars.fd ]; then
   cp /usr/share/edk2/x64/OVMF_VARS.4m.fd ionix-test-efivars.fd
