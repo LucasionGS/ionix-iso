@@ -66,6 +66,9 @@ zenity
 cmark
 docker
 zoxide
+fakeroot
+debugedit
+cronie
 
 # --- Arch tools ---
 arch-install-scripts
