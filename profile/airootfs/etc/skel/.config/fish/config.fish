@@ -17,6 +17,9 @@ alias ll='ls -la'
 alias vim='nvim'
 alias update='sudo pacman -Syu'
 
+zoxide init fish | source
+alias cd='z'
+
 # Custom greeting
 function fish_greeting
     echo ""
