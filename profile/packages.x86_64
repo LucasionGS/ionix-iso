@@ -7,6 +7,7 @@ amd-ucode
 intel-ucode
 mkinitcpio
 mkinitcpio-archiso
+zram-generator
 
 # --- Boot ---
 grub
@@ -89,7 +90,6 @@ blueman
 
 # --- Wayland / Hyprland ---
 hyprland
-hyprpaper
 hypridle
 hyprlock
 hyprpolkitagent

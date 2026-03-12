@@ -35,6 +35,7 @@ fi
 systemctl enable NetworkManager.service 2>/dev/null || true
 systemctl enable power-profiles-daemon.service 2>/dev/null || true
 systemctl enable bluetooth.service 2>/dev/null || true
+systemctl enable ananicy-cpp.service 2>/dev/null || true
 
 # Remove live-session-only artifacts
 rm -f /etc/sudoers.d/10-ionix
