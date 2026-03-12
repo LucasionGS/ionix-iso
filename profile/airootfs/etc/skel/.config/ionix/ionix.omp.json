@@ -117,6 +117,67 @@
       "type": "prompt"
     },
     {
+      "alignment": "right",
+      "overflow": "hide",
+      "segments": [
+        {
+          "background": "#1a1025",
+          "foreground": "#f39c12",
+          "leading_diamond": "\ue0b2",
+          "style": "diamond",
+          "template": " \uf252 {{ .FormattedMs }} ",
+          "type": "executiontime",
+          "options": {
+            "threshold": 500,
+            "style": "roundrock"
+          }
+        },
+        {
+          "background": "#2d2d3f",
+          "foreground": "#48dbfb",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b2",
+          "invert_powerline": true,
+          "template": " \ue235 {{ .Full }} ",
+          "type": "python",
+          "options": {
+            "display_mode": "context"
+          }
+        },
+        {
+          "background": "#2d2d3f",
+          "foreground": "#1abc9c",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b2",
+          "invert_powerline": true,
+          "template": " \uf308 {{ .Context }} ",
+          "type": "docker"
+        },
+        {
+          "background": "#2d2d3f",
+          "foreground": "#55efc4",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b2",
+          "invert_powerline": true,
+          "template": " \uf9b0 {{ round .PhysicalPercentUsed .Precision }}% ",
+          "type": "sysinfo"
+        },
+        {
+          "background": "#1a1025",
+          "foreground": "#c4b5fd",
+          "style": "powerline",
+          "powerline_symbol": "\ue0b2",
+          "invert_powerline": true,
+          "template": " \uf073 {{ .CurrentDate | date .Format }} ",
+          "type": "time",
+          "options": {
+            "time_format": "15:04:05"
+          }
+        }
+      ],
+      "type": "prompt"
+    },
+    {
       "alignment": "left",
       "newline": true,
       "segments": [
