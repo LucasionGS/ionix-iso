@@ -73,6 +73,8 @@ zoxide
 fakeroot
 debugedit
 cronie
+openssh
+net-tools
 
 # --- Arch tools ---
 arch-install-scripts
