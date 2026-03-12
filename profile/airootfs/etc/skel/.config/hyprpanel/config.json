@@ -62,19 +62,19 @@
   "bar.windowtitle.label": true,
   "menus.dashboard.directories.left.directory3.label": "󰚝 Development",
   "menus.dashboard.directories.left.directory3.command": "bash -c \"xdg-open $HOME/development/\"",
-  "menus.dashboard.shortcuts.left.shortcut1.icon": "",
+  "menus.dashboard.shortcuts.left.shortcut1.icon": "",
   "bar.workspaces.applicationIconMap": {
-    "class:dev.warp.Warp": "",
-    "class:tabby": "",
-    "title:YouTube": "",
-    "title:Picture in picture": "",
+    "class:dev.warp.Warp": "",
+    "class:tabby": "",
+    "title:YouTube": "",
+    "title:Picture in picture": "",
     "title:Microsoft Teams": "󰊻",
     "title:Outlook": "󰴢",
-    "title:Beekeeper Studio": "",
-    "title:FileZilla": "",
-    "class:Toxen": ""
+    "title:Beekeeper Studio": "",
+    "title:FileZilla": "",
+    "class:Toxen": ""
   },
-  "bar.workspaces.applicationIconEmptyWorkspace": "",
+  "bar.workspaces.applicationIconEmptyWorkspace": "",
   "bar.windowtitle.icon": true,
   "bar.windowtitle.truncation": true,
   "bar.windowtitle.class_name": true,
@@ -115,23 +115,19 @@
   "bar.notifications.show_total": true,
   "theme.bar.buttons.notifications.enableBorder": false,
   "theme.bar.menus.enableShadow": false,
-  "menus.dashboard.shortcuts.left.shortcut2.icon": "",
-
+  "menus.dashboard.shortcuts.left.shortcut2.icon": "",
   "theme.font.size": "1.2rem",
-
   "theme.bar.menus.cards": "#2d2d3f",
   "theme.bar.menus.background": "#1a1025",
   "theme.bar.background": "#1a1025",
   "theme.bar.border.color": "#9b59b6",
   "theme.bar.buttons.borderColor": "#9b59b6",
-
   "theme.bar.buttons.icon": "#c084fc",
   "theme.bar.buttons.text": "#c4b5fd",
   "theme.bar.buttons.hover": "#3a2d50",
   "theme.bar.buttons.background": "#2d2d3f",
   "theme.bar.buttons.icon_background": "#2d2d3f",
   "theme.bar.buttons.style": "default",
-
   "theme.bar.menus.text": "#c4b5fd",
   "theme.bar.menus.border.color": "#4a3d60",
   "theme.bar.menus.label": "#a855f7",
@@ -140,21 +136,17 @@
   "theme.bar.menus.popover.text": "#c084fc",
   "theme.bar.menus.popover.background": "#1a1025",
   "theme.bar.menus.popover.border": "#1a1025",
-
   "theme.bar.menus.tooltip.text": "#c4b5fd",
   "theme.bar.menus.tooltip.background": "#1a1025",
-
   "theme.bar.menus.dropdownmenu.divider": "#2d2d3f",
   "theme.bar.menus.dropdownmenu.text": "#c4b5fd",
   "theme.bar.menus.dropdownmenu.background": "#1a1025",
-
   "theme.bar.menus.slider.puck": "#6b5f80",
   "theme.bar.menus.slider.backgroundhover": "#4a3d60",
   "theme.bar.menus.slider.background": "#4a3d60",
   "theme.bar.menus.slider.primary": "#9b59b6",
   "theme.bar.menus.progressbar.background": "#4a3d60",
   "theme.bar.menus.progressbar.foreground": "#9b59b6",
-
   "theme.bar.menus.iconbuttons.active": "#a855f7",
   "theme.bar.menus.iconbuttons.passive": "#c4b5fd",
   "theme.bar.menus.buttons.text": "#0f0a18",
@@ -170,12 +162,10 @@
   "theme.bar.menus.listitems.passive": "#c4b5fd",
   "theme.bar.menus.check_radio_button.background": "#2d2d3f",
   "theme.bar.menus.check_radio_button.active": "#9b59b6",
-
   "theme.bar.buttons.dashboard.icon": "#c084fc",
   "theme.bar.buttons.dashboard.background": "#1a1025",
   "theme.bar.buttons.dashboard.hover": "#3a2d50",
   "theme.bar.buttons.dashboard.border": "#c084fc",
-
   "theme.bar.buttons.workspaces.active": "#a855f7",
   "theme.bar.buttons.workspaces.occupied": "#9b59b6",
   "theme.bar.buttons.workspaces.available": "#7c3aed",
@@ -185,14 +175,12 @@
   "theme.bar.buttons.workspaces.numbered_active_highlighted_text_color": "#0f0a18",
   "theme.bar.buttons.workspaces.numbered_active_underline_color": "#a855f7",
   "theme.bar.buttons.workspaces.numbered_active_text_color": "#0f0a18",
-
   "theme.bar.buttons.windowtitle.icon": "#c084fc",
   "theme.bar.buttons.windowtitle.text": "#c4b5fd",
   "theme.bar.buttons.windowtitle.background": "#1a1025",
   "theme.bar.buttons.windowtitle.hover": "#3a2d50",
   "theme.bar.buttons.windowtitle.icon_background": "#7c3aed",
   "theme.bar.buttons.windowtitle.border": "#c4b5fd",
-
   "theme.bar.buttons.volume.icon": "#e74c3c",
   "theme.bar.buttons.volume.text": "#e74c3c",
   "theme.bar.buttons.volume.background": "#1a1025",
@@ -204,54 +192,46 @@
   "theme.bar.buttons.volume.input_icon": "#0f0a18",
   "theme.bar.buttons.volume.input_text": "#e74c3c",
   "theme.bar.buttons.volume.separator": "#4a3d60",
-
   "theme.bar.buttons.network.icon": "#c084fc",
   "theme.bar.buttons.network.text": "#c084fc",
   "theme.bar.buttons.network.background": "#1a1025",
   "theme.bar.buttons.network.hover": "#3a2d50",
   "theme.bar.buttons.network.icon_background": "#c084fc",
   "theme.bar.buttons.network.border": "#c084fc",
-
   "theme.bar.buttons.bluetooth.icon": "#48dbfb",
   "theme.bar.buttons.bluetooth.text": "#48dbfb",
   "theme.bar.buttons.bluetooth.background": "#1a1025",
   "theme.bar.buttons.bluetooth.hover": "#3a2d50",
   "theme.bar.buttons.bluetooth.icon_background": "#48dbfb",
   "theme.bar.buttons.bluetooth.border": "#48dbfb",
-
   "theme.bar.buttons.battery.icon": "#f39c12",
   "theme.bar.buttons.battery.text": "#f39c12",
   "theme.bar.buttons.battery.background": "#1a1025",
   "theme.bar.buttons.battery.hover": "#3a2d50",
   "theme.bar.buttons.battery.icon_background": "#f39c12",
   "theme.bar.buttons.battery.border": "#f39c12",
-
   "theme.bar.buttons.systray.background": "#1a1025",
   "theme.bar.buttons.systray.hover": "#3a2d50",
   "theme.bar.buttons.systray.border": "#4a3d60",
   "theme.bar.buttons.systray.customIcon": "#c4b5fd",
-
   "theme.bar.buttons.clock.icon": "#2ecc71",
   "theme.bar.buttons.clock.text": "#2ecc71",
   "theme.bar.buttons.clock.background": "#1a1025",
   "theme.bar.buttons.clock.hover": "#3a2d50",
   "theme.bar.buttons.clock.icon_background": "#2ecc71",
   "theme.bar.buttons.clock.border": "#2ecc71",
-
   "theme.bar.buttons.notifications.total": "#a855f7",
   "theme.bar.buttons.notifications.icon": "#a855f7",
   "theme.bar.buttons.notifications.background": "#1a1025",
   "theme.bar.buttons.notifications.hover": "#3a2d50",
   "theme.bar.buttons.notifications.icon_background": "#a855f7",
   "theme.bar.buttons.notifications.border": "#a855f7",
-
   "theme.bar.buttons.media.icon": "#9b59b6",
   "theme.bar.buttons.media.text": "#9b59b6",
   "theme.bar.buttons.media.background": "#1a1025",
   "theme.bar.buttons.media.hover": "#3a2d50",
   "theme.bar.buttons.media.icon_background": "#9b59b6",
   "theme.bar.buttons.media.border": "#9b59b6",
-
   "theme.bar.menus.menu.volume.text": "#c4b5fd",
   "theme.bar.menus.menu.volume.card.color": "#2d2d3f",
   "theme.bar.menus.menu.volume.label.color": "#e74c3c",
@@ -271,7 +251,6 @@
   "theme.bar.menus.menu.volume.iconbutton.passive": "#c4b5fd",
   "theme.bar.menus.menu.volume.listitems.active": "#e74c3c",
   "theme.bar.menus.menu.volume.listitems.passive": "#c4b5fd",
-
   "theme.bar.menus.menu.network.iconbuttons.active": "#c084fc",
   "theme.bar.menus.menu.network.iconbuttons.passive": "#c4b5fd",
   "theme.bar.menus.menu.network.icons.active": "#c084fc",
@@ -288,7 +267,6 @@
   "theme.bar.menus.menu.network.background.color": "#1a1025",
   "theme.bar.menus.menu.network.card.color": "#2d2d3f",
   "theme.bar.menus.menu.network.scroller.color": "#c084fc",
-
   "theme.bar.menus.menu.bluetooth.iconbutton.active": "#48dbfb",
   "theme.bar.menus.menu.bluetooth.iconbutton.passive": "#c4b5fd",
   "theme.bar.menus.menu.bluetooth.icons.active": "#48dbfb",
@@ -306,7 +284,6 @@
   "theme.bar.menus.menu.bluetooth.background.color": "#1a1025",
   "theme.bar.menus.menu.bluetooth.card.color": "#2d2d3f",
   "theme.bar.menus.menu.bluetooth.scroller.color": "#48dbfb",
-
   "theme.bar.menus.menu.battery.slider.puck": "#3a2d50",
   "theme.bar.menus.menu.battery.slider.backgroundhover": "#3a2d50",
   "theme.bar.menus.menu.battery.slider.background": "#6b5f80",
@@ -320,11 +297,9 @@
   "theme.bar.menus.menu.battery.border.color": "#4a3d60",
   "theme.bar.menus.menu.battery.background.color": "#1a1025",
   "theme.bar.menus.menu.battery.card.color": "#2d2d3f",
-
   "theme.bar.menus.menu.systray.dropdownmenu.divider": "#2d2d3f",
   "theme.bar.menus.menu.systray.dropdownmenu.text": "#c4b5fd",
   "theme.bar.menus.menu.systray.dropdownmenu.background": "#1a1025",
-
   "theme.bar.menus.menu.notifications.switch.puck": "#3a2d50",
   "theme.bar.menus.menu.notifications.switch.disabled": "#4a3d60",
   "theme.bar.menus.menu.notifications.switch.enabled": "#a855f7",
@@ -339,7 +314,6 @@
   "theme.bar.menus.menu.notifications.scrollbar.color": "#a855f7",
   "theme.bar.menus.menu.notifications.pager.label": "#6b5f80",
   "theme.bar.menus.menu.notifications.pager.background": "#1a1025",
-
   "theme.bar.menus.menu.clock.weather.hourly.temperature": "#c084fc",
   "theme.bar.menus.menu.clock.weather.hourly.icon": "#c084fc",
   "theme.bar.menus.menu.clock.weather.hourly.time": "#c084fc",
@@ -364,7 +338,6 @@
   "theme.bar.menus.menu.clock.border.color": "#4a3d60",
   "theme.bar.menus.menu.clock.background.color": "#1a1025",
   "theme.bar.menus.menu.clock.card.color": "#2d2d3f",
-
   "theme.bar.menus.menu.dashboard.powermenu.shutdown": "#e74c3c",
   "theme.bar.menus.menu.dashboard.powermenu.confirmation.deny": "#e74c3c",
   "theme.bar.menus.menu.dashboard.powermenu.confirmation.confirm": "#2ecc71",
@@ -377,7 +350,6 @@
   "theme.bar.menus.menu.dashboard.powermenu.sleep": "#1abc9c",
   "theme.bar.menus.menu.dashboard.powermenu.logout": "#2ecc71",
   "theme.bar.menus.menu.dashboard.powermenu.restart": "#f39c12",
-
   "theme.bar.menus.menu.dashboard.monitors.disk.label": "#c084fc",
   "theme.bar.menus.menu.dashboard.monitors.disk.bar": "#c084fc",
   "theme.bar.menus.menu.dashboard.monitors.disk.icon": "#c084fc",
@@ -391,14 +363,12 @@
   "theme.bar.menus.menu.dashboard.monitors.cpu.bar": "#e74c3c",
   "theme.bar.menus.menu.dashboard.monitors.cpu.icon": "#e74c3c",
   "theme.bar.menus.menu.dashboard.monitors.bar_background": "#3a2d50",
-
   "theme.bar.menus.menu.dashboard.directories.right.bottom.color": "#48dbfb",
   "theme.bar.menus.menu.dashboard.directories.right.middle.color": "#c084fc",
   "theme.bar.menus.menu.dashboard.directories.right.top.color": "#1abc9c",
   "theme.bar.menus.menu.dashboard.directories.left.bottom.color": "#e74c3c",
   "theme.bar.menus.menu.dashboard.directories.left.middle.color": "#f39c12",
   "theme.bar.menus.menu.dashboard.directories.left.top.color": "#a855f7",
-
   "theme.bar.menus.menu.dashboard.controls.input.text": "#0f0a18",
   "theme.bar.menus.menu.dashboard.controls.input.background": "#c084fc",
   "theme.bar.menus.menu.dashboard.controls.volume.text": "#0f0a18",
@@ -410,7 +380,6 @@
   "theme.bar.menus.menu.dashboard.controls.wifi.text": "#0f0a18",
   "theme.bar.menus.menu.dashboard.controls.wifi.background": "#9b59b6",
   "theme.bar.menus.menu.dashboard.controls.disabled": "#6b5f80",
-
   "theme.bar.menus.menu.dashboard.shortcuts.recording": "#2ecc71",
   "theme.bar.menus.menu.dashboard.shortcuts.text": "#0f0a18",
   "theme.bar.menus.menu.dashboard.shortcuts.background": "#9b59b6",
@@ -418,7 +387,6 @@
   "theme.bar.menus.menu.dashboard.border.color": "#4a3d60",
   "theme.bar.menus.menu.dashboard.background.color": "#1a1025",
   "theme.bar.menus.menu.dashboard.card.color": "#2d2d3f",
-
   "theme.bar.menus.menu.media.slider.puck": "#6b5f80",
   "theme.bar.menus.menu.media.slider.backgroundhover": "#4a3d60",
   "theme.bar.menus.menu.media.slider.background": "#4a3d60",
@@ -434,7 +402,6 @@
   "theme.bar.menus.menu.media.artist": "#1abc9c",
   "theme.bar.menus.menu.media.song": "#c084fc",
   "theme.bar.menus.menu.media.timestamp": "#c4b5fd",
-
   "theme.bar.menus.menu.power.buttons.shutdown.icon": "#0f0a18",
   "theme.bar.menus.menu.power.buttons.shutdown.icon_background": "#e74c3c",
   "theme.bar.menus.menu.power.buttons.shutdown.text": "#e74c3c",
@@ -454,7 +421,6 @@
   "theme.bar.menus.menu.power.border.color": "#4a3d60",
   "theme.bar.menus.menu.power.background.color": "#1a1025",
   "theme.bar.menus.menu.power.card.color": "#2d2d3f",
-
   "theme.notification.close_button.label": "#0f0a18",
   "theme.notification.close_button.background": "#e74c3c",
   "theme.notification.labelicon": "#a855f7",
@@ -465,7 +431,6 @@
   "theme.notification.actions.text": "#0f0a18",
   "theme.notification.actions.background": "#9b59b6",
   "theme.notification.background": "#1a1025",
-
   "theme.osd.label": "#a855f7",
   "theme.osd.icon": "#0f0a18",
   "theme.osd.bar_overflow_color": "#e74c3c",
@@ -474,98 +439,81 @@
   "theme.osd.icon_container": "#9b59b6",
   "theme.osd.bar_container": "#1a1025",
   "theme.osd.border.color": "#9b59b6",
-
   "theme.bar.buttons.modules.ram.icon": "#f39c12",
   "theme.bar.buttons.modules.ram.icon_background": "#f39c12",
   "theme.bar.buttons.modules.ram.text": "#f39c12",
   "theme.bar.buttons.modules.ram.background": "#1a1025",
   "theme.bar.buttons.modules.ram.border": "#f39c12",
-
   "theme.bar.buttons.modules.cpu.icon": "#e74c3c",
   "theme.bar.buttons.modules.cpu.icon_background": "#e74c3c",
   "theme.bar.buttons.modules.cpu.text": "#e74c3c",
   "theme.bar.buttons.modules.cpu.background": "#1a1025",
   "theme.bar.buttons.modules.cpu.border": "#e74c3c",
   "theme.bar.buttons.modules.cpu.hover": "#3a2d50",
-
   "theme.bar.buttons.modules.storage.icon": "#e74c3c",
   "theme.bar.buttons.modules.storage.icon_background": "#e74c3c",
   "theme.bar.buttons.modules.storage.text": "#e74c3c",
   "theme.bar.buttons.modules.storage.background": "#1a1025",
   "theme.bar.buttons.modules.storage.border": "#e74c3c",
-
   "theme.bar.buttons.modules.netstat.icon": "#2ecc71",
   "theme.bar.buttons.modules.netstat.icon_background": "#2ecc71",
   "theme.bar.buttons.modules.netstat.text": "#2ecc71",
   "theme.bar.buttons.modules.netstat.background": "#1a1025",
   "theme.bar.buttons.modules.netstat.border": "#2ecc71",
-
   "theme.bar.buttons.modules.kbLayout.icon": "#1abc9c",
   "theme.bar.buttons.modules.kbLayout.icon_background": "#1abc9c",
   "theme.bar.buttons.modules.kbLayout.text": "#1abc9c",
   "theme.bar.buttons.modules.kbLayout.background": "#1a1025",
   "theme.bar.buttons.modules.kbLayout.border": "#1abc9c",
-
   "theme.bar.buttons.modules.updates.icon": "#c084fc",
   "theme.bar.buttons.modules.updates.icon_background": "#c084fc",
   "theme.bar.buttons.modules.updates.text": "#c084fc",
   "theme.bar.buttons.modules.updates.background": "#1a1025",
   "theme.bar.buttons.modules.updates.border": "#c084fc",
-
   "theme.bar.buttons.modules.weather.icon": "#48dbfb",
   "theme.bar.buttons.modules.weather.icon_background": "#48dbfb",
   "theme.bar.buttons.modules.weather.text": "#48dbfb",
   "theme.bar.buttons.modules.weather.background": "#1a1025",
   "theme.bar.buttons.modules.weather.border": "#48dbfb",
-
   "theme.bar.buttons.modules.power.icon": "#e74c3c",
   "theme.bar.buttons.modules.power.icon_background": "#e74c3c",
   "theme.bar.buttons.modules.power.background": "#1a1025",
   "theme.bar.buttons.modules.power.border": "#e74c3c",
-
   "theme.bar.buttons.modules.submap.background": "#1a1025",
   "theme.bar.buttons.modules.submap.text": "#1abc9c",
   "theme.bar.buttons.modules.submap.border": "#1abc9c",
   "theme.bar.buttons.modules.submap.icon": "#1abc9c",
   "theme.bar.buttons.modules.submap.icon_background": "#1a1025",
-
   "theme.bar.buttons.modules.hyprsunset.icon": "#f39c12",
   "theme.bar.buttons.modules.hyprsunset.background": "#1a1025",
   "theme.bar.buttons.modules.hyprsunset.icon_background": "#f39c12",
   "theme.bar.buttons.modules.hyprsunset.text": "#f39c12",
   "theme.bar.buttons.modules.hyprsunset.border": "#f39c12",
-
   "theme.bar.buttons.modules.hypridle.icon": "#e74c3c",
   "theme.bar.buttons.modules.hypridle.background": "#1a1025",
   "theme.bar.buttons.modules.hypridle.icon_background": "#e74c3c",
   "theme.bar.buttons.modules.hypridle.text": "#e74c3c",
   "theme.bar.buttons.modules.hypridle.border": "#e74c3c",
-
   "theme.bar.buttons.modules.cava.text": "#1abc9c",
   "theme.bar.buttons.modules.cava.background": "#1a1025",
   "theme.bar.buttons.modules.cava.icon_background": "#1a1025",
   "theme.bar.buttons.modules.cava.icon": "#1abc9c",
   "theme.bar.buttons.modules.cava.border": "#1abc9c",
-
   "theme.bar.buttons.modules.microphone.border": "#2ecc71",
   "theme.bar.buttons.modules.microphone.background": "#1a1025",
   "theme.bar.buttons.modules.microphone.text": "#2ecc71",
   "theme.bar.buttons.modules.microphone.icon": "#2ecc71",
   "theme.bar.buttons.modules.microphone.icon_background": "#1a1025",
-
   "theme.bar.buttons.modules.worldclock.text": "#c084fc",
   "theme.bar.buttons.modules.worldclock.background": "#1a1025",
   "theme.bar.buttons.modules.worldclock.icon_background": "#7c3aed",
   "theme.bar.buttons.modules.worldclock.icon": "#c084fc",
   "theme.bar.buttons.modules.worldclock.border": "#c084fc",
-
   "theme.bar.buttons.modules.cpuTemp.icon_background": "#f39c12",
   "theme.bar.buttons.modules.cpuTemp.icon": "#f39c12",
   "theme.bar.buttons.modules.cpuTemp.text": "#f39c12",
   "theme.bar.buttons.modules.cpuTemp.border": "#f39c12",
-
   "theme.bar.buttons.modules.microphone.enableBorder": false,
-
   "menus.dashboard.shortcuts.left.shortcut3.tooltip": "Toggle Good Audio <-> Working mic",
   "menus.dashboard.shortcuts.left.shortcut3.command": "toggle-headunit.sh",
   "menus.dashboard.shortcuts.left.shortcut3.icon": "󰋎",
