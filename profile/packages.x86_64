@@ -1,5 +1,6 @@
 # --- Base system ---
 base
+base-devel
 linux
 linux-firmware
 sof-firmware
@@ -48,6 +49,7 @@ which
 less
 man-db
 man-pages
+python
 git
 curl
 wget
@@ -55,6 +57,7 @@ rsync
 unzip
 p7zip
 htop
+btop
 fastfetch
 bat
 ripgrep
@@ -131,6 +134,8 @@ python-toml
 nemo
 copyq
 rofi
+pavucontrol
+nm-connection-editor
 
 # --- Screenshot / Utilities ---
 grim
