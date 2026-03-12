@@ -101,7 +101,7 @@ if lspci | grep -qi 'nvidia'; then
     mkinitcpio -P
 else
     # No NVIDIA GPU — remove NVIDIA packages to save space
-    pacman -Rns --noconfirm nvidia-open nvidia-utils lib32-nvidia-utils egl-wayland 2>/dev/null || true
+    pacman -Rns --noconfirm nvidia-open nvidia-utils lib32-nvidia-utils egl-wayland libva-nvidia-driver 2>/dev/null || true
 fi
 
 echo "Ionix post-install completed."
