@@ -109,4 +109,9 @@ else
     pacman -Rns --noconfirm nvidia-open nvidia-utils lib32-nvidia-utils egl-wayland libva-nvidia-driver 2>/dev/null || true
 fi
 
+# Remove bin files we added to /usr/local/bin during the live session
+rm -f /usr/local/bin/ionix-install
+rm -f /usr/local/bin/grub-install
+rm -f /usr/local/bin/ionix-post-install
+
 echo "Ionix post-install completed."
