@@ -24,6 +24,18 @@ gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null
 gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
 gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true
 
+# Remind the user to enable Secure Boot in firmware if not yet active.
+# MOK enrollment should have happened via MokManager on the first boot;
+# the remaining step is just flipping the Secure Boot switch in UEFI.
+if command -v mokutil &>/dev/null; then
+    if ! mokutil --sb-state 2>/dev/null | grep -qi "SecureBoot enabled"; then
+        notify-send \
+            "Secure Boot not yet enabled" \
+            "MOK key enrollment should have completed on first boot.\nTo finish: enter UEFI firmware → enable Secure Boot → save and reboot.\nRun 'sudo ionix-secureboot-enroll' if you need to re-check status." \
+            --icon=security-high --urgency=normal 2>/dev/null || true
+    fi
+fi
+
 # Mark first login as complete
 touch "$MARKER"
 

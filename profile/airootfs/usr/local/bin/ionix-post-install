@@ -112,6 +112,7 @@ fi
 # Remove bin files we added to /usr/local/bin during the live session
 rm -f /usr/local/bin/ionix-install
 rm -f /usr/local/bin/grub-install
+rm -f /usr/local/bin/ionix-secureboot-sign
 rm -f /usr/local/bin/ionix-post-install
 
 echo "Ionix post-install completed."

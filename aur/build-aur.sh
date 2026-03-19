@@ -32,6 +32,7 @@ AUR_PACKAGES=(
     "yay"
     "oh-my-posh-bin"
     "calamares"
+    "shim-signed"
     "anyrun-bin"
     "tabby-bin"
     # astal core (build order: io first, then base, then everything else)

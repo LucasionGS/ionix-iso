@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Ionix Secure Boot Signing (shim-based)
+# Called by Calamares shellprocess after grub-install.
+#
+# Boot chain:
+#   UEFI firmware (trusts Microsoft UEFI CA)
+#     → shimx64.efi  (signed by Microsoft — trusted on all PCs)
+#       → grubx64.efi  (signed by MOK key — shim verifies)
+#         → vmlinuz-linux  (signed by MOK key — shim/GRUB verifies)
+#
+# This approach works across all machines without enrolling a custom Platform
+# Key, making it ideal for USB installs and dual-boot with Windows.
+#
+# Only proceeds on UEFI installs; silently skips on BIOS/Legacy installs.
+
+set -uo pipefail
+
+GRUB_EFI="/boot/efi/EFI/Ionix/grubx64.efi"
+KERNEL="/boot/vmlinuz-linux"
+SHIM_SRC="/usr/share/shim-signed"
+
+# Skip if no UEFI binary exists (BIOS/Legacy install)
+if [[ ! -f "$GRUB_EFI" ]]; then
+    echo "Secure Boot setup skipped: no UEFI EFI binary found (BIOS/Legacy install)."
+    exit 0
+fi
+
+if [[ ! -f "$SHIM_SRC/shimx64.efi" ]]; then
+    echo "ERROR: shim-signed is not installed (missing $SHIM_SRC/shimx64.efi)."
+    exit 1
+fi
+
+# 1. Install shim and MokManager into the Ionix EFI directory
+echo "Installing shim and MokManager..."
+install -m 644 "$SHIM_SRC/shimx64.efi" /boot/efi/EFI/Ionix/shimx64.efi
+install -m 644 "$SHIM_SRC/mmx64.efi"   /boot/efi/EFI/Ionix/mmx64.efi
+
+# The fallback boot path (EFI/BOOT/BOOTX64.EFI) must also be shim so the disk
+# boots on any PC without a registered NVRAM entry (e.g. USB boot, new machine).
+mkdir -p /boot/efi/EFI/BOOT
+install -m 644 "$SHIM_SRC/shimx64.efi" /boot/efi/EFI/BOOT/BOOTX64.EFI
+install -m 644 "$SHIM_SRC/mmx64.efi"   /boot/efi/EFI/BOOT/mmx64.efi
+
+# 2. Generate MOK signing key pair
+echo "Generating MOK signing key..."
+sbctl create-keys
+
+# 3. Sign GRUB and the kernel with the MOK key
+# sbctl -s records the file path so the pacman hook re-signs after upgrades.
+echo "Signing GRUB EFI binary..."
+sbctl sign -s "$GRUB_EFI"
+
+if [[ -f "$KERNEL" ]]; then
+    echo "Signing kernel..."
+    sbctl sign -s "$KERNEL"
+fi
+
+# 4. Update the EFI NVRAM boot entry to point to shimx64.efi instead of
+#    grubx64.efi (grub-install already created an entry pointing at grubx64.efi).
+if command -v efibootmgr &>/dev/null; then
+    EFI_DEV=$(findmnt -n -o SOURCE /boot/efi 2>/dev/null || true)
+    if [[ -n "$EFI_DEV" ]]; then
+        EFI_DISK=$(echo "$EFI_DEV" | sed 's/p\?[0-9]*$//')
+        EFI_PART=$(echo "$EFI_DEV" | grep -oP '[0-9]+$')
+        # Remove the grub-install NVRAM entry
+        BOOT_NUM=$(efibootmgr 2>/dev/null | grep -i 'Ionix' | grep -oP 'Boot\K[0-9A-Fa-f]+' | head -1)
+        [[ -n "$BOOT_NUM" ]] && efibootmgr --bootnum "$BOOT_NUM" --delete-bootnum --quiet 2>/dev/null || true
+        # Register shim as the NVRAM boot entry
+        efibootmgr --create \
+            --disk "$EFI_DISK" \
+            --part "$EFI_PART" \
+            --label "Ionix" \
+            --loader '\EFI\Ionix\shimx64.efi' \
+            --quiet 2>/dev/null || true
+        echo "EFI NVRAM boot entry updated to shimx64.efi."
+    fi
+fi
+
+# 5. Queue MOK certificate enrollment for first boot.
+# MokManager (the blue EFI UI launched by shim) will prompt for this passphrase.
+# The passphrase is set to: ionix
+MOK_CERT_DER="/tmp/ionix-mok-enroll.cer"
+MOK_PEM="/usr/share/secureboot/keys/db/db.pem"
+openssl x509 -in "$MOK_PEM" -outform DER -out "$MOK_CERT_DER"
+printf 'ionix\nionix\n' | mokutil --import "$MOK_CERT_DER"
+rm -f "$MOK_CERT_DER"
+
+echo ""
+echo "=== Secure Boot setup complete ==="
+echo ""
+echo "If Secure Boot is already ENABLED in your firmware:"
+echo "  On first boot, a blue MokManager screen will appear automatically."
+echo "  1. Select 'Enroll MOK' -> 'Continue' -> 'Yes'"
+echo "  2. Enter passphrase: ionix"
+echo "  3. Select 'Reboot' -- done. Ionix and Windows will both boot normally."
+echo ""
+echo "If Secure Boot is currently DISABLED in your firmware:"
+echo "  Complete the same MokManager steps above, then enter UEFI and enable Secure Boot."
