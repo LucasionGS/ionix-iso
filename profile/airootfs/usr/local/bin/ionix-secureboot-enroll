@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# ionix-secureboot-enroll
+# Shows Secure Boot / MOK status and handles re-enrollment if needed.
+# Ionix uses shim-based Secure Boot: you should have been prompted by
+# MokManager (the blue EFI screen) on your first boot to enroll the MOK key.
+# Run this script if you need to check status or re-queue key enrollment.
+
+set -uo pipefail
+
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root."
+    echo "  sudo ionix-secureboot-enroll"
+    exit 1
+fi
+
+for cmd in sbctl mokutil; do
+    if ! command -v "$cmd" &>/dev/null; then
+        echo "ERROR: $cmd is not installed. Install it with: sudo pacman -S $cmd"
+        exit 1
+    fi
+done
+
+echo "=== Ionix Secure Boot Status ==="
+echo ""
+sbctl status
+echo ""
+
+# Check MOK enrollment
+if mokutil --sb-state 2>/dev/null | grep -qi "SecureBoot enabled"; then
+    echo "Secure Boot is ACTIVE."
+    echo ""
+    echo "Verifying signed files:"
+    sbctl verify
+    exit 0
+fi
+
+MOK_PEM="/usr/share/secureboot/keys/db/db.pem"
+if [[ ! -f "$MOK_PEM" ]]; then
+    echo "ERROR: MOK signing key not found at $MOK_PEM"
+    echo "Keys should have been generated during installation."
+    echo "Regenerate with: sudo sbctl create-keys"
+    exit 1
+fi
+
+echo "Secure Boot is NOT yet active."
+echo ""
+
+# Check if there is already a pending MOK enrollment request
+if mokutil --list-new 2>/dev/null | grep -q "."; then
+    echo "A MOK enrollment is already pending — it will be presented on next boot."
+    echo "Reboot, then follow the MokManager prompts and enter passphrase: ionix"
+else
+    echo "Re-queuing MOK key enrollment for next boot..."
+    MOK_CERT_DER="/tmp/ionix-mok-reenroll.cer"
+    openssl x509 -in "$MOK_PEM" -outform DER -out "$MOK_CERT_DER"
+    printf 'ionix\nionix\n' | mokutil --import "$MOK_CERT_DER"
+    rm -f "$MOK_CERT_DER"
+    echo ""
+    echo "MOK enrollment queued. Reboot to proceed."
+fi
+
+echo ""
+echo "After enrolling the MOK key:"
+echo "  If Secure Boot was already enabled: next reboot will work immediately."
+echo "  If Secure Boot is disabled: enter UEFI firmware -> enable Secure Boot -> save."
+echo "  Both Ionix and Windows will then boot with Secure Boot enabled."
