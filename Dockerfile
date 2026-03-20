@@ -32,6 +32,7 @@ RUN pacman-key --init \
   libportal-gtk4 \
   muparser \
   json-glib \
-  libgtop
+  libgtop \
+  wayland-protocols
 
 CMD ["/bin/bash"]
