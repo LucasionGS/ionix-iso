@@ -19,6 +19,7 @@ syslinux
 memtest86+
 memtest86+-efi
 edk2-shell
+mokutil
 
 # --- Filesystem tools ---
 btrfs-progs
@@ -226,11 +227,13 @@ libastal-4-git
 libastal-gjs-git
 libcava-git
 appmenu-glib-translator-git
+wl-vapi-gen
+libastal-wl-git
 libastal-powerprofiles-git
 libastal-meta
 aylurs-gtk-shell-git
 ags-hyprpanel-git
-morghulis-git
+# morghulis-git
 oh-my-posh-bin
 calamares
 openconnect-sso

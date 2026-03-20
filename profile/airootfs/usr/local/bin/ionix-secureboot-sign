@@ -80,7 +80,7 @@ fi
 # MokManager (the blue EFI UI launched by shim) will prompt for this passphrase.
 # The passphrase is set to: ionix
 MOK_CERT_DER="/tmp/ionix-mok-enroll.cer"
-MOK_PEM="/usr/share/secureboot/keys/db/db.pem"
+MOK_PEM="/var/lib/sbctl/keys/db/db.pem"
 openssl x509 -in "$MOK_PEM" -outform DER -out "$MOK_CERT_DER"
 printf 'ionix\nionix\n' | mokutil --import "$MOK_CERT_DER"
 rm -f "$MOK_CERT_DER"

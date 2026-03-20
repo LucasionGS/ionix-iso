@@ -34,12 +34,21 @@ if mokutil --sb-state 2>/dev/null | grep -qi "SecureBoot enabled"; then
     exit 0
 fi
 
-MOK_PEM="/usr/share/secureboot/keys/db/db.pem"
+MOK_PEM="/var/lib/sbctl/keys/db/db.pem"
 if [[ ! -f "$MOK_PEM" ]]; then
-    echo "ERROR: MOK signing key not found at $MOK_PEM"
-    echo "Keys should have been generated during installation."
-    echo "Regenerate with: sudo sbctl create-keys"
-    exit 1
+    echo "MOK signing key not found at $MOK_PEM — generating now..."
+    sbctl create-keys
+    if [[ ! -f "$MOK_PEM" ]]; then
+        echo "ERROR: sbctl create-keys did not produce $MOK_PEM"
+        exit 1
+    fi
+    echo ""
+    echo "New keys generated. Re-signing GRUB and kernel..."
+    GRUB_EFI="/boot/efi/EFI/Ionix/grubx64.efi"
+    KERNEL="/boot/vmlinuz-linux"
+    [[ -f "$GRUB_EFI" ]] && sbctl sign -s "$GRUB_EFI"
+    [[ -f "$KERNEL"   ]] && sbctl sign -s "$KERNEL"
+    echo ""
 fi
 
 echo "Secure Boot is NOT yet active."
