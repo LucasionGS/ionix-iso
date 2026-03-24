@@ -2,6 +2,9 @@
 # Ionix - Cycle Wallpaper
 # Randomly cycles wallpapers across all connected displays using swww.
 
+# To have this in a cron, add the following line to your crontab (edit with `crontab -e`):
+# */5 * * * * hyprctl -i 0 dispatch exec "bash ~/.config/ionix/cron/cycle-wallpaper.sh" >/dev/null
+
 IONIX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix"
 WALLPAPER_DIR="$IONIX_DIR/.wallpapers_active"
 SWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
