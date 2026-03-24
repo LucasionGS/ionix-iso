@@ -32,6 +32,7 @@ AUR_PACKAGES=(
     "yay"
     "oh-my-posh-bin"
     "calamares"
+    "shim-signed"
     "anyrun-bin"
     "tabby-bin"
     # astal core (build order: io first, then base, then everything else)
@@ -49,6 +50,8 @@ AUR_PACKAGES=(
     "libastal-mpris-git"
     "libastal-network-git"
     "libastal-notifd-git"
+    "wl-vapi-gen"
+    "libastal-wl-git"
     "libastal-powerprofiles-git"
     "libastal-river-git"
     "libastal-greet-git"
@@ -59,7 +62,7 @@ AUR_PACKAGES=(
     # HyprPanel stack
     "aylurs-gtk-shell-git"
     "ags-hyprpanel-git" # Primary shell
-    "morghulis-git" # Secondary shell
+    # "morghulis-git" # Secondary shell
     "google-chrome"
     # ionix tooling (openconnect-sso before ionix-openconnect-tools; ionix-openconnect-tools before ionix-shell)
     "openconnect-sso"
