@@ -90,6 +90,7 @@ pipewire-pulse
 pipewire-alsa
 pipewire-jack
 wireplumber
+alsa-utils
 lib32-pipewire
 
 # --- Bluetooth ---
