@@ -146,11 +146,12 @@ pavucontrol
 nm-connection-editor
 
 # --- Screenshot / Utilities ---
-grim
+# grim
 slurp
 wf-recorder
 hyprpicker
 hyprshot
+scdoc
 
 # --- Fonts ---
 noto-fonts
@@ -243,3 +244,4 @@ openconnect-sso
 ionix-openconnect-tools
 ionix-shell
 protonup-qt
+grim-hyprland-git
