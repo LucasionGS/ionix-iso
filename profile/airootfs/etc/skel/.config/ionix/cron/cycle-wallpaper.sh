@@ -1,13 +1,13 @@
 #!/bin/bash
 # Ionix - Cycle Wallpaper
-# Randomly cycles wallpapers across all connected displays using swww.
+# Randomly cycles wallpapers across all connected displays using awww.
 
 # To have this in a cron, add the following line to your crontab (edit with `crontab -e`):
 # */5 * * * * hyprctl -i 0 dispatch exec "bash ~/.config/ionix/cron/cycle-wallpaper.sh" >/dev/null
 
 IONIX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix"
 WALLPAPER_DIR="$IONIX_DIR/.wallpapers_active"
-SWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
+AWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
 
 ALL_WALLPAPERS=($(find "$WALLPAPER_DIR" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" \)))
 
@@ -16,7 +16,7 @@ if [ ${#ALL_WALLPAPERS[@]} -eq 0 ]; then
   exit 1
 fi
 
-DISPLAYS=($(swww query | grep -oP '(?<=: ).+(?=: \d+x\d+)'))
+DISPLAYS=($(awww query | grep -oP '(?<=: ).+(?=: \d+x\d+)'))
 
 if [ ${#DISPLAYS[@]} -eq 0 ]; then
   echo "No displays found"
@@ -25,7 +25,7 @@ fi
 
 declare -A CURRENT_WALLPAPERS
 for display in "${DISPLAYS[@]}"; do
-  current_wall=$(swww query | grep "^$display:" | grep -oP '(?<=image: ).*')
+  current_wall=$(awww query | grep "^$display:" | grep -oP '(?<=image: ).*')
   if [ -n "$current_wall" ]; then
     CURRENT_WALLPAPERS["$display"]="$(realpath "$current_wall")"
   fi
@@ -57,5 +57,5 @@ for display in "${DISPLAYS[@]}"; do
   fi
 
   echo "Setting wallpaper for $display: $(basename "$selected_wallpaper")"
-  swww img $SWWW_ARGS --outputs "$display" "$selected_wallpaper"
+  awww img $AWWW_ARGS --outputs "$display" "$selected_wallpaper"
 done
