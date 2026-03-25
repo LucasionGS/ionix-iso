@@ -35,6 +35,7 @@ AUR_PACKAGES=(
     "shim-signed"
     "anyrun-bin"
     "tabby-bin"
+    "grim-hyprland-git"                # Replaces grim
     # astal core (build order: io first, then base, then everything else)
     "libastal-io-git"
     "libastal-git"
