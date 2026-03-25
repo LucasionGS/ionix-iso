@@ -1,15 +1,15 @@
 #!/bin/bash
 # Ionix - Wallpaper Picker
-# Set wallpaper(s) using swww. Opens a file dialog if no arguments given.
+# Set wallpaper(s) using awww. Opens a file dialog if no arguments given.
 #
 # Usage: promptwallpaper.sh [file1] [file2] ...
 
 IONIX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix"
-SWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
+AWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   echo "Usage: $0 [file1] [file2] ..."
-  echo "Set wallpaper(s) using swww. If no files given, opens a file selection dialog."
+  echo "Set wallpaper(s) using awww. If no files given, opens a file selection dialog."
   exit 0
 fi
 
@@ -52,5 +52,5 @@ if [ ${#FILE_ARRAY[@]} -gt 0 ]; then
 fi
 
 if [ -n "$FILE_PATH" ]; then
-  swww img $SWWW_ARGS "$FILE_PATH"
+  awww img $AWWW_ARGS "$FILE_PATH"
 fi

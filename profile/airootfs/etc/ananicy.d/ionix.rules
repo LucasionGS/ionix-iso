@@ -11,7 +11,7 @@
 {"name": "gjs", "type": "LowLatency_RT"}
 
 # Wallpaper daemon
-{"name": "swww-daemon", "type": "BG_Nice"}
+{"name": "awww-daemon", "type": "BG_Nice"}
 
 # Lock screen
 {"name": "hyprlock", "type": "LowLatency_RT"}
