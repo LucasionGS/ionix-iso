@@ -34,9 +34,9 @@
       "left": [
         "dashboard",
         "workspaces",
-        "custom/vpn",
-        "custom/ssh",
-        "custom/docker"
+        "custom/ionix/vpn",
+        "custom/ionix/ssh",
+        "custom/ionix/docker"
       ],
       "middle": [],
       "right": [
