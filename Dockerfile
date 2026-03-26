@@ -33,6 +33,7 @@ RUN pacman-key --init \
   muparser \
   json-glib \
   libgtop \
-  wayland-protocols
+  wayland-protocols \
+  scdoc
 
 CMD ["/bin/bash"]
