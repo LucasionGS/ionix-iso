@@ -220,6 +220,7 @@ wine-gecko
 libportal
 libportal-gtk4
 libsoup
+libsecret
 
 # --- AUR packages (from ionix local repo) ---
 yay

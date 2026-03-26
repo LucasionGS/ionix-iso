@@ -12,7 +12,7 @@ fi
 
 qemu-system-x86_64 \
   -enable-kvm \
-  -m 4G \
+  -m 8G \
   -smp 4 \
   -cpu host \
   -drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2/x64/OVMF_CODE.4m.fd \
@@ -20,4 +20,4 @@ qemu-system-x86_64 \
   -drive file=ionix-test.qcow2,format=qcow2,if=virtio \
   -boot d \
   -device virtio-vga-gl \
-  -display spice-app,gl=on
+  -display gtk,gl=on
