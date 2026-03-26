@@ -5,6 +5,7 @@ localrepo/
 *.pkg.tar.zst
 *.pkg.tar.xz
 !includes/*
+profile/airootfs/usr/local/share/ionix/ionix-logo.svg
 profile/airootfs/etc/calamares/branding/ionix/ionix-logo.png
 profile/airootfs/usr/local/share/ionix/wallpaper.png
 ionix-test.qcow2
