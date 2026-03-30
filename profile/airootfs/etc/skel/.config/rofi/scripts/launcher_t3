@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-## Ionix - Rofi launcher entry point
-## Called via Super+R keybind
-
-exec "$HOME/.config/rofi/launchers/type-3/launcher.sh"

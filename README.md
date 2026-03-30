@@ -40,6 +40,7 @@ Ionix is designed for developers, power users, and gamers who want the bleeding-
 Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth animations, rounded corners, and blur effects out of the box.
 
 ### Visual Style
+
 - Rounded window corners (12 px rounding)
 - Background blur and drop shadows
 - Purple-accented window borders
@@ -47,18 +48,21 @@ Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth anim
 - Animated workspace transitions
 
 ### Panel & Shell
+
 - **HyprPanel** — feature-rich status bar with notifications, system tray, media controls, and a dashboard overlay (press `Super`)
 - **ionix-shell** — custom AGS/Astal component providing a command palette (`Alt+Space`) and an `Alt+Tab` window switcher
 
 ### Screen Lock
+
 - **hyprlock** — lockscreen triggered with `Super+L` or on idle via hypridle
 
 ### App Launcher
+
 - **nwg-drawer** — icon-based application drawer (`Super+R`)
-- **Anyrun** — keyboard-driven runner integrated into ionix-shell
 - **Rofi** — additional launcher available for scripting
 
 ### Login Flow
+
 The system auto-logs in to a TTY on boot, starts the Fish shell, and launches Hyprland via UWSM automatically — no display manager required.
 
 ---
@@ -66,6 +70,7 @@ The system auto-logs in to a TTY on boot, starts the Fish shell, and launches Hy
 ## Pre-installed Applications
 
 ### Productivity & Development
+
 | App | Purpose |
 |---|---|
 | **Neovim** + NvChad | Modal text editor, auto-configured on first login |
@@ -79,6 +84,7 @@ The system auto-logs in to a TTY on boot, starts the Fish shell, and launches Hy
 | **yay** | AUR helper |
 
 ### Internet & Communication
+
 | App | Purpose |
 |---|---|
 | **Google Chrome** | Primary web browser |
@@ -86,6 +92,7 @@ The system auto-logs in to a TTY on boot, starts the Fish shell, and launches Hy
 | **openconnect-sso** | VPN client with SSO support |
 
 ### Gaming
+
 | App | Purpose |
 |---|---|
 | **Steam** | Game library and launcher |
@@ -99,6 +106,7 @@ The system auto-logs in to a TTY on boot, starts the Fish shell, and launches Hy
 | **AntiMicroX** | Gamepad-to-keyboard/mouse mapper |
 
 ### System Utilities
+
 | App | Purpose |
 |---|---|
 | **CopyQ** | Clipboard manager with history (`Super+V`) |
@@ -129,6 +137,7 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 > **`$mainMod` = Super (Windows key)**
 
 ### Applications
+
 | Shortcut | Action |
 |---|---|
 | `Super+T` | Open kitty terminal |
@@ -143,12 +152,14 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 | `Ctrl+Super+R` | Reload Hyprland config |
 
 ### HyprPanel
+
 | Shortcut | Action |
 |---|---|
 | `Super+Super_L` | Toggle dashboard menu |
 | `Super+N` | Toggle notifications panel |
 
 ### Screenshots
+
 | Shortcut | Action |
 |---|---|
 | `Print` | Area screenshot → clipboard |
@@ -157,6 +168,7 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 | `Shift+Print` | Active monitor screenshot → clipboard |
 
 ### Window Management
+
 | Shortcut | Action |
 |---|---|
 | `Super+Q` | Close active window |
@@ -170,6 +182,7 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 | `Alt+Tab` / `Shift+Alt+Tab` | Cycle through windows |
 
 ### Workspaces
+
 | Shortcut | Action |
 |---|---|
 | `Super+1`…`0` | Switch to workspace 1–10 |
@@ -178,6 +191,7 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 | `Super+S` | Toggle scratchpad workspace |
 
 ### Media Keys
+
 | Shortcut | Action |
 |---|---|
 | `XF86AudioRaiseVolume` | Volume up |
@@ -198,14 +212,18 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 5. After installation completes, **reboot** and remove the installation media.
 
 ### Post-Installation (Automatic)
+
 When you first log in, Ionix automatically:
+
 - Sets Fish as the default shell for your user
 - Clones the NvChad starter config for Neovim
 - Sets up standard XDG user directories
 - Applies the dark theme for GTK and portal-aware apps
 
 ### NVIDIA GPUs
+
 NVIDIA is detected automatically during installation. If an NVIDIA GPU is found:
+
 - DRM modesetting is enabled (`nvidia_drm modeset=1 fbdev=1`)
 - NVIDIA kernel modules are injected into the initramfs for early loading
 - The `nvidia-open` driver is pre-installed
@@ -213,6 +231,7 @@ NVIDIA is detected automatically during installation. If an NVIDIA GPU is found:
 If no NVIDIA GPU is found, the NVIDIA packages are removed to save disk space.
 
 ### Secure Boot
+
 Ionix includes `shim-signed`, `sbctl`, and `mokutil` for Secure Boot support. Manual enrollment of your own keys via `sbctl` is possible after installation.
 
 ---

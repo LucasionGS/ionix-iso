@@ -35,6 +35,4 @@ file_permissions=(
   ["/etc/skel/.config/hypr/scripts/alttab/disable.sh"]="0:0:755"
   ["/etc/skel/.config/ionix/scripts/promptwallpaper.sh"]="0:0:755"
   ["/etc/skel/.config/ionix/cron/cycle-wallpaper.sh"]="0:0:755"
-  ["/etc/skel/.config/rofi/launchers/type-3/launcher.sh"]="0:0:755"
-  ["/etc/skel/.config/rofi/scripts/launcher_t3"]="0:0:755"
 )

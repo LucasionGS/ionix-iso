@@ -141,7 +141,6 @@ python-toml
 # --- Desktop apps ---
 nemo
 copyq
-rofi
 pavucontrol
 nm-connection-editor
 
@@ -225,7 +224,6 @@ libsecret
 # --- AUR packages (from ionix local repo) ---
 yay
 google-chrome
-anyrun-bin
 tabby-bin
 libastal-git
 libastal-4-git
