@@ -84,6 +84,46 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 - `ionix-install-bootloader` / `grub-install-ionix` — Bootloader installation
 - `ionix-mount-efi` — EFI partition mounting helper
 
+## Visual Theme
+
+Ionix uses a **deep purple/violet dark** theme consistently across all UI surfaces. When styling any component, use these values.
+
+### Core Palette
+
+| Role | Hex | Usage |
+|---|---|---|
+| Deepest background | `#0f0a18` | Terminal bg, deepest layers |
+| Window background | `#1a1025` | Bar, menus, popover backgrounds |
+| Card/button background | `#2d2d3f` | Buttons, cards, input fills |
+| Hover | `#3a2d50` | Button/item hover state |
+| Border / dim | `#4a3d60` | Borders, dividers, dim text |
+| Muted foreground | `#6b5f80` | Dim/secondary text, passive icons |
+| Primary text | `#c4b5fd` | Default UI text |
+| Bright text | `#e2d9f3` | Headings, input text |
+| Accent (mid) | `#9b59b6` | Primary accent, sliders, switches |
+| Accent (bright) | `#a855f7` | Active items, highlights |
+| Accent (light) | `#c084fc` | Icons, labels, glows |
+
+### Semantic Colors
+
+| Role | Hex |
+|---|---|
+| Success / green | `#2ecc71` |
+| Warning / orange | `#f39c12` |
+| Error / red | `#e74c3c` |
+| Info / cyan | `#48dbfb` |
+| Link / blue-purple | `#7c3aed` |
+
+### Glass / Transparency Convention
+
+UI surfaces that float over the wallpaper (drawers, launchers, overlays) should use semi-transparent backgrounds so the wallpaper shows through. Always pair with an explicit `background-color: transparent` to prevent the GTK theme from painting an opaque layer underneath.
+
+- **Heavy glass** (panels, bars): 80–90% opacity
+- **Medium glass** (drawers, launchers): 55–65% opacity
+- **Light glass** (tooltips, hover cards): 30–45% opacity
+
+Tint using the deep background colors (`#1a1025` / `#0f0a18`) at the appropriate alpha rather than solid fills.
+
 ## Working with This Repo
 
 - When adding new packages: edit `profile/packages.x86_64`. AUR packages must also be added to `aur/build-aur.sh` with correct dependency ordering.
