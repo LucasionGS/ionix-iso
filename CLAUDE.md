@@ -74,7 +74,6 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 - **Shell:** ionix-shell (custom AGS/Astal component)
 - **Terminal:** kitty (primary), foot, tabby
 - **Shell:** fish + oh-my-posh
-- **App launcher:** anyrun + rofi
 - **Login flow:** TTY autologin → fish → auto-starts Hyprland via UWSM
 
 ### Important Scripts in `profile/airootfs/usr/local/bin/`

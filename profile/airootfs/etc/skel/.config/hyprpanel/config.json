@@ -50,7 +50,7 @@
       ]
     }
   },
-  "menus.dashboard.shortcuts.left.shortcut4.command": "bash ~/.config/rofi/scripts/launcher_t3",
+  "menus.dashboard.shortcuts.left.shortcut4.command": "nwg-drawer",
   "menus.dashboard.shortcuts.left.shortcut2.command": "xdg-open \"https://stream.toxen.net\"",
   "menus.dashboard.controls.enabled": true,
   "menus.dashboard.powermenu.avatar.name": "Lucas",
