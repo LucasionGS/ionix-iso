@@ -33,6 +33,8 @@ gptfdisk
 parted
 squashfs-tools
 mtools
+lsd
+yazi
 
 # --- Networking ---
 networkmanager
@@ -119,7 +121,6 @@ nwg-drawer
 kitty
 foot
 fish
-lsd
 neovim
 tree-sitter-cli
 
