@@ -9,4 +9,7 @@ GRUB_CMDLINE_LINUX=""
 GRUB_DISABLE_OS_PROBER=true
 
 GRUB_PRELOAD_MODULES="part_gpt part_msdos"
-GRUB_TERMINAL_INPUT=console
+GRUB_THEME="/boot/grub/themes/ionix/theme.txt"
+GRUB_BACKGROUND="/boot/grub/themes/ionix/background.png"
+GRUB_GFXMODE="1920x1080,auto"
+GRUB_GFXPAYLOAD_LINUX=keep

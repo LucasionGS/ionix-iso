@@ -91,6 +91,34 @@ else
     echo "    WARNING: Cannot convert logo SVG to PNG for Calamares branding."
 fi
 
+# Generate GRUB theme assets (fonts + logo)
+GRUB_THEME_DIR="${PROFILE_DIR}/airootfs/boot/grub/themes/ionix"
+echo "    Generating GRUB theme assets..."
+if command -v grub-mkfont &>/dev/null; then
+    FONT_DIR="${GRUB_THEME_DIR}/fonts"
+    mkdir -p "$FONT_DIR"
+    grub-mkfont /usr/share/fonts/noto/NotoSans-Regular.ttf -o "${FONT_DIR}/regular-16.pf2" -s 16 -n "NotoSans Regular 16" 2>/dev/null
+    grub-mkfont /usr/share/fonts/noto/NotoSans-Regular.ttf -o "${FONT_DIR}/regular-14.pf2" -s 14 -n "NotoSans Regular 14" 2>/dev/null
+    grub-mkfont /usr/share/fonts/noto/NotoSans-Bold.ttf    -o "${FONT_DIR}/bold-16.pf2"    -s 16 -n "NotoSans Bold 16"    2>/dev/null
+    grub-mkfont /usr/share/fonts/noto/NotoSans-Bold.ttf    -o "${FONT_DIR}/bold-24.pf2"    -s 24 -n "NotoSans Bold 24"    2>/dev/null
+    echo "    GRUB fonts generated."
+else
+    echo "    WARNING: grub-mkfont not found — GRUB theme fonts not regenerated."
+fi
+# Regenerate GRUB theme logo from the freshly-converted calamares PNG
+if [[ -f "$CALA_LOGO" ]] && command -v python3 &>/dev/null; then
+    python3 - "$CALA_LOGO" "${GRUB_THEME_DIR}/ionix-logo.png" <<'PYEOF'
+import sys
+from PIL import Image
+src, dst = sys.argv[1], sys.argv[2]
+Image.open(src).convert("RGBA").resize((160, 160), Image.LANCZOS).save(dst)
+PYEOF
+    echo "    GRUB theme logo updated."
+elif command -v magick &>/dev/null && [[ -f "$CALA_LOGO" ]]; then
+    magick "$CALA_LOGO" -resize 160x160 "${GRUB_THEME_DIR}/ionix-logo.png"
+    echo "    GRUB theme logo updated (ImageMagick)."
+fi
+
 # ── Step 4: Build ISO ─────────────────────────────────────────
 echo ""
 echo "==> Step 4/4: Building ISO with mkarchiso..."
