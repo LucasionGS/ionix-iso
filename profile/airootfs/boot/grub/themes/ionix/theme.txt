@@ -1,0 +1,58 @@
+# Ionix GRUB Theme - Deep purple / violet dark palette
+
+desktop-image: "background.png"
+desktop-color: "#3a3a3a"
+title-color:   "#c4b5fd"
+title-font:    "NotoSans Bold 24"
+title-text:    ""
+
++ image {
+    top    = 12%
+    left   = 46%
+    width  = 160
+    height = 160
+    file   = "ionix-logo.png"
+}
+
++ label {
+    top   = 28%
+    left  = 47%
+    width = 120
+    align = "center"
+    id    = "__title__"
+    text  = "Ionix"
+    font  = "NotoSans Bold 24"
+    color = "#c4b5fd"
+}
+
++ boot_menu {
+    top    = 34%
+    left   = 36%
+    width  = 520
+    height = 38%
+
+    scrollbar                  = false
+
+    item_font                  = "NotoSans Regular 16"
+    item_color                 = "#7c6a96"
+    selected_item_color        = "#a855f7"
+    item_height                = 44
+    item_padding               = 20
+    item_spacing               = 6
+
+    icon_width                 = 32
+    icon_height                = 32
+    item_icon_space            = 12
+}
+
++ label {
+    top   = 76%
+    left  = 38%
+    width = 440
+    align = "center"
+    id    = "__timeout__"
+    text  = "Booting in %d seconds - Press any key to select"
+    font  = "NotoSans Regular 14"
+    color = "#7c6a96"
+}
+
