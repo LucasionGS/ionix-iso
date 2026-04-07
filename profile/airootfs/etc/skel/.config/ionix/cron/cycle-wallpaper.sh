@@ -2,14 +2,11 @@
 # Ionix - Cycle Wallpaper
 # Randomly cycles wallpapers across all connected displays using awww.
 
-# To have this in a cron, add the following line to your crontab (edit with `crontab -e`):
-# */5 * * * * hyprctl -i 0 dispatch exec "bash ~/.config/ionix/cron/cycle-wallpaper.sh" >/dev/null
-
 IONIX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix"
 WALLPAPER_DIR="$IONIX_DIR/.wallpapers_active"
 AWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
 
-ALL_WALLPAPERS=($(find "$WALLPAPER_DIR" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" \)))
+mapfile -d '' ALL_WALLPAPERS < <(find "$WALLPAPER_DIR" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" \) -print0)
 
 if [ ${#ALL_WALLPAPERS[@]} -eq 0 ]; then
   echo "No wallpapers found in $WALLPAPER_DIR"
@@ -31,7 +28,7 @@ for display in "${DISPLAYS[@]}"; do
   fi
 done
 
-SHUFFLED_WALLPAPERS=($(printf '%s\n' "${ALL_WALLPAPERS[@]}" | shuf))
+mapfile -d '' SHUFFLED_WALLPAPERS < <(printf '%s\0' "${ALL_WALLPAPERS[@]}" | shuf -z)
 
 wallpaper_index=0
 for display in "${DISPLAYS[@]}"; do
