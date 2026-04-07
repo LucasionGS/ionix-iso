@@ -28,6 +28,7 @@ RUN pacman-key --init \
   python-pip \
   python-setuptools \
   python-gobject cairo \
+  python-pillow \
   libportal \
   libportal-gtk4 \
   muparser \
