@@ -68,6 +68,7 @@ AUR_PACKAGES=(
     "openconnect-sso"
     "ionix-openconnect-tools"
     "ionix-shell"
+    "ionix-file-manager-git"
     # Gaming
     "python-inputs"
     "python-steam"

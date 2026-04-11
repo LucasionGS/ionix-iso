@@ -34,7 +34,6 @@ parted
 squashfs-tools
 mtools
 lsd
-yazi
 
 # --- Networking ---
 networkmanager
@@ -244,5 +243,6 @@ calamares
 openconnect-sso
 ionix-openconnect-tools
 ionix-shell
+ionix-file-manager-git
 protonup-qt
 grim-hyprland-git
