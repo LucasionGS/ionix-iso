@@ -3,7 +3,13 @@
 set -gx SSH_AUTH_SOCK "$XDG_RUNTIME_DIR/keyring/ssh"
 # Auto-start desktop session via UWSM on TTY1
 if status is-login; and test (tty) = /dev/tty1
-    set session (ionix-session-selector | tail -1)
+    # Read session from kernel cmdline (set by GRUB: ionix.desktop=hyprland|gnome)
+    set session (string match -r 'ionix\.desktop=(\S+)' < /proc/cmdline | tail -1)
+
+    if test -z "$session"
+        set session hyprland
+    end
+
     switch $session
         case gnome
             set -gx XDG_SESSION_TYPE wayland
