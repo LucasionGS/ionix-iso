@@ -16,7 +16,7 @@ show-battery-percentage=true
 titlebar-font='Noto Sans Bold 11'
 button-layout='appmenu:minimize,maximize,close'
 num-workspaces=10
-focus-mode='click'
+focus-mode='sloppy'
 
 [org/gnome/mutter]
 dynamic-workspaces=false
@@ -51,9 +51,9 @@ move-to-workspace-9=['<Super><Shift>9']
 move-to-workspace-10=['<Super><Shift>0']
 close=['<Super>q']
 toggle-fullscreen=['<Super>f']
-maximize=['<Super>m']
-minimize=['<Super>d']
-toggle-on-all-workspaces=@as []
+maximize=['<Super>d']
+minimize=@as []
+toggle-on-all-workspaces=['<Super>p']
 move-to-monitor-left=['<Super><Shift>Left']
 move-to-monitor-right=['<Super><Shift>Right']
 switch-windows=['<Alt>Tab']
@@ -73,7 +73,7 @@ toggle-message-tray=['<Super>n']
 toggle-overview=['<Super>r']
 
 [org/gnome/settings-daemon/plugins/media-keys]
-custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/']
+custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']
 screensaver=['<Super>l']
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
@@ -93,8 +93,18 @@ name='File Manager'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3]
 binding='<Control><Alt>t'
-command='kitty'
-name='Terminal Alt'
+command='tabby'
+name='Tabby'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4]
+binding='<Super>b'
+command='kitty btop'
+name='System Monitor'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5]
+binding='<Super>v'
+command='copyq toggle'
+name='Clipboard Manager'
 
 [org/gnome/shell]
 favorite-apps=['google-chrome.desktop', 'nemo.desktop', 'kitty.desktop', 'steam.desktop', 'org.gnome.Settings.desktop']
@@ -108,6 +118,7 @@ name='Ionix'
 tap-to-click=true
 natural-scroll=true
 two-finger-scrolling-enabled=true
+disable-while-typing=true
 
 [org/gnome/desktop/input-sources]
 sources=[('xkb', 'dk')]
