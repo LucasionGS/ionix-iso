@@ -1,0 +1,24 @@
+/* Ionix GTK4/libadwaita purple accent overrides */
+@define-color accent_bg_color #9b59b6;
+@define-color accent_fg_color #ffffff;
+@define-color accent_color #a855f7;
+
+@define-color window_bg_color #1a1025;
+@define-color window_fg_color #e2d9f3;
+@define-color headerbar_bg_color #1a1025;
+@define-color headerbar_fg_color #e2d9f3;
+@define-color headerbar_border_color rgba(155, 89, 182, 0.25);
+@define-color card_bg_color #2d2d3f;
+@define-color card_fg_color #e2d9f3;
+@define-color sidebar_bg_color #0f0a18;
+@define-color sidebar_fg_color #c4b5fd;
+@define-color popover_bg_color #1a1025;
+@define-color popover_fg_color #e2d9f3;
+@define-color dialog_bg_color #1a1025;
+@define-color dialog_fg_color #e2d9f3;
+@define-color view_bg_color #0f0a18;
+@define-color view_fg_color #e2d9f3;
+
+@define-color headerbar_shade_color rgba(0, 0, 0, 0.2);
+@define-color shade_color rgba(0, 0, 0, 0.25);
+@define-color scrollbar_outline_color rgba(155, 89, 182, 0.15);

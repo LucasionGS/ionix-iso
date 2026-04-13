@@ -34,7 +34,7 @@ SKIP_PATTERNS=(
     "etc/locale.gen"
     "etc/locale.conf"
     "etc/vconsole.conf"
-    "etc/skel"
+    # "etc/skel"
     "etc/mkinitcpio.conf.d"
     "etc/pacman.d/hooks"
     "etc/calamares"
