@@ -13,6 +13,7 @@ TARGET_ROOT=""
 # These are installer/live-specific files that must never be copied to an
 # installed system.
 SKIP_EXACT=(
+    "etc/default/grub"
     "etc/mkinitcpio.d/linux.preset"
     "etc/sudoers.d/10-ionix"
     "home/liveuser/.gitkeep"
