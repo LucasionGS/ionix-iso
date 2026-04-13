@@ -1,0 +1,15 @@
+/* Ionix GTK3 purple accent overrides */
+@define-color theme_bg_color #1a1025;
+@define-color theme_fg_color #e2d9f3;
+@define-color theme_base_color #0f0a18;
+@define-color theme_text_color #e2d9f3;
+@define-color theme_selected_bg_color #9b59b6;
+@define-color theme_selected_fg_color #ffffff;
+@define-color theme_unfocused_bg_color #1a1025;
+@define-color theme_unfocused_fg_color #c4b5fd;
+@define-color theme_unfocused_base_color #0f0a18;
+@define-color theme_unfocused_text_color #c4b5fd;
+@define-color theme_unfocused_selected_bg_color #7c3aed;
+@define-color theme_unfocused_selected_fg_color #ffffff;
+@define-color borders rgba(74, 61, 96, 0.6);
+@define-color unfocused_borders rgba(74, 61, 96, 0.4);

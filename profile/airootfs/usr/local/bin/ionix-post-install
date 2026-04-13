@@ -114,4 +114,7 @@ rm -f /usr/local/bin/ionix-install
 rm -f /usr/local/bin/grub-install
 rm -f /usr/local/bin/ionix-post-install
 
+# Compile dconf database for system-wide GNOME defaults
+dconf update 2>/dev/null || true
+
 echo "Ionix post-install completed."

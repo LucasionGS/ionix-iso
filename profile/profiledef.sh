@@ -28,6 +28,7 @@ file_permissions=(
   ["/usr/local/bin/grub-install"]="0:0:755"
   ["/usr/local/bin/ionix-mount-efi"]="0:0:755"
   ["/usr/local/bin/ionix-install-bootloader"]="0:0:755"
+  ["/usr/local/bin/ionix-session-selector"]="0:0:755"
   ["/home/liveuser"]="1000:1000:750"
   ["/etc/skel/.config/hypr/scripts/alttab/alttab.sh"]="0:0:755"
   ["/etc/skel/.config/hypr/scripts/alttab/preview.sh"]="0:0:755"

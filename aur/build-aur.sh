@@ -65,6 +65,8 @@ AUR_PACKAGES=(
     # "morghulis-git" # Secondary shell
     "google-chrome"
     # ionix tooling (openconnect-sso before ionix-openconnect-tools; ionix-openconnect-tools before ionix-shell)
+    "python-gevent-eventemitter"
+    "python-vcrpy"
     "openconnect-sso"
     "ionix-openconnect-tools"
     "ionix-shell"

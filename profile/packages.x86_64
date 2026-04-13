@@ -114,6 +114,19 @@ nwg-displays
 nwg-dock-hyprland
 nwg-drawer
 
+# --- GNOME (alternative session) ---
+gnome-shell
+gnome-session
+gnome-settings-daemon
+gnome-control-center
+gnome-tweaks
+gnome-shell-extensions
+# Do i only need this..?
+gnome
+xdg-desktop-portal-gnome
+gnome-backgrounds
+dconf-editor
+
 # --- Greeter ---
 
 # --- Terminal and Shell ---
@@ -240,6 +253,8 @@ ags-hyprpanel-git
 # morghulis-git
 oh-my-posh-bin
 calamares
+python-gevent-eventemitter
+python-vcrpy
 openconnect-sso
 ionix-openconnect-tools
 ionix-shell
