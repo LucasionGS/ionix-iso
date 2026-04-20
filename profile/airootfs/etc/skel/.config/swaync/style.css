@@ -1,0 +1,315 @@
+/* ============================================================
+   Ionix SwayNotificationCenter Theme — Deep Purple/Violet Dark
+   ============================================================ */
+
+* {
+    font-family: "Inter", "Noto Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+/* ── Control Center Panel ───────────────────────────────────── */
+.control-center {
+    background-color: rgba(15, 10, 24, 0.92);
+    border-radius: 14px;
+    border: 1px solid rgba(74, 61, 96, 0.5);
+    padding: 8px;
+    color: #c4b5fd;
+}
+
+.control-center-list {
+    background-color: transparent;
+}
+
+.control-center-list-placeholder {
+    opacity: 0.4;
+    color: #6b5f80;
+}
+
+/* ── Header / Title ─────────────────────────────────────────── */
+.widget-title {
+    color: #e2d9f3;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 10px 4px 10px;
+}
+
+.widget-title > button {
+    font-size: 12px;
+    color: #6b5f80;
+    background-color: rgba(45, 45, 63, 0.6);
+    border-radius: 8px;
+    padding: 4px 10px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.widget-title > button:hover {
+    background-color: rgba(155, 89, 182, 0.3);
+    color: #c4b5fd;
+}
+
+/* ── Do Not Disturb ─────────────────────────────────────────── */
+.widget-dnd {
+    padding: 4px 10px;
+    color: #c4b5fd;
+    font-size: 13px;
+}
+
+.widget-dnd > switch {
+    border-radius: 12px;
+    background-color: rgba(74, 61, 96, 0.8);
+    border: 1px solid rgba(74, 61, 96, 0.5);
+}
+
+.widget-dnd > switch:checked {
+    background-color: #9b59b6;
+    border-color: #9b59b6;
+}
+
+.widget-dnd > switch slider {
+    background-color: #e2d9f3;
+    border-radius: 50%;
+    min-width: 18px;
+    min-height: 18px;
+    margin: 2px;
+}
+
+/* ── Inhibitors ─────────────────────────────────────────────── */
+.widget-inhibitors {
+    padding: 4px 10px;
+    color: #c4b5fd;
+}
+
+.widget-inhibitors > button {
+    font-size: 12px;
+    color: #6b5f80;
+    background-color: rgba(45, 45, 63, 0.6);
+    border-radius: 8px;
+    padding: 4px 10px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.widget-inhibitors > button:hover {
+    background-color: rgba(155, 89, 182, 0.3);
+    color: #c4b5fd;
+}
+
+/* ── MPRIS Media Player ─────────────────────────────────────── */
+.widget-mpris {
+    padding: 4px 6px;
+}
+
+.widget-mpris-player {
+    background-color: rgba(26, 16, 37, 0.85);
+    border-radius: 12px;
+    border: 1px solid rgba(74, 61, 96, 0.4);
+    padding: 10px;
+    margin: 4px 0;
+}
+
+.widget-mpris-album-art {
+    border-radius: 8px;
+}
+
+.widget-mpris-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #e2d9f3;
+}
+
+.widget-mpris-subtitle {
+    font-size: 12px;
+    color: #6b5f80;
+}
+
+.widget-mpris > box > button {
+    background-color: transparent;
+    color: #c4b5fd;
+    border-radius: 6px;
+    padding: 4px 8px;
+    transition: background-color 0.15s ease;
+}
+
+.widget-mpris > box > button:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+/* ── Notification Popup (floating toast) ────────────────────── */
+.notification-window {
+    background-color: transparent;
+    border-radius: 14px;
+    padding: 0;
+    margin: 4px;
+}
+
+.notification {
+    background-color: rgba(26, 16, 37, 0.92);
+    border-radius: 12px;
+    border: 1px solid rgba(74, 61, 96, 0.5);
+    padding: 12px;
+    margin: 4px;
+    color: #c4b5fd;
+    transition: background-color 0.15s ease;
+}
+
+.notification:hover {
+    background-color: rgba(45, 45, 63, 0.95);
+}
+
+/* low urgency */
+.notification.low {
+    border-left: 3px solid #4a3d60;
+}
+
+/* normal urgency */
+.notification.normal {
+    border-left: 3px solid #9b59b6;
+}
+
+/* critical urgency */
+.notification.critical {
+    border-left: 3px solid #e74c3c;
+    animation: critical-pulse 2s ease infinite;
+}
+
+@keyframes critical-pulse {
+    0%, 100% { border-left-color: #e74c3c; }
+    50%       { border-left-color: rgba(231, 76, 60, 0.4); }
+}
+
+/* ── Notification Content ───────────────────────────────────── */
+.notification-content {
+    padding: 0;
+}
+
+.notification-default-action {
+    background-color: transparent;
+    border-radius: 10px;
+    padding: 0;
+    color: #c4b5fd;
+}
+
+.notification-default-action:hover {
+    background-color: rgba(58, 45, 80, 0.4);
+}
+
+.app-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #a855f7;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.app-icon {
+    -gtk-icon-size: 20px;
+}
+
+.summary {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2d9f3;
+}
+
+.time {
+    font-size: 11px;
+    color: #6b5f80;
+}
+
+.body {
+    font-size: 12px;
+    color: #c4b5fd;
+}
+
+.body-image {
+    border-radius: 8px;
+    margin-top: 6px;
+}
+
+/* ── Notification Action Buttons ────────────────────────────── */
+.notification-action {
+    background-color: rgba(45, 45, 63, 0.8);
+    border-radius: 8px;
+    color: #c4b5fd;
+    font-size: 12px;
+    padding: 4px 12px;
+    margin: 6px 4px 0 0;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.notification-action:hover {
+    background-color: rgba(155, 89, 182, 0.4);
+    color: #e2d9f3;
+}
+
+.notification-action:last-child {
+    margin-right: 0;
+}
+
+/* ── Close Button ───────────────────────────────────────────── */
+.close-button {
+    background-color: transparent;
+    color: #4a3d60;
+    border-radius: 50%;
+    padding: 2px;
+    min-width: 20px;
+    min-height: 20px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.close-button:hover {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+/* ── Notification in Control Center ────────────────────────── */
+.notification-group {
+    margin: 4px 0;
+}
+
+.notification-group-icon {
+    color: #a855f7;
+}
+
+.notification-group-headers {
+    font-weight: 600;
+    color: #c4b5fd;
+}
+
+.notification-group-collapse-button,
+.notification-group-expand-button {
+    background-color: transparent;
+    color: #6b5f80;
+    border-radius: 6px;
+    padding: 2px 6px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.notification-group-collapse-button:hover,
+.notification-group-expand-button:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+    color: #c4b5fd;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+scrollbar {
+    background-color: transparent;
+    border-radius: 4px;
+}
+
+scrollbar slider {
+    background-color: rgba(74, 61, 96, 0.5);
+    border-radius: 4px;
+    min-width: 4px;
+    min-height: 4px;
+}
+
+scrollbar slider:hover {
+    background-color: rgba(155, 89, 182, 0.6);
+}

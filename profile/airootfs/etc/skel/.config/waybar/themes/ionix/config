@@ -1,0 +1,177 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 44,
+    "margin-top": 4,
+    "margin-left": 4,
+    "margin-right": 4,
+    "margin-bottom": 4,
+    "spacing": 0,
+    "exclusive": true,
+
+    "modules-left": [
+        "custom/launcher",
+        "hyprland/workspaces",
+        "wlr/taskbar",
+        "custom/vpn/disabled",
+        "custom/vpn-windscribe",
+        "custom/ssh",
+        "custom/docker"
+    ],
+
+    "modules-center": [],
+
+    "modules-right": [
+        "pulseaudio",
+        "network",
+        "bluetooth",
+        "battery",
+        "tray",
+        "clock",
+        "custom/notification"
+    ],
+
+    "custom/launcher": {
+        "format": "󰣇",
+        "tooltip": false,
+        "on-click": "pkill nwg-drawer || nwg-drawer"
+    },
+
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "format-icons": {
+            "active": "󰮯",
+            "default": "󰊠",
+            "empty": ""
+        },
+        "on-click": "activate",
+        "sort-by-number": true,
+        "all-outputs": false,
+        "show-special": false
+    },
+
+    "wlr/taskbar": {
+        "format": "{icon}",
+        "icon-size": 20,
+        "tooltip-format": "{title}",
+        "on-click": "activate",
+        "on-click-middle": "close",
+        "all-outputs": false,
+        "sort-by-app-id": false,
+        "ignore-list": []
+    },
+
+    "clock": {
+        "format": " {:%I:%M %p}",
+        "format-alt": "{:%A, %B %d, %Y}",
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode": "month",
+            "on-scroll": 1,
+            "format": {
+                "months": "<span color='#c4b5fd'><b>{}</b></span>",
+                "days": "<span color='#c4b5fd'>{}</span>",
+                "weeks": "<span color='#a855f7'>{}</span>",
+                "weekdays": "<span color='#c084fc'>{}</span>",
+                "today": "<span color='#a855f7'><b><u>{}</u></b></span>"
+            }
+        },
+        "actions": {
+            "on-click-right": "mode",
+            "on-scroll-up": "shift_up",
+            "on-scroll-down": "shift_down"
+        }
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 6,
+        "show-passive-items": true
+    },
+
+    "network": {
+        "format-wifi": "󰖩",
+        "format-ethernet": "󰈀",
+        "format-disconnected": "󰖪",
+        "tooltip-format-wifi": "{essid} ({signalStrength}%)",
+        "tooltip-format-ethernet": "{ifname}: {ipaddr}",
+        "tooltip-format-disconnected": "Disconnected",
+        "on-click": "nm-connection-editor"
+    },
+
+    "bluetooth": {
+        "format": "󰂯",
+        "format-disabled": "󰂲",
+        "format-connected": "󰂱 {num_connections}",
+        "tooltip-format": "{controller_alias}\n{num_connections} connected",
+        "tooltip-format-connected": "{controller_alias}\n{device_enumerate}",
+        "tooltip-format-enumerate-connected": "{device_alias}",
+        "on-click": "blueman-manager"
+    },
+
+    "pulseaudio": {
+        "format": "{icon}",
+        "format-muted": "󰖁",
+        "format-icons": {
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "tooltip-format": "{volume}% - {desc}",
+        "on-click": "pavucontrol",
+        "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +2%",
+        "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -2%"
+    },
+
+    "battery": {
+        "format": "{icon}",
+        "format-charging": "󰂄",
+        "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+        "tooltip-format": "{capacity}% - {time} {power}W",
+        "states": {
+            "warning": 30,
+            "critical": 15
+        }
+    },
+
+    "custom/notification": {
+        "format": "󰂚",
+        "tooltip": false,
+        "on-click": "swaync-client -t"
+    },
+
+    "custom/vpn": {
+        "exec": "if oc s 2>/dev/null | grep -q 'connected to VPN'; then echo '{\"text\": \"󰖂\", \"tooltip\": \"VPN: Connected\", \"class\": \"connected\"}'; else echo '{\"text\": \"󰖐\", \"tooltip\": \"VPN: Not Connected\", \"class\": \"disconnected\"}'; fi",
+        "return-type": "json",
+        "interval": 5,
+        "format": "{}",
+        "on-click": "ags request -i ionix-shell 'vpn'",
+        "on-click-right": "oc s 2>/dev/null | xargs -I{} notify-send 'VPN Status' '{}'",
+        "on-click-middle": "if oc s 2>/dev/null | grep -q 'connected to VPN'; then oc dc && notify-send 'VPN' 'Disconnected'; else oc p && notify-send 'VPN' 'Connected'; fi",
+        "tooltip": true
+    },
+
+    "custom/vpn-windscribe": {
+        "exec": "state=$(windscribe-cli status 2>/dev/null | grep 'Connect state:' | cut -d: -f2- | xargs); if echo \"$state\" | grep -qi '^connected'; then echo '{\"text\": \"󰖂\", \"tooltip\": \"Windscribe: Connected\", \"class\": \"connected\"}'; else echo '{\"text\": \"󰖐\", \"tooltip\": \"Windscribe: Not Connected\", \"class\": \"disconnected\"}'; fi",
+        "return-type": "json",
+        "interval": 5,
+        "format": "{}",
+        "on-click": "ags request -i ionix-shell 'vpn'",
+        "on-click-right": "windscribe-cli status 2>/dev/null | xargs -I{} notify-send 'Windscribe Status' '{}'",
+        "on-click-middle": "if windscribe-cli status 2>/dev/null | grep -q 'Connect state: Connected'; then windscribe-cli disconnect && notify-send 'Windscribe' 'Disconnected'; else windscribe-cli connect best && notify-send 'Windscribe' 'Connected to best location'; fi",
+        "tooltip": true
+    },
+
+    "custom/ssh": {
+        "format": "SSH",
+        "tooltip": true,
+        "tooltip-format": "SSH Panel",
+        "on-click": "ags request -i ionix-shell 'ssh'"
+    },
+
+    "custom/docker": {
+        "format": "Docker",
+        "tooltip": true,
+        "tooltip-format": "Docker Panel",
+        "on-click": "ags request -i ionix-shell 'docker'"
+    }
+}
+
