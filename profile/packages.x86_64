@@ -117,6 +117,7 @@ nwg-drawer
 # --- UI Utilities ---
 waybar
 wlr-protocols
+swaync
 
 # --- GNOME (alternative session) ---
 gnome-shell

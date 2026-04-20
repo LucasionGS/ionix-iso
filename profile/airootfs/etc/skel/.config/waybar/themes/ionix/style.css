@@ -1,0 +1,309 @@
+/* ============================================================
+   Ionix Waybar Theme — Deep Purple/Violet Dark
+   ============================================================ */
+
+* {
+    font-family: "Inter", "Noto Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+/* ── Window / Bar Root ──────────────────────────────────── */
+window#waybar {
+    background-color: rgba(26, 16, 37, 0.85);
+    color: #c4b5fd;
+    border-bottom: 1px solid rgba(74, 61, 96, 0.5);
+    border-radius: 12px;
+    transition: background-color 0.3s ease;
+}
+
+/* Glass effect relies on Hyprland blur on the waybar layer.
+   In hyprland.conf add:
+     layerrule = blur, waybar
+     layerrule = ignorezero, waybar
+*/
+
+/* ── Left Section ───────────────────────────────────────── */
+.modules-left {
+    padding-left: 4px;
+}
+
+/* Launcher (Ionix logo) button */
+#custom-launcher {
+    font-size: 20px;
+    padding: 0 14px;
+    color: #c084fc;
+    border-radius: 6px;
+    margin: 6px 2px;
+    transition: background-color 0.15s ease;
+}
+
+#custom-launcher:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+#custom-launcher:active {
+    background-color: rgba(45, 45, 63, 0.8);
+}
+
+/* ── Workspaces ─────────────────────────────────────────── */
+#workspaces {
+    margin: 0 6px;
+}
+
+#workspaces button {
+    background-color: transparent;
+    border-radius: 6px;
+    margin: 6px 2px;
+    padding: 0 8px;
+    min-width: 20px;
+    color: #6b5f80;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#workspaces button:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+    color: #c4b5fd;
+}
+
+#workspaces button.active {
+    background-color: rgba(168, 85, 247, 0.2);
+    color: #a855f7;
+    border-bottom: 2px solid #a855f7;
+    border-radius: 6px 6px 4px 4px;
+    margin-bottom: 4px;
+}
+
+#workspaces button.empty {
+    color: #4a3d60;
+}
+
+/* ── Custom Modules (VPN, SSH, Docker) ──────────────────────── */
+#custom-vpn,
+#custom-vpn-windscribe,
+#custom-ssh,
+#custom-docker {
+    font-size: 16px;
+    padding: 0 10px;
+    margin: 6px 1px;
+    border-radius: 6px;
+    color: #c084fc;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#custom-vpn:hover,
+#custom-vpn-windscribe:hover,
+#custom-ssh:hover,
+#custom-docker:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+#custom-vpn.connected,
+#custom-vpn-windscribe.connected {
+    color: #2ecc71;
+}
+
+#custom-vpn.disconnected,
+#custom-vpn-windscribe.disconnected {
+    color: #6b5f80;
+}
+
+/* ── Taskbar ────────────────────────────────────────────── */
+#taskbar {
+    margin: 0 6px;
+}
+
+#taskbar button {
+    background-color: transparent;
+    border-radius: 6px;
+    margin: 6px 2px;
+    padding: 0 10px;
+    min-width: 20px;
+    transition: background-color 0.15s ease;
+    color: #c4b5fd;
+}
+
+#taskbar button:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+#taskbar button.active {
+    background-color: rgba(168, 85, 247, 0.2);
+    border-bottom: 2px solid #a855f7;
+    border-radius: 6px 6px 4px 4px;
+    margin-bottom: 4px;
+}
+
+#taskbar button.minimized {
+    opacity: 0.5;
+}
+
+/* ── Center (empty in Ionix layout) ─────────────────────── */
+.modules-center {
+}
+
+/* ── Clock ──────────────────────────────────────────────── */
+#clock {
+    font-size: 13px;
+    font-weight: 500;
+    color: #2ecc71;
+    padding: 0 12px;
+    border-radius: 6px;
+    margin: 6px 2px;
+    transition: background-color 0.15s ease;
+}
+
+#clock:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+/* ── Right Section ──────────────────────────────────────── */
+.modules-right {
+    padding-right: 4px;
+}
+
+/* Pulseaudio / Volume */
+#pulseaudio {
+    font-size: 16px;
+    padding: 0 8px;
+    margin: 6px 1px;
+    border-radius: 6px;
+    color: #e74c3c;
+    transition: background-color 0.15s ease;
+}
+
+#pulseaudio:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+/* Network */
+#network {
+    font-size: 16px;
+    padding: 0 8px;
+    margin: 6px 1px;
+    border-radius: 6px;
+    color: #c084fc;
+    transition: background-color 0.15s ease;
+}
+
+#network:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+/* Bluetooth */
+#bluetooth {
+    font-size: 16px;
+    padding: 0 8px;
+    margin: 6px 1px;
+    border-radius: 6px;
+    color: #48dbfb;
+    transition: background-color 0.15s ease;
+}
+
+#bluetooth:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+/* Battery */
+#battery {
+    font-size: 16px;
+    padding: 0 8px;
+    margin: 6px 1px;
+    border-radius: 6px;
+    color: #f39c12;
+    transition: background-color 0.15s ease;
+}
+
+#battery:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+#battery.warning {
+    color: #f39c12;
+}
+
+#battery.critical {
+    color: #e74c3c;
+    animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.5; }
+}
+
+/* Notification */
+#custom-notification {
+    font-size: 16px;
+    padding: 0 8px;
+    margin: 6px 1px;
+    border-radius: 6px;
+    color: #a855f7;
+    transition: background-color 0.15s ease;
+}
+
+#custom-notification:hover {
+    background-color: rgba(58, 45, 80, 0.6);
+}
+
+/* System tray */
+#tray {
+    padding: 0 6px;
+    margin: 6px 2px;
+    border-radius: 6px;
+    color: #c4b5fd;
+}
+
+#tray:hover {
+    background-color: rgba(58, 45, 80, 0.4);
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: rgba(168, 85, 247, 0.2);
+    border-radius: 4px;
+}
+
+/* ── Tooltip ────────────────────────────────────────────── */
+tooltip {
+    background-color: rgba(15, 10, 24, 0.95);
+    border: 1px solid rgba(74, 61, 96, 0.6);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #c4b5fd;
+    font-size: 12px;
+}
+
+tooltip label {
+    color: #c4b5fd;
+}
+
+/* ── Calendar Popover ───────────────────────────────────── */
+calendar {
+    background-color: rgba(26, 16, 37, 0.97);
+    border: 1px solid rgba(74, 61, 96, 0.5);
+    border-radius: 12px;
+    padding: 8px;
+    color: #c4b5fd;
+    font-size: 13px;
+}
+
+calendar:selected {
+    background-color: #a855f7;
+    color: #0f0a18;
+    border-radius: 50%;
+}
+
+calendar.highlight {
+    color: #c084fc;
+}

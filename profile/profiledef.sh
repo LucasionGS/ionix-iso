@@ -36,5 +36,6 @@ file_permissions=(
   ["/etc/skel/.config/hypr/scripts/alttab/enable.sh"]="0:0:755"
   ["/etc/skel/.config/hypr/scripts/alttab/disable.sh"]="0:0:755"
   ["/etc/skel/.config/ionix/scripts/promptwallpaper.sh"]="0:0:755"
+  ["/etc/skel/.config/ionix/scripts/ionix-settheme.sh"]="0:0:755"
   ["/etc/skel/.config/ionix/cron/cycle-wallpaper.sh"]="0:0:755"
 )
