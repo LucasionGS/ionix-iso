@@ -114,6 +114,10 @@ nwg-displays
 nwg-dock-hyprland
 nwg-drawer
 
+# --- UI Utilities ---
+waybar
+wlr-protocols
+
 # --- GNOME (alternative session) ---
 gnome-shell
 gnome-session
@@ -126,8 +130,6 @@ gnome
 xdg-desktop-portal-gnome
 gnome-backgrounds
 dconf-editor
-
-# --- Greeter ---
 
 # --- Terminal and Shell ---
 kitty

@@ -1,0 +1,244 @@
+/* ============================================================
+   Win11 Waybar Theme
+   ============================================================ */
+/*
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+*/
+
+/* Fallback if Segoe UI isn't installed system-wide */
+* {
+    font-family: "Segoe UI", "Noto Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+/* ── Window / Bar Root ──────────────────────────────────── */
+window#waybar {
+    background-color: rgba(32, 32, 32, 0.85);
+    color: #ffffff;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background-color 0.3s ease;
+}
+
+/* Acrylic effect relies on Hyprland blur on the waybar layer.
+   In hyprland.conf add:
+     layerrule = blur, waybar
+     layerrule = ignorezero, waybar
+*/
+
+/* ── Left Section ───────────────────────────────────────── */
+.modules-left {
+    padding-left: 4px;
+}
+
+/* Start (Windows logo) button */
+#custom-start {
+    font-size: 18px;
+    padding: 0 14px;
+    color: #ffffff;
+    border-radius: 6px;
+    margin: 6px 2px;
+    transition: background-color 0.15s ease;
+}
+
+#custom-start:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#custom-start:active {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Search pill */
+#custom-search {
+    background-color: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin: 8px 6px;
+    font-size: 12px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+#custom-search:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+
+/* ── Taskbar ────────────────────────────────────────────── */
+#taskbar {
+    margin: 0 6px;
+}
+
+#taskbar button {
+    background-color: transparent;
+    border-radius: 6px;
+    margin: 6px 2px;
+    padding: 0 10px;
+    min-width: 20px;
+    transition: background-color 0.15s ease;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+#taskbar button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#taskbar button.active {
+    background-color: rgba(255, 255, 255, 0.12);
+    /* Win11 uses a small accent bar under active apps */
+    border-bottom: 2px solid #60cdff;
+    border-radius: 6px 6px 4px 4px;
+    margin-bottom: 4px;
+}
+
+#taskbar button.minimized {
+    opacity: 0.6;
+}
+
+#taskbar button.fullscreen {
+    border-bottom-color: #c3e88d;
+}
+
+/* ── Center Clock ───────────────────────────────────────── */
+.modules-center {
+    /* No extra padding needed - the bar centers this naturally */
+}
+
+#clock {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
+    padding: 0 12px;
+    border-radius: 6px;
+    margin: 6px 0;
+    transition: background-color 0.15s ease;
+}
+
+#clock:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Right Section ──────────────────────────────────────── */
+.modules-right {
+    padding-right: 4px;
+}
+
+/* Generic right-side icon styling */
+#network,
+#pulseaudio,
+#battery,
+#custom-notification {
+    font-size: 16px;
+    padding: 0 8px;
+    margin: 6px 1px;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.9);
+    transition: background-color 0.15s ease;
+}
+
+#network:hover,
+#pulseaudio:hover,
+#battery:hover,
+#custom-notification:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Battery states */
+#battery.warning {
+    color: #f9e2af;
+}
+
+#battery.critical {
+    color: #f38ba8;
+    animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.5; }
+}
+
+/* System tray */
+#tray {
+    padding: 0 6px;
+    margin: 6px 2px;
+    border-radius: 6px;
+}
+
+#tray:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: rgba(96, 205, 255, 0.2);
+    border-radius: 4px;
+}
+
+/* Date module */
+#clock.date {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+    padding: 0 8px;
+    margin: 6px 1px;
+    border-radius: 6px;
+}
+
+#clock.date:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+/* Separator */
+#custom-separator {
+    color: rgba(255, 255, 255, 0.15);
+    padding: 0 4px;
+    font-size: 16px;
+}
+
+/* ── Tooltip ────────────────────────────────────────────── */
+tooltip {
+    background-color: rgba(28, 28, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #ffffff;
+    font-size: 12px;
+}
+
+tooltip label {
+    color: #ffffff;
+}
+
+/* ── Calendar Popover ───────────────────────────────────── */
+calendar {
+    background-color: rgba(32, 32, 32, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 8px;
+    color: #ffffff;
+    font-size: 13px;
+}
+
+calendar:selected {
+    background-color: #60cdff;
+    color: #000000;
+    border-radius: 50%;
+}
+
+calendar.highlight {
+    color: #60cdff;
+}
