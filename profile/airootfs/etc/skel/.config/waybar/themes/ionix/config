@@ -1,11 +1,11 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 44,
-    "margin-top": 4,
-    "margin-left": 4,
-    "margin-right": 4,
-    "margin-bottom": 4,
+    "height": 46,
+    "margin-top": 6,
+    "margin-left": 8,
+    "margin-right": 8,
+    "margin-bottom": 0,
     "spacing": 0,
     "exclusive": true,
 
@@ -19,15 +19,16 @@
         "custom/docker"
     ],
 
-    "modules-center": [],
+    "modules-center": [
+        "clock"
+    ],
 
     "modules-right": [
-        "pulseaudio",
         "network",
         "bluetooth",
+        "pulseaudio",
         "battery",
         "tray",
-        "clock",
         "custom/notification"
     ],
 
@@ -40,14 +41,18 @@
     "hyprland/workspaces": {
         "format": "{icon}",
         "format-icons": {
-            "active": "󰮯",
+            "active":  "󰮯",
             "default": "󰊠",
-            "empty": ""
+            "empty":   "󰝦",
+            "urgent":  "󰀦"
         },
         "on-click": "activate",
         "sort-by-number": true,
         "all-outputs": false,
-        "show-special": false
+        "show-special": false,
+        "persistent-workspaces": {
+            "*": 5
+        }
     },
 
     "wlr/taskbar": {
@@ -62,24 +67,24 @@
     },
 
     "clock": {
-        "format": " {:%I:%M %p}",
-        "format-alt": "{:%A, %B %d, %Y}",
+        "format": "  {:%H:%M}",
+        "format-alt": "󰃭  {:%a, %d %b}",
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "calendar": {
             "mode": "month",
             "on-scroll": 1,
             "format": {
-                "months": "<span color='#c4b5fd'><b>{}</b></span>",
-                "days": "<span color='#c4b5fd'>{}</span>",
-                "weeks": "<span color='#a855f7'>{}</span>",
-                "weekdays": "<span color='#c084fc'>{}</span>",
-                "today": "<span color='#a855f7'><b><u>{}</u></b></span>"
+                "months":   "<span color='#e2d9f3'><b>{}</b></span>",
+                "days":     "<span color='#c4b5fd'>{}</span>",
+                "weeks":    "<span color='#a855f7'><b>{}</b></span>",
+                "weekdays": "<span color='#c084fc'><b>{}</b></span>",
+                "today":    "<span color='#a855f7'><b><u>{}</u></b></span>"
             }
         },
         "actions": {
-            "on-click-right": "mode",
-            "on-scroll-up": "shift_up",
-            "on-scroll-down": "shift_down"
+            "on-click-right":  "mode",
+            "on-scroll-up":    "shift_up",
+            "on-scroll-down":  "shift_down"
         }
     },
 
@@ -90,50 +95,53 @@
     },
 
     "network": {
-        "format-wifi": "󰖩",
-        "format-ethernet": "󰈀",
+        "format-wifi":         "󰖩",
+        "format-ethernet":     "󰈀",
         "format-disconnected": "󰖪",
-        "tooltip-format-wifi": "{essid} ({signalStrength}%)",
-        "tooltip-format-ethernet": "{ifname}: {ipaddr}",
+        "tooltip-format-wifi":       "{essid} ({signalStrength}%)\n{ipaddr}",
+        "tooltip-format-ethernet":   "{ifname}: {ipaddr}",
         "tooltip-format-disconnected": "Disconnected",
         "on-click": "nm-connection-editor"
     },
 
     "bluetooth": {
-        "format": "󰂯",
-        "format-disabled": "󰂲",
-        "format-connected": "󰂱 {num_connections}",
-        "tooltip-format": "{controller_alias}\n{num_connections} connected",
-        "tooltip-format-connected": "{controller_alias}\n{device_enumerate}",
-        "tooltip-format-enumerate-connected": "{device_alias}",
+        "format":           "󰂯",
+        "format-disabled":  "󰂲",
+        "format-connected": "󰂱",
+        "tooltip-format": "{controller_alias} — {num_connections} connected",
+        "tooltip-format-connected": "{device_enumerate}",
+        "tooltip-format-enumerate-connected": "  {device_alias}",
         "on-click": "blueman-manager"
     },
 
     "pulseaudio": {
-        "format": "{icon}",
+        "format":       "{icon}",
         "format-muted": "󰖁",
         "format-icons": {
-            "default": ["󰕿", "󰖀", "󰕾"]
+            "default":    ["󰕿", "󰖀", "󰕾"],
+            "headphone":  "󰋋",
+            "headset":    "󰋎"
         },
-        "tooltip-format": "{volume}% - {desc}",
-        "on-click": "pavucontrol",
-        "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +2%",
+        "tooltip-format": "{volume}%  {desc}",
+        "on-click":       "pavucontrol",
+        "on-scroll-up":   "pactl set-sink-volume @DEFAULT_SINK@ +2%",
         "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -2%"
     },
 
     "battery": {
-        "format": "{icon}",
+        "format":          "{icon}",
         "format-charging": "󰂄",
+        "format-full":     "󰁹",
         "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
-        "tooltip-format": "{capacity}% - {time} {power}W",
+        "tooltip-format": "{capacity}%  {time}  {power}W",
         "states": {
-            "warning": 30,
+            "warning":  30,
             "critical": 15
         }
     },
 
     "custom/notification": {
-        "format": "󰂚",
+        "format":  "󰂚",
         "tooltip": false,
         "on-click": "swaync-client -t"
     },
@@ -174,4 +182,3 @@
         "on-click": "ags request -i ionix-shell 'docker'"
     }
 }
-

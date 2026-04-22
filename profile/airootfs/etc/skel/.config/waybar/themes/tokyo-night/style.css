@@ -1,0 +1,393 @@
+/* ============================================================
+   Tokyo Night — Waybar Theme
+   Dark navy base. Neon city-light accents. Glow everything.
+
+   Bar:     rgba(16, 17, 28, 0.92)
+   Blue:    #7aa2f7   network · clock · taskbar active
+   Purple:  #bb9af7   launcher · VPN/SSH · notifications
+   Pink:    #f7768e   active workspace · volume · critical
+   Cyan:    #7dcfff   bluetooth
+   Amber:   #e0af68   battery
+   Green:   #9ece6a   charging · connected
+   Text:    #c0caf5
+   Muted:   #414868
+   Dim:     #252738
+   ============================================================ */
+
+* {
+    font-family: "JetBrains Mono", "Inter", monospace;
+    font-size: 13px;
+    font-weight: 400;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+/* ── Bar Root ───────────────────────────────────────────── */
+window#waybar {
+    background-color: rgba(16, 17, 28, 0.92);
+    color: #c0caf5;
+    border-bottom: 1px solid rgba(122, 162, 247, 0.22);
+    border-radius: 14px;
+    transition: background-color 0.3s ease;
+    box-shadow:
+        0 6px 28px rgba(0, 0, 0, 0.55),
+        0 1px 0 rgba(122, 162, 247, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Hyprland blur:
+     layerrule = blur, waybar
+     layerrule = ignorezero, waybar
+*/
+
+/* ── Section containers ─────────────────────────────────── */
+.modules-left  { padding-left: 6px; }
+.modules-right { padding-right: 6px; }
+.modules-center {}
+
+/* ── Launcher ───────────────────────────────────────────── */
+#custom-launcher {
+    font-size: 22px;
+    padding: 0 16px;
+    color: #bb9af7;
+    border-radius: 10px;
+    margin: 5px 3px;
+    transition: all 0.2s ease;
+}
+
+#custom-launcher:hover {
+    background-color: rgba(187, 154, 247, 0.12);
+    color: #cdb4ff;
+    text-shadow: 0 0 14px rgba(187, 154, 247, 0.7);
+    box-shadow: 0 0 16px rgba(187, 154, 247, 0.15);
+}
+
+#custom-launcher:active {
+    background-color: rgba(187, 154, 247, 0.22);
+}
+
+/* ── Workspaces — full pill, no underlines ──────────────── */
+#workspaces {
+    margin: 0 4px;
+    background-color: rgba(26, 27, 38, 0.5);
+    border-radius: 24px;
+    padding: 0 4px;
+    border: 1px solid rgba(65, 72, 104, 0.3);
+}
+
+#workspaces button {
+    background-color: transparent;
+    border-radius: 20px;
+    margin: 6px 2px;
+    padding: 0 12px;
+    min-width: 28px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #414868;
+    transition: all 0.18s ease;
+}
+
+#workspaces button:hover {
+    background-color: rgba(122, 162, 247, 0.12);
+    color: #7aa2f7;
+}
+
+#workspaces button.active {
+    background-color: rgba(247, 118, 142, 0.2);
+    color: #f7768e;
+    border-radius: 20px;
+    padding: 0 16px;
+    text-shadow: 0 0 12px rgba(247, 118, 142, 0.8);
+    box-shadow:
+        0 0 16px rgba(247, 118, 142, 0.22),
+        inset 0 0 8px rgba(247, 118, 142, 0.08);
+}
+
+#workspaces button.empty {
+    color: #252738;
+    min-width: 18px;
+    padding: 0 6px;
+}
+
+#workspaces button.urgent {
+    background-color: rgba(247, 118, 142, 0.3);
+    color: #ff9fb2;
+    text-shadow: 0 0 10px rgba(247, 118, 142, 0.9);
+    animation: urgentPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes urgentPulse {
+    0%   { box-shadow: 0 0 8px rgba(247, 118, 142, 0.3); }
+    50%  { box-shadow: 0 0 20px rgba(247, 118, 142, 0.65); }
+    100% { box-shadow: 0 0 8px rgba(247, 118, 142, 0.3); }
+}
+
+/* ── Custom Modules: VPN / SSH / Docker ─────────────────── */
+#custom-vpn,
+#custom-vpn-windscribe,
+#custom-ssh,
+#custom-docker {
+    font-size: 12px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
+    color: #bb9af7;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    transition: all 0.15s ease;
+}
+
+#custom-vpn:hover,
+#custom-vpn-windscribe:hover,
+#custom-ssh:hover,
+#custom-docker:hover {
+    background-color: rgba(187, 154, 247, 0.1);
+    color: #cdb4ff;
+    text-shadow: 0 0 8px rgba(187, 154, 247, 0.5);
+}
+
+#custom-vpn.connected,
+#custom-vpn-windscribe.connected {
+    color: #9ece6a;
+    text-shadow: 0 0 10px rgba(158, 206, 106, 0.55);
+}
+
+#custom-vpn.disconnected,
+#custom-vpn-windscribe.disconnected {
+    color: #343754;
+}
+
+/* ── Taskbar ────────────────────────────────────────────── */
+#taskbar {
+    margin: 0 4px;
+}
+
+#taskbar button {
+    background-color: transparent;
+    border-radius: 8px;
+    margin: 8px 1px;
+    padding: 0 10px;
+    min-width: 22px;
+    transition: all 0.15s ease;
+    color: #565f89;
+}
+
+#taskbar button:hover {
+    background-color: rgba(86, 95, 137, 0.18);
+    color: #c0caf5;
+}
+
+#taskbar button.active {
+    background-color: rgba(122, 162, 247, 0.12);
+    color: #7aa2f7;
+    border-bottom: 2px solid rgba(122, 162, 247, 0.65);
+    border-radius: 8px 8px 4px 4px;
+    margin-bottom: 6px;
+    text-shadow: 0 0 8px rgba(122, 162, 247, 0.4);
+}
+
+#taskbar button.minimized {
+    opacity: 0.35;
+}
+
+/* ── Clock — center focal point, pill with glow ─────────── */
+#clock {
+    font-size: 14px;
+    font-weight: 700;
+    color: #7aa2f7;
+    padding: 0 22px;
+    border-radius: 22px;
+    margin: 6px 8px;
+    background-color: rgba(122, 162, 247, 0.07);
+    border: 1px solid rgba(122, 162, 247, 0.2);
+    text-shadow: 0 0 16px rgba(122, 162, 247, 0.55);
+    box-shadow:
+        0 0 14px rgba(122, 162, 247, 0.1),
+        inset 0 1px 0 rgba(122, 162, 247, 0.07);
+    transition: all 0.2s ease;
+}
+
+#clock:hover {
+    background-color: rgba(122, 162, 247, 0.14);
+    border-color: rgba(122, 162, 247, 0.38);
+    box-shadow: 0 0 22px rgba(122, 162, 247, 0.25);
+    text-shadow: 0 0 20px rgba(122, 162, 247, 0.85);
+}
+
+/* ── Pulseaudio / Volume ────────────────────────────────── */
+#pulseaudio {
+    font-size: 16px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
+    color: #f7768e;
+    transition: all 0.15s ease;
+}
+
+#pulseaudio:hover {
+    background-color: rgba(247, 118, 142, 0.1);
+    text-shadow: 0 0 10px rgba(247, 118, 142, 0.65);
+}
+
+#pulseaudio.muted {
+    color: #414868;
+    text-shadow: none;
+}
+
+/* ── Network ────────────────────────────────────────────── */
+#network {
+    font-size: 16px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
+    color: #7aa2f7;
+    transition: all 0.15s ease;
+}
+
+#network:hover {
+    background-color: rgba(122, 162, 247, 0.1);
+    text-shadow: 0 0 10px rgba(122, 162, 247, 0.65);
+}
+
+#network.disconnected {
+    color: #414868;
+    text-shadow: none;
+}
+
+/* ── Bluetooth ──────────────────────────────────────────── */
+#bluetooth {
+    font-size: 16px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
+    color: #7dcfff;
+    transition: all 0.15s ease;
+}
+
+#bluetooth:hover {
+    background-color: rgba(125, 207, 255, 0.1);
+    text-shadow: 0 0 10px rgba(125, 207, 255, 0.65);
+}
+
+#bluetooth.disabled {
+    color: #414868;
+    text-shadow: none;
+}
+
+/* ── Battery ────────────────────────────────────────────── */
+#battery {
+    font-size: 16px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
+    color: #e0af68;
+    transition: all 0.15s ease;
+}
+
+#battery:hover {
+    background-color: rgba(224, 175, 104, 0.1);
+    text-shadow: 0 0 10px rgba(224, 175, 104, 0.55);
+}
+
+#battery.charging {
+    color: #9ece6a;
+    text-shadow: 0 0 10px rgba(158, 206, 106, 0.5);
+}
+
+#battery.warning:not(.charging) {
+    color: #e0af68;
+    text-shadow: 0 0 10px rgba(224, 175, 104, 0.5);
+}
+
+#battery.critical:not(.charging) {
+    color: #f7768e;
+    text-shadow: 0 0 14px rgba(247, 118, 142, 0.75);
+    animation: blink 0.9s step-start infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.3; }
+}
+
+/* ── Notification bell ──────────────────────────────────── */
+#custom-notification {
+    font-size: 16px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
+    color: #bb9af7;
+    transition: all 0.15s ease;
+}
+
+#custom-notification:hover {
+    background-color: rgba(187, 154, 247, 0.1);
+    text-shadow: 0 0 10px rgba(187, 154, 247, 0.65);
+}
+
+/* ── Tray ───────────────────────────────────────────────── */
+#tray {
+    padding: 0 8px;
+    margin: 8px 3px;
+    border-radius: 8px;
+    color: #c0caf5;
+}
+
+#tray:hover {
+    background-color: rgba(65, 72, 104, 0.22);
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: rgba(122, 162, 247, 0.2);
+    border-radius: 5px;
+    box-shadow: 0 0 8px rgba(122, 162, 247, 0.22);
+}
+
+/* ── Tooltip ────────────────────────────────────────────── */
+tooltip {
+    background-color: rgba(16, 17, 28, 0.97);
+    border: 1px solid rgba(122, 162, 247, 0.3);
+    border-radius: 10px;
+    padding: 7px 14px;
+    color: #c0caf5;
+    font-size: 12px;
+    box-shadow:
+        0 6px 24px rgba(0, 0, 0, 0.6),
+        0 0 14px rgba(122, 162, 247, 0.09);
+}
+
+tooltip label {
+    color: #c0caf5;
+}
+
+/* ── Calendar Popover ───────────────────────────────────── */
+calendar {
+    background-color: rgba(16, 17, 28, 0.98);
+    border: 1px solid rgba(122, 162, 247, 0.22);
+    border-radius: 14px;
+    padding: 10px;
+    color: #c0caf5;
+    font-size: 13px;
+}
+
+calendar:selected {
+    background-color: #f7768e;
+    color: #1a1b26;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(247, 118, 142, 0.5);
+}
+
+calendar.highlight {
+    color: #bb9af7;
+    font-weight: 600;
+}

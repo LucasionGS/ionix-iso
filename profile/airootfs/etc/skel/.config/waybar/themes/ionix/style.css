@@ -1,9 +1,25 @@
 /* ============================================================
-   Ionix Waybar Theme — Deep Purple/Violet Dark
+   Ionix Waybar Theme — Deep Purple/Violet Dark (Revamped)
+
+   Deepest bg:    #0f0a18
+   Bar bg:        rgba(15, 10, 24, 0.92)
+   Accent bright: #a855f7
+   Accent light:  #c084fc
+   Accent mid:    #9b59b6
+   Text:          #c4b5fd
+   Bright text:   #e2d9f3
+   Muted:         #6b5f80
+   Dim:           #4a3d60
+   Border:        #4a3d60
+   Hover:         #3a2d50
+   Green:         #2ecc71
+   Orange:        #f39c12
+   Red:           #e74c3c
+   Cyan:          #48dbfb
    ============================================================ */
 
 * {
-    font-family: "Inter", "Noto Sans", sans-serif;
+    font-family: "JetBrains Mono", "Inter", monospace;
     font-size: 13px;
     font-weight: 400;
     border: none;
@@ -15,253 +31,319 @@
     text-shadow: none;
 }
 
-/* ── Window / Bar Root ──────────────────────────────────── */
+/* ── Bar Root ───────────────────────────────────────────── */
 window#waybar {
-    background-color: rgba(26, 16, 37, 0.85);
+    background-color: rgba(15, 10, 24, 0.92);
     color: #c4b5fd;
-    border-bottom: 1px solid rgba(74, 61, 96, 0.5);
-    border-radius: 12px;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 14px;
     transition: background-color 0.3s ease;
+    box-shadow:
+        0 6px 28px rgba(0, 0, 0, 0.6),
+        0 1px 0 rgba(168, 85, 247, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
-/* Glass effect relies on Hyprland blur on the waybar layer.
-   In hyprland.conf add:
+/* Hyprland blur:
      layerrule = blur, waybar
      layerrule = ignorezero, waybar
 */
 
-/* ── Left Section ───────────────────────────────────────── */
-.modules-left {
-    padding-left: 4px;
-}
+/* ── Section containers ─────────────────────────────────── */
+.modules-left  { padding-left: 6px; }
+.modules-right { padding-right: 6px; }
+.modules-center {}
 
-/* Launcher (Ionix logo) button */
+/* ── Launcher ───────────────────────────────────────────── */
 #custom-launcher {
-    font-size: 20px;
-    padding: 0 14px;
+    font-size: 22px;
+    padding: 0 16px;
     color: #c084fc;
-    border-radius: 6px;
-    margin: 6px 2px;
-    transition: background-color 0.15s ease;
+    border-radius: 10px;
+    margin: 5px 3px;
+    transition: all 0.2s ease;
 }
 
 #custom-launcher:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(192, 132, 252, 0.12);
+    color: #e2d9f3;
+    text-shadow: 0 0 14px rgba(192, 132, 252, 0.7);
+    box-shadow: 0 0 16px rgba(192, 132, 252, 0.15);
 }
 
 #custom-launcher:active {
-    background-color: rgba(45, 45, 63, 0.8);
+    background-color: rgba(192, 132, 252, 0.22);
 }
 
-/* ── Workspaces ─────────────────────────────────────────── */
+/* ── Workspaces — pill container, no underlines ─────────── */
 #workspaces {
-    margin: 0 6px;
+    margin: 0 4px;
+    background-color: rgba(26, 16, 37, 0.55);
+    border-radius: 24px;
+    padding: 0 4px;
+    border: 1px solid rgba(74, 61, 96, 0.4);
 }
 
 #workspaces button {
     background-color: transparent;
-    border-radius: 6px;
+    border-radius: 20px;
     margin: 6px 2px;
-    padding: 0 8px;
-    min-width: 20px;
-    color: #6b5f80;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    padding: 0 12px;
+    min-width: 28px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #4a3d60;
+    transition: all 0.18s ease;
 }
 
 #workspaces button:hover {
-    background-color: rgba(58, 45, 80, 0.6);
-    color: #c4b5fd;
+    background-color: rgba(168, 85, 247, 0.12);
+    color: #c084fc;
 }
 
 #workspaces button.active {
-    background-color: rgba(168, 85, 247, 0.2);
+    background-color: rgba(168, 85, 247, 0.22);
     color: #a855f7;
-    border-bottom: 2px solid #a855f7;
-    border-radius: 6px 6px 4px 4px;
-    margin-bottom: 4px;
+    border-radius: 20px;
+    padding: 0 16px;
+    text-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
+    box-shadow:
+        0 0 16px rgba(168, 85, 247, 0.25),
+        inset 0 0 8px rgba(168, 85, 247, 0.08);
 }
 
 #workspaces button.empty {
-    color: #4a3d60;
+    color: #2d1f40;
+    min-width: 18px;
+    padding: 0 6px;
 }
 
-/* ── Custom Modules (VPN, SSH, Docker) ──────────────────────── */
+#workspaces button.urgent {
+    background-color: rgba(231, 76, 60, 0.3);
+    color: #ff6b6b;
+    text-shadow: 0 0 10px rgba(231, 76, 60, 0.9);
+    animation: urgentPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes urgentPulse {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.45; }
+    100% { opacity: 1; }
+}
+
+/* ── Custom Modules: VPN / SSH / Docker ─────────────────── */
 #custom-vpn,
 #custom-vpn-windscribe,
 #custom-ssh,
 #custom-docker {
-    font-size: 16px;
+    font-size: 12px;
     padding: 0 10px;
-    margin: 6px 1px;
-    border-radius: 6px;
+    margin: 8px 1px;
+    border-radius: 8px;
     color: #c084fc;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    transition: all 0.15s ease;
 }
 
 #custom-vpn:hover,
 #custom-vpn-windscribe:hover,
 #custom-ssh:hover,
 #custom-docker:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(192, 132, 252, 0.1);
+    color: #e2d9f3;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.5);
 }
 
 #custom-vpn.connected,
 #custom-vpn-windscribe.connected {
     color: #2ecc71;
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.55);
 }
 
 #custom-vpn.disconnected,
 #custom-vpn-windscribe.disconnected {
-    color: #6b5f80;
+    color: #3a2d50;
 }
 
 /* ── Taskbar ────────────────────────────────────────────── */
 #taskbar {
-    margin: 0 6px;
+    margin: 0 4px;
 }
 
 #taskbar button {
     background-color: transparent;
-    border-radius: 6px;
-    margin: 6px 2px;
+    border-radius: 8px;
+    margin: 8px 1px;
     padding: 0 10px;
-    min-width: 20px;
-    transition: background-color 0.15s ease;
-    color: #c4b5fd;
+    min-width: 22px;
+    transition: all 0.15s ease;
+    color: #6b5f80;
 }
 
 #taskbar button:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(107, 95, 128, 0.18);
+    color: #c4b5fd;
 }
 
 #taskbar button.active {
-    background-color: rgba(168, 85, 247, 0.2);
-    border-bottom: 2px solid #a855f7;
-    border-radius: 6px 6px 4px 4px;
-    margin-bottom: 4px;
+    background-color: rgba(168, 85, 247, 0.14);
+    color: #a855f7;
+    border-bottom: 2px solid rgba(168, 85, 247, 0.65);
+    border-radius: 8px 8px 4px 4px;
+    margin-bottom: 6px;
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.45);
 }
 
 #taskbar button.minimized {
-    opacity: 0.5;
+    opacity: 0.35;
 }
 
-/* ── Center (empty in Ionix layout) ─────────────────────── */
-.modules-center {
-}
-
-/* ── Clock ──────────────────────────────────────────────── */
+/* ── Clock — center focal point, pill with glow ─────────── */
 #clock {
-    font-size: 13px;
-    font-weight: 500;
-    color: #2ecc71;
-    padding: 0 12px;
-    border-radius: 6px;
-    margin: 6px 2px;
-    transition: background-color 0.15s ease;
+    font-size: 14px;
+    font-weight: 700;
+    color: #a855f7;
+    padding: 0 22px;
+    border-radius: 22px;
+    margin: 6px 8px;
+    background-color: rgba(168, 85, 247, 0.08);
+    border: 1px solid rgba(168, 85, 247, 0.22);
+    text-shadow: 0 0 16px rgba(168, 85, 247, 0.55);
+    box-shadow:
+        0 0 14px rgba(168, 85, 247, 0.1),
+        inset 0 1px 0 rgba(168, 85, 247, 0.07);
+    transition: all 0.2s ease;
 }
 
 #clock:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 0 0 22px rgba(168, 85, 247, 0.28);
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.9);
 }
 
-/* ── Right Section ──────────────────────────────────────── */
-.modules-right {
-    padding-right: 4px;
-}
-
-/* Pulseaudio / Volume */
+/* ── Pulseaudio / Volume ────────────────────────────────── */
 #pulseaudio {
     font-size: 16px;
-    padding: 0 8px;
-    margin: 6px 1px;
-    border-radius: 6px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
     color: #e74c3c;
-    transition: background-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 #pulseaudio:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(231, 76, 60, 0.1);
+    text-shadow: 0 0 10px rgba(231, 76, 60, 0.65);
 }
 
-/* Network */
+#pulseaudio.muted {
+    color: #4a3d60;
+    text-shadow: none;
+}
+
+/* ── Network ────────────────────────────────────────────── */
 #network {
     font-size: 16px;
-    padding: 0 8px;
-    margin: 6px 1px;
-    border-radius: 6px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
     color: #c084fc;
-    transition: background-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 #network:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(192, 132, 252, 0.1);
+    text-shadow: 0 0 10px rgba(192, 132, 252, 0.65);
 }
 
-/* Bluetooth */
+#network.disconnected {
+    color: #4a3d60;
+    text-shadow: none;
+}
+
+/* ── Bluetooth ──────────────────────────────────────────── */
 #bluetooth {
     font-size: 16px;
-    padding: 0 8px;
-    margin: 6px 1px;
-    border-radius: 6px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
     color: #48dbfb;
-    transition: background-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 #bluetooth:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(72, 219, 251, 0.1);
+    text-shadow: 0 0 10px rgba(72, 219, 251, 0.65);
 }
 
-/* Battery */
+#bluetooth.disabled {
+    color: #4a3d60;
+    text-shadow: none;
+}
+
+/* ── Battery ────────────────────────────────────────────── */
 #battery {
     font-size: 16px;
-    padding: 0 8px;
-    margin: 6px 1px;
-    border-radius: 6px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
     color: #f39c12;
-    transition: background-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 #battery:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(243, 156, 18, 0.1);
+    text-shadow: 0 0 10px rgba(243, 156, 18, 0.55);
 }
 
-#battery.warning {
+#battery.charging {
+    color: #2ecc71;
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+}
+
+#battery.warning:not(.charging) {
     color: #f39c12;
+    text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
 }
 
-#battery.critical {
+#battery.critical:not(.charging) {
     color: #e74c3c;
-    animation: blink 1s step-start infinite;
+    text-shadow: 0 0 14px rgba(231, 76, 60, 0.75);
+    animation: blink 0.9s step-start infinite;
 }
 
 @keyframes blink {
-    50% { opacity: 0.5; }
+    50% { opacity: 0.3; }
 }
 
-/* Notification */
+/* ── Notification bell ──────────────────────────────────── */
 #custom-notification {
     font-size: 16px;
-    padding: 0 8px;
-    margin: 6px 1px;
-    border-radius: 6px;
+    padding: 0 10px;
+    margin: 8px 1px;
+    border-radius: 8px;
     color: #a855f7;
-    transition: background-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 #custom-notification:hover {
-    background-color: rgba(58, 45, 80, 0.6);
+    background-color: rgba(168, 85, 247, 0.1);
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.65);
 }
 
-/* System tray */
+/* ── Tray ───────────────────────────────────────────────── */
 #tray {
-    padding: 0 6px;
-    margin: 6px 2px;
-    border-radius: 6px;
+    padding: 0 8px;
+    margin: 8px 3px;
+    border-radius: 8px;
     color: #c4b5fd;
 }
 
 #tray:hover {
-    background-color: rgba(58, 45, 80, 0.4);
+    background-color: rgba(74, 61, 96, 0.25);
 }
 
 #tray > .passive {
@@ -270,18 +352,22 @@ window#waybar {
 
 #tray > .needs-attention {
     -gtk-icon-effect: highlight;
-    background-color: rgba(168, 85, 247, 0.2);
-    border-radius: 4px;
+    background-color: rgba(168, 85, 247, 0.22);
+    border-radius: 5px;
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.22);
 }
 
 /* ── Tooltip ────────────────────────────────────────────── */
 tooltip {
-    background-color: rgba(15, 10, 24, 0.95);
-    border: 1px solid rgba(74, 61, 96, 0.6);
-    border-radius: 8px;
-    padding: 6px 10px;
+    background-color: rgba(15, 10, 24, 0.97);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 10px;
+    padding: 7px 14px;
     color: #c4b5fd;
     font-size: 12px;
+    box-shadow:
+        0 6px 24px rgba(0, 0, 0, 0.65),
+        0 0 14px rgba(168, 85, 247, 0.08);
 }
 
 tooltip label {
@@ -290,10 +376,10 @@ tooltip label {
 
 /* ── Calendar Popover ───────────────────────────────────── */
 calendar {
-    background-color: rgba(26, 16, 37, 0.97);
-    border: 1px solid rgba(74, 61, 96, 0.5);
-    border-radius: 12px;
-    padding: 8px;
+    background-color: rgba(15, 10, 24, 0.98);
+    border: 1px solid rgba(168, 85, 247, 0.22);
+    border-radius: 14px;
+    padding: 10px;
     color: #c4b5fd;
     font-size: 13px;
 }
@@ -302,8 +388,10 @@ calendar:selected {
     background-color: #a855f7;
     color: #0f0a18;
     border-radius: 50%;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.55);
 }
 
 calendar.highlight {
     color: #c084fc;
+    font-weight: 600;
 }
