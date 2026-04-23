@@ -1,0 +1,6 @@
+# Ionix walker configuration.
+# Overrides the system defaults in /etc/xdg/walker/config.toml just to
+# switch the theme to the bundled "ionix" look.
+# See /etc/xdg/walker/config.toml for the full reference.
+
+theme = "ionix"
