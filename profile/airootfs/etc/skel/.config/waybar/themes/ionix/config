@@ -12,11 +12,7 @@
     "modules-left": [
         "custom/launcher",
         "hyprland/workspaces",
-        "wlr/taskbar",
-        "custom/vpn/disabled",
-        "custom/vpn-windscribe",
-        "custom/ssh",
-        "custom/docker"
+        "wlr/taskbar"
     ],
 
     "modules-center": [
@@ -26,6 +22,10 @@
     ],
 
     "modules-right": [
+        "custom/vpn/disabled",
+        "custom/vpn-windscribe",
+        "custom/ssh",
+        "custom/docker",
         "network",
         "bluetooth",
         "pulseaudio",
