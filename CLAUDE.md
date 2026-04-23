@@ -70,7 +70,7 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 ### Desktop Stack
 
 - **Compositor:** Hyprland (Wayland) managed by UWSM
-- **Panel:** HyprPanel (AGS-based)
+- **Panel:** Waybar (custom Ionix theme)
 - **Shell:** ionix-shell (custom AGS/Astal component)
 - **Terminal:** kitty (primary), foot, tabby
 - **Shell:** fish + oh-my-posh

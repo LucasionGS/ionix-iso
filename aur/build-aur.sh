@@ -27,7 +27,6 @@ chmod +x "$PYTHON_WRAPPER_DIR/python" "$PYTHON_WRAPPER_DIR/python3"
 # libastal-io-git is the foundation; all other astal libs depend on it.
 # libastal-git (split) provides libastal + libastal-4; required by aylurs-gtk-shell-git.
 # libastal-meta is a metapackage requiring every libastal-* sublib.
-# aylurs-gtk-shell-git must be built before ags-hyprpanel-git.
 AUR_PACKAGES=(
     "yay"
     "oh-my-posh-bin"
@@ -85,10 +84,7 @@ AUR_PACKAGES=(
     "libastal-wireplumber-git"
     "libastal-gjs-git"
     "libastal-meta"
-    # HyprPanel stack
     "aylurs-gtk-shell-git"
-    "ags-hyprpanel-git" # Primary shell
-    # "morghulis-git" # Secondary shell
     "google-chrome"
     # ionix tooling (openconnect-sso before ionix-openconnect-tools; ionix-openconnect-tools before ionix-shell)
     "python-gevent-eventemitter"
