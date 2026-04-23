@@ -32,13 +32,13 @@
     "custom/start": {
         "format": "",
         "tooltip": false,
-        "on-click": "pkill nwg-drawer || nwg-drawer"
+        "on-click": "walker"
     },
 
     "custom/search": {
         "format": " Search",
         "tooltip": false,
-        "on-click": "pkill nwg-drawer || nwg-drawer"
+        "on-click": "walker"
     },
 
     "wlr/taskbar": {

@@ -35,7 +35,7 @@
     "custom/launcher": {
         "format": "󰣇",
         "tooltip": false,
-        "on-click": "pkill nwg-drawer || nwg-drawer"
+        "on-click": "walker"
     },
 
     "hyprland/workspaces": {
@@ -67,7 +67,7 @@
     },
 
     "clock": {
-        "format": "  {:%H:%M}",
+        "format": "{:%H:%M}",
         "format-alt": "󰃭  {:%a, %d %b}",
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "calendar": {
