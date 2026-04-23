@@ -32,7 +32,7 @@
     ],
 
     "custom/launcher": {
-        "format": "󰣇",
+        "format": "",
         "tooltip": false,
         "on-click": "walker"
     },
