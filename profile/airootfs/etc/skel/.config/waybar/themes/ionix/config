@@ -20,7 +20,9 @@
     ],
 
     "modules-center": [
-        "clock"
+        "custom/toxen-prev",
+        "custom/toxen",
+        "custom/toxen-next"
     ],
 
     "modules-right": [
@@ -29,6 +31,7 @@
         "pulseaudio",
         "battery",
         "tray",
+        "clock",
         "custom/notification"
     ],
 
@@ -51,7 +54,7 @@
         "all-outputs": false,
         "show-special": false,
         "persistent-workspaces": {
-            "*": 5
+            "*": 1
         }
     },
 
@@ -180,5 +183,25 @@
         "tooltip": true,
         "tooltip-format": "Docker Panel",
         "on-click": "ags request -i ionix-shell 'docker'"
+    },
+
+    "custom/toxen-prev": {
+        "format": "󰒮",
+        "tooltip": false,
+        "on-click": "toxen-mini -s prev"
+    },
+
+    "custom/toxen": {
+        "exec": "~/.config/waybar/themes/ionix/toxen.sh",
+        "return-type": "json",
+        "interval": 2,
+        "format": "{}",
+        "on-click": "toxen-mini -s toggle"
+    },
+
+    "custom/toxen-next": {
+        "format": "󰒭",
+        "tooltip": false,
+        "on-click": "toxen-mini -s next"
     }
 }

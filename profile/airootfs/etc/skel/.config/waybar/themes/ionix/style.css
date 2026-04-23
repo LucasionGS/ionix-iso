@@ -375,6 +375,79 @@ tooltip label {
     color: #c4b5fd;
 }
 
+/* ── Toxen music controls — three modules styled as one pill ── */
+#custom-toxen-prev,
+#custom-toxen,
+#custom-toxen-next {
+    background-color: rgba(26, 16, 37, 0.7);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    transition: all 0.15s ease;
+}
+
+#custom-toxen-prev {
+    font-size: 14px;
+    border-radius: 8px 0 0 8px;
+    border-right: none;
+    margin-left: 4px;
+    margin-right: 0;
+    padding: 0 8px 0 12px;
+}
+
+#custom-toxen-prev:hover {
+    background-color: rgba(168, 85, 247, 0.14);
+    color: #e2d9f3;
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+}
+
+#custom-toxen {
+    font-size: 13px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0 14px;
+    min-width: 140px;
+}
+
+#custom-toxen:hover {
+    background-color: rgba(168, 85, 247, 0.14);
+}
+
+#custom-toxen.playing {
+    color: #a855f7;
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+#custom-toxen.paused {
+    color: #6b5f80;
+}
+
+#custom-toxen.inactive {
+    color: #4a3d60;
+    min-width: 40px;
+    padding: 0 12px;
+    text-shadow: none;
+}
+
+#custom-toxen-next {
+    font-size: 14px;
+    border-radius: 0 8px 8px 0;
+    border-left: none;
+    margin-left: 0;
+    margin-right: 4px;
+    padding: 0 12px 0 8px;
+}
+
+#custom-toxen-next:hover {
+    background-color: rgba(168, 85, 247, 0.14);
+    color: #e2d9f3;
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+}
+
 /* ── Calendar Popover ───────────────────────────────────── */
 calendar {
     background-color: rgba(15, 10, 24, 0.98);
