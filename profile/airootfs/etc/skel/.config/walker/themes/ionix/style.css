@@ -1,0 +1,243 @@
+/* Ionix theme for walker
+ *
+ * Deep purple/violet dark palette matching the rest of the Ionix desktop
+ * (waybar, ionix-shell, menus). Uses GTK4 CSS with alpha()/lighter()/darker()
+ * helpers the way walker's default theme does.
+ *
+ * See CLAUDE.md in the ionix-iso repo for the full palette reference.
+ */
+
+/* ── Palette ─────────────────────────────────────────────────────────── */
+@define-color ionix_bg_deep      #0f0a18; /* deepest background */
+@define-color ionix_bg           #1a1025; /* window background   */
+@define-color ionix_surface      #2d2d3f; /* cards, inputs       */
+@define-color ionix_hover        #3a2d50; /* hover state         */
+@define-color ionix_border       #4a3d60; /* borders, dividers   */
+@define-color ionix_fg_muted     #6b5f80; /* muted text          */
+@define-color ionix_fg           #c4b5fd; /* primary text        */
+@define-color ionix_fg_bright    #e2d9f3; /* headings, input     */
+@define-color ionix_accent       #9b59b6; /* primary accent      */
+@define-color ionix_accent_hi    #a855f7; /* active highlight    */
+@define-color ionix_accent_light #c084fc; /* icons, glows        */
+@define-color ionix_error_bg     #e74c3c;
+@define-color ionix_error_fg     #ffffff;
+
+/* keep GTK-ish names pointing at the Ionix palette so any widget that
+ * references them (e.g. selections) stays on-theme */
+@define-color window_bg_color @ionix_bg;
+@define-color accent_bg_color @ionix_accent;
+@define-color theme_fg_color  @ionix_fg;
+@define-color error_bg_color  @ionix_error_bg;
+@define-color error_fg_color  @ionix_error_fg;
+
+* {
+  all: unset;
+  font-family: "Inter", "Noto Sans", "Cantarell", sans-serif;
+}
+
+/* ── Popovers / submenus ─────────────────────────────────────────────── */
+popover {
+  background: alpha(@ionix_bg, 0.92);
+  border: 1px solid alpha(@ionix_accent, 0.4);
+  border-radius: 14px;
+  padding: 10px;
+  color: @ionix_fg;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+.normal-icons { -gtk-icon-size: 18px; }
+.large-icons  { -gtk-icon-size: 36px; }
+
+scrollbar { opacity: 0; }
+
+/* ── Window chrome (glass-over-wallpaper) ────────────────────────────── */
+window.window {
+  background: transparent;
+}
+
+.box-wrapper {
+  background: alpha(@ionix_bg, 0.85);
+  border: 1px solid alpha(@ionix_accent, 0.45);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    0 0 0 1px alpha(@ionix_accent_hi, 0.08),
+    inset 0 1px 0 alpha(@ionix_accent_light, 0.08);
+}
+
+.box {}
+
+/* ── Search input ────────────────────────────────────────────────────── */
+.search-container {
+  border-radius: 12px;
+  background: alpha(@ionix_bg_deep, 0.75);
+  border: 1px solid alpha(@ionix_border, 0.55);
+}
+
+.search-container:focus-within {
+  border-color: alpha(@ionix_accent_hi, 0.75);
+}
+
+.input {
+  caret-color: @ionix_accent_light;
+  background: transparent;
+  color: @ionix_fg_bright;
+  padding: 12px 14px;
+  font-size: 15px;
+}
+
+.input placeholder {
+  color: @ionix_fg_muted;
+  opacity: 1;
+}
+
+.input selection {
+  background: alpha(@ionix_accent, 0.45);
+  color: @ionix_fg_bright;
+}
+
+/* ── Content / list ──────────────────────────────────────────────────── */
+.content-container {}
+
+.placeholder,
+.elephant-hint {
+  color: @ionix_fg_muted;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.scroll {}
+
+.list {
+  color: @ionix_fg;
+}
+
+child {}
+
+.item-box {
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: background 120ms ease, box-shadow 120ms ease;
+}
+
+child:hover .item-box {
+  background: alpha(@ionix_hover, 0.55);
+}
+
+child:selected .item-box,
+row:selected .item-box {
+  background: alpha(@ionix_accent, 0.28);
+  box-shadow: inset 2px 0 0 @ionix_accent_hi;
+  color: @ionix_fg_bright;
+}
+
+.item-text-box {}
+
+.item-text {
+  color: @ionix_fg_bright;
+  font-size: 14px;
+}
+
+.item-subtext {
+  font-size: 12px;
+  color: @ionix_fg_muted;
+}
+
+.providerlist .item-subtext {
+  font-size: unset;
+  color: alpha(@ionix_fg, 0.75);
+}
+
+.item-image-text {
+  font-size: 28px;
+  color: @ionix_accent_light;
+}
+
+child:selected .item-image-text {
+  color: @ionix_accent_light;
+}
+
+/* ── Quick activation badges (F1-F4) ─────────────────────────────────── */
+.item-quick-activation {
+  background: alpha(@ionix_accent, 0.22);
+  color: @ionix_accent_light;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── Preview pane ────────────────────────────────────────────────────── */
+.preview {
+  border: 1px solid alpha(@ionix_border, 0.55);
+  background: alpha(@ionix_bg_deep, 0.55);
+  border-radius: 10px;
+  padding: 10px;
+  color: @ionix_fg;
+}
+
+.preview .large-icons { -gtk-icon-size: 64px; }
+
+.preview-box {
+  color: @ionix_fg;
+}
+
+/* ── Provider-specific tweaks ────────────────────────────────────────── */
+.calc .item-text    { font-size: 24px; color: @ionix_accent_light; }
+.calc .item-subtext { color: @ionix_fg_muted; }
+
+.symbols .item-image { font-size: 24px; }
+
+.todo.done .item-text-box { opacity: 0.35; }
+.todo.urgent              { font-size: 22px; color: #f39c12; }
+.todo.active              { font-weight: bold; color: @ionix_accent_light; }
+
+.bluetooth.disconnected { opacity: 0.5; }
+
+.preview-content.archlinuxpkgs,
+.preview-content.dnfpackages {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  color: @ionix_fg;
+}
+
+/* ── Keybind footer ──────────────────────────────────────────────────── */
+.keybinds {
+  padding-top: 10px;
+  border-top: 1px solid alpha(@ionix_border, 0.45);
+  font-size: 11px;
+  color: @ionix_fg_muted;
+}
+
+.global-keybinds {}
+.item-keybinds  {}
+.keybind        {}
+
+.keybind-button          { opacity: 0.6; }
+.keybind-button:hover    { opacity: 1; color: @ionix_accent_light; }
+
+.keybind-bind {
+  text-transform: lowercase;
+  color: @ionix_fg_muted;
+}
+
+.keybind-label {
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid alpha(@ionix_border, 0.8);
+  color: @ionix_fg;
+  background: alpha(@ionix_surface, 0.5);
+}
+
+/* ── Current item / error ────────────────────────────────────────────── */
+:not(.calc).current {
+  font-style: italic;
+  color: @ionix_accent_light;
+}
+
+.error {
+  padding: 10px;
+  background: @ionix_error_bg;
+  color: @ionix_error_fg;
+  border-radius: 8px;
+}
