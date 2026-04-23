@@ -22,7 +22,7 @@ Ionix is designed for developers, power users, and gamers who want the bleeding-
 
 | Category | What's Included |
 |---|---|
-| **Desktop** | Hyprland (Wayland), HyprPanel status bar, ionix-shell command palette |
+| **Desktop** | Hyprland (Wayland), Waybar, ionix-shell command palette |
 | **Shell** | Fish + oh-my-posh prompt, NvChad for Neovim (auto-configured on first login) |
 | **Terminals** | kitty (primary), foot, Tabby |
 | **Browser** | Google Chrome |
@@ -49,7 +49,7 @@ Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth anim
 
 ### Panel & Shell
 
-- **HyprPanel** — feature-rich status bar with notifications, system tray, media controls, and a dashboard overlay (press `Super`)
+**Waybar** — highly customizable status bar with a built-in module system and support for custom scripts. Uses a custom Ionix theme
 - **ionix-shell** — custom AGS/Astal component providing a command palette (`Alt+Space`) and an `Alt+Tab` window switcher
 
 ### Screen Lock
@@ -58,8 +58,7 @@ Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth anim
 
 ### App Launcher
 
-- **nwg-drawer** — icon-based application drawer (`Super+R`)
-- **Rofi** — additional launcher available for scripting
+- **Walker** — icon-based application drawer (`Super+R or SUPER_L`)
 
 ### Login Flow
 
@@ -150,13 +149,6 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 | `Super+V` | Toggle CopyQ clipboard manager |
 | `Super+L` | Lock screen |
 | `Ctrl+Super+R` | Reload Hyprland config |
-
-### HyprPanel
-
-| Shortcut | Action |
-|---|---|
-| `Super+Super_L` | Toggle dashboard menu |
-| `Super+N` | Toggle notifications panel |
 
 ### Screenshots
 
@@ -304,7 +296,7 @@ sudo ./build.sh
 
 The build proceeds in four steps:
 
-1. **AUR packages** — ~35 AUR packages (including HyprPanel, ionix-shell, Calamares, etc.) are compiled into a local `localrepo/` pacman repository.
+1. **AUR packages** — ~35 AUR packages (including ionix-shell, Calamares, etc.) are compiled into a local `localrepo/` pacman repository.
 2. **Local repo** — the local repo is staged at `/tmp/ionix-localrepo` for use by archiso.
 3. **Branding assets** — SVG wallpaper and logo are rasterised to PNG with `rsvg-convert` (or ImageMagick as a fallback).
 4. **ISO assembly** — `mkarchiso` builds the final squashfs-compressed ISO in `./out/`.

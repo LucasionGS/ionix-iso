@@ -111,8 +111,6 @@ qt5-wayland
 qt6-wayland
 uwsm
 nwg-displays
-nwg-dock-hyprland
-nwg-drawer
 
 # --- UI Utilities ---
 waybar
@@ -139,6 +137,9 @@ fish
 neovim
 tree-sitter-cli
 
+# --- Wallpapers ---
+awww
+
 # --- HyprPanel dependencies (official repos) ---
 dart-sass
 wl-clipboard
@@ -149,7 +150,6 @@ gtksourceview3
 libsoup3
 brightnessctl
 power-profiles-daemon
-awww
 matugen
 
 # --- Calamares dependencies ---
@@ -252,8 +252,6 @@ libastal-wl-git
 libastal-powerprofiles-git
 libastal-meta
 aylurs-gtk-shell-git
-ags-hyprpanel-git
-# morghulis-git
 oh-my-posh-bin
 calamares
 python-gevent-eventemitter
