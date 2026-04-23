@@ -40,38 +40,27 @@ window#waybar {
 
 /* Start (Windows logo) button */
 #custom-start {
+    font-family: "Ionix";
     font-size: 18px;
     padding: 0 14px;
     color: #ffffff;
     border-radius: 6px;
     margin: 6px 2px;
     transition: background-color 0.15s ease;
-}
-
-#custom-start:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-#custom-start:active {
-    background-color: rgba(255, 255, 255, 0.06);
-}
-
-/* Search pill */
-#custom-search {
     background-color: rgba(255, 255, 255, 0.07);
     color: rgba(255, 255, 255, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    padding: 4px 14px;
-    margin: 8px 6px;
-    font-size: 12px;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-#custom-search:hover {
+#custom-start:hover {
     background-color: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.18);
     color: #ffffff;
+}
+
+#custom-start:active {
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
 /* ── Taskbar ────────────────────────────────────────────── */

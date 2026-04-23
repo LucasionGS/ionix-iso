@@ -10,7 +10,6 @@
 
     "modules-left": [
         "custom/start",
-        "custom/search",
         "wlr/taskbar"
     ],
 
@@ -30,13 +29,7 @@
     ],
 
     "custom/start": {
-        "format": "",
-        "tooltip": false,
-        "on-click": "walker"
-    },
-
-    "custom/search": {
-        "format": " Search",
+        "format": "",
         "tooltip": false,
         "on-click": "walker"
     },

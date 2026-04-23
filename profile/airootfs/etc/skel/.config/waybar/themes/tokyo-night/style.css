@@ -15,7 +15,7 @@
    ============================================================ */
 
 * {
-    font-family: "JetBrains Mono", "Inter", monospace;
+    font-family: "Ionix", "JetBrains Mono", "Inter", monospace;
     font-size: 13px;
     font-weight: 400;
     border: none;
@@ -52,6 +52,7 @@ window#waybar {
 
 /* ── Launcher ───────────────────────────────────────────── */
 #custom-launcher {
+    font-family: "Ionix";
     font-size: 22px;
     padding: 0 16px;
     color: #bb9af7;
