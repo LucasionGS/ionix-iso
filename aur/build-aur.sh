@@ -93,6 +93,7 @@ AUR_PACKAGES=(
     "ionix-openconnect-tools"
     "ionix-shell"
     "ionix-file-manager-git"
+    "ioexplorer-git"
     # Gaming
     "python-inputs"
     "python-steam"
