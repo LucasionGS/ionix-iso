@@ -1,0 +1,79 @@
+name: Build ISO
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-iso-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-iso:
+    name: Build and publish ISO artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    env:
+      DOCKER_BUILDKIT: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+
+      - name: Show available disk space
+        run: df -h /
+
+      - name: Build ISO with Docker
+        run: ./docker-build.sh
+
+      - name: Reclaim Docker build layers
+        if: always()
+        run: docker system prune -af
+
+      - name: Generate ISO checksum
+        run: |
+          set -euo pipefail
+
+          sudo chown -R "$(id -u):$(id -g)" out
+
+          iso_path="$(find out -maxdepth 1 -type f -name 'ionix-*.iso' -print -quit)"
+          if [[ -z "$iso_path" ]]; then
+            echo "No Ionix ISO found in ./out" >&2
+            exit 1
+          fi
+
+          mkdir -p dist
+          iso_name="$(basename "$iso_path")"
+
+          (cd "$(dirname "$iso_path")" && sha256sum "$iso_name") > "dist/${iso_name}.sha256"
+
+          ls -lh "$iso_path"
+          ls -lh dist
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ionix-iso-${{ github.run_id }}
+          path: |
+            out/*.iso
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
