@@ -247,10 +247,10 @@ libastal-4-git
 libastal-gjs-git
 libcava-git
 appmenu-glib-translator-git
-# wl-vapi-gen
+wl-vapi-gen
 libastal-wl-git
 libastal-powerprofiles-git
-# libastal-meta
+libastal-meta
 aylurs-gtk-shell-git
 oh-my-posh-bin
 calamares
