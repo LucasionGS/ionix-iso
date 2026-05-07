@@ -256,7 +256,7 @@ oh-my-posh-bin
 calamares
 python-gevent-eventemitter
 python-vcrpy
-openconnect-sso
+openconnect-sso-git
 ionix-openconnect-tools
 ionix-shell
 ionix-file-manager-git
