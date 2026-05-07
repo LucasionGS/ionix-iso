@@ -89,7 +89,7 @@ AUR_PACKAGES=(
     # ionix tooling (openconnect-sso before ionix-openconnect-tools; ionix-openconnect-tools before ionix-shell)
     "python-gevent-eventemitter"
     "python-vcrpy"
-    "openconnect-sso"
+    "openconnect-sso-git"
     "ionix-openconnect-tools"
     "ionix-shell"
     "ionix-file-manager-git"
