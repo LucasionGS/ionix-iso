@@ -53,6 +53,12 @@ for display in "${DISPLAYS[@]}"; do
     fi
   fi
 
+  # My fork of awww supports --ken-burns, but the original does not,
+  # so we check for support before applying the argument
+  if awww img --help | grep -q -- '--ken-burns'; then
+    AWWW_ARGS="$AWWW_ARGS --ken-burns"
+  fi
+
   echo "Setting wallpaper for $display: $(basename "$selected_wallpaper")"
   awww img $AWWW_ARGS --outputs "$display" "$selected_wallpaper"
 done
