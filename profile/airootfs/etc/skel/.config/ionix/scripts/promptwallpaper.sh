@@ -50,6 +50,11 @@ if [ ${#FILE_ARRAY[@]} -gt 0 ]; then
     cp "$file" "$IONIX_DIR/.wallpapers_active/"
   done
 fi
+# My fork of awww supports --ken-burns, but the original does not,
+# so we check for support before applying the argument
+if awww img --help | grep -q -- '--ken-burns'; then
+  AWWW_ARGS="$AWWW_ARGS --ken-burns"
+fi
 
 if [ -n "$FILE_PATH" ]; then
   awww img $AWWW_ARGS "$FILE_PATH"
