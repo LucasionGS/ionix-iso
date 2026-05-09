@@ -24,6 +24,7 @@ file_permissions=(
   ["/usr/local/bin/ionix-post-install"]="0:0:755"
   ["/usr/local/bin/ionix-first-login"]="0:0:755"
   ["/usr/local/bin/ionix-install"]="0:0:755"
+  ["/usr/local/bin/ionix-arrange-workspace"]="0:0:755"
   ["/usr/local/bin/grub-install-ionix"]="0:0:755"
   ["/usr/local/bin/grub-install"]="0:0:755"
   ["/usr/local/bin/ionix-mount-efi"]="0:0:755"
