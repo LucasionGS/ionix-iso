@@ -30,6 +30,12 @@ done
 
 mapfile -d '' SHUFFLED_WALLPAPERS < <(printf '%s\0' "${ALL_WALLPAPERS[@]}" | shuf -z)
 
+# My fork of awww supports --ken-burns, but the original does not,
+# so we check for support before applying the argument
+if awww img --help | grep -q -- '--ken-burns'; then
+  AWWW_ARGS="$AWWW_ARGS --ken-burns"
+fi
+
 wallpaper_index=0
 for display in "${DISPLAYS[@]}"; do
   selected_wallpaper=""
@@ -51,12 +57,6 @@ for display in "${DISPLAYS[@]}"; do
       selected_wallpaper=$(realpath "${SHUFFLED_WALLPAPERS[$wallpaper_index]}")
       wallpaper_index=$((wallpaper_index + 1))
     fi
-  fi
-
-  # My fork of awww supports --ken-burns, but the original does not,
-  # so we check for support before applying the argument
-  if awww img --help | grep -q -- '--ken-burns'; then
-    AWWW_ARGS="$AWWW_ARGS --ken-burns"
   fi
 
   echo "Setting wallpaper for $display: $(basename "$selected_wallpaper")"
