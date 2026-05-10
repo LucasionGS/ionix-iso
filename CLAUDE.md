@@ -59,7 +59,7 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 
 **Local AUR repository:** AUR packages are pre-built into a local pacman repo (`localrepo/`) that is injected into `pacman.conf` as the `[ionix]` repo, avoiding AUR helpers during the ISO build.
 
-**Layered Hyprland config:** System defaults live in `profile/airootfs/etc/hypr/hyprland.conf`, user config in `profile/airootfs/etc/skel/.config/hypr/hyprland.conf` which sources the system config, then loads `ionix-shell.conf`, then allows user overrides.
+**Layered Hyprland config:** System defaults live in `profile/airootfs/etc/hypr/hyprland.lua`, user config in `profile/airootfs/etc/skel/.config/hypr/hyprland.lua` which loads the system config with `dofile`, then allows user overrides.
 
 **Installer flow:** Calamares runs its module sequence, ending with `ionix-post-install` (via shellprocess), which configures the installed system: sets fish as default shell, enables systemd services, handles NVIDIA detection, installs GRUB.
 

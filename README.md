@@ -230,17 +230,17 @@ Ionix includes `shim-signed`, `sbctl`, and `mokutil` for Secure Boot support. Ma
 
 ## Customizing Hyprland
 
-User configuration lives in `~/.config/hypr/hyprland.conf`. This file sources the system defaults from `/etc/hypr/hyprland.conf` first, so you only need to add overrides:
+User configuration lives in `~/.config/hypr/hyprland.lua`. This file loads the system defaults from `/etc/hypr/hyprland.lua` first, so you only need to add overrides:
 
-```bash
+```lua
 # Example: change keyboard layout to US
-input { kb_layout = us }
+hl.config({ input = { kb_layout = "us" } })
 
 # Example: add a custom keybinding
-bind = $mainMod, code:60, exec, yourapp
+hl.bind(mainMod .. " + code:60", hl.dsp.exec_cmd("yourapp"))
 ```
 
-Monitor layout can be managed graphically with **nwg-displays** or by editing `~/.config/hypr/monitors.conf`.
+Monitor layout can be managed by adding `hl.monitor({ ... })` rules to `~/.config/hypr/hyprland.lua`.
 
 ---
 
