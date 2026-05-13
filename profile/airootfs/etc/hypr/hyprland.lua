@@ -161,6 +161,7 @@ bind_exec(mainMod .. " + SUPER_L", "ioexplorer-start --top --center")
 bind_exec(mainMod .. " + R", "walker")
 bind_exec("ALT + Space", "ags request -i ionix-shell \"command-palette\"")
 bind_exec(mainMod .. " + V", "copyq toggle")
+bind_exec(mainMod .. " + period", "gnome-characters")
 bind_exec(mainMod .. " + L", "hyprlock -c /etc/hypr/hyprlock.conf --grace 2")
 bind_exec("CTRL + " .. mainMod .. " + R", "hyprctl reload")
 
