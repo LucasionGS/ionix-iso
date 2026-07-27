@@ -1,6 +1,9 @@
 #!/bin/bash
 # Ionix - Cycle Wallpaper
 # Randomly cycles wallpapers across all connected displays using awww.
+# It can be run as a cron job, e.g. every X minutes,
+# to continuously cycle wallpapers. You can set it up like this (every 5 minutes cycle):
+# */5 * * * * hyprctl -i 0 dispatch "hl.dsp.exec_cmd('bash ~/.config/ionix/cron/cycle-wallpaper.sh')"
 
 IONIX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix"
 WALLPAPER_DIR="$IONIX_DIR/.wallpapers_active"
