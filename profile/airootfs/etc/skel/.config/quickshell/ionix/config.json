@@ -1,0 +1,3 @@
+{
+  "_comment": "Ionix shell overrides. Deep-merged over /etc/xdg/quickshell/ionix and applied live on save. See /etc/xdg/quickshell/ionix/defaults.json for every available key."
+}

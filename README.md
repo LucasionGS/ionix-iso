@@ -22,7 +22,7 @@ Ionix is designed for developers, power users, and gamers who want the bleeding-
 
 | Category | What's Included |
 |---|---|
-| **Desktop** | Hyprland (Wayland), Waybar, ionix-shell command palette |
+| **Desktop** | Hyprland (Wayland), ionix-quickshell bar, ionix-shell command palette |
 | **Shell** | Fish + oh-my-posh prompt, NvChad for Neovim (auto-configured on first login) |
 | **Terminals** | kitty (primary), foot, Tabby |
 | **Browser** | Google Chrome |
@@ -49,8 +49,12 @@ Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth anim
 
 ### Panel & Shell
 
-**Waybar** — highly customizable status bar with a built-in module system and support for custom scripts. Uses a custom Ionix theme
-- **ionix-shell** — custom AGS/Astal component providing a command palette (`Alt+Space`) and an `Alt+Tab` window switcher
+- **ionix-quickshell** — the status bar, written in QML on [Quickshell](https://quickshell.org). Floating, blurred and rounded, with workspaces, a window taskbar, media controls, system tray, and audio / network / bluetooth / battery indicators. Clicking an indicator opens an in-shell panel rather than launching a separate app: a calendar, an audio mixer with per-application volume sliders, a Wi-Fi picker with inline password entry, a bluetooth manager, a media player, and a power menu. Volume and brightness get an on-screen display.
+  - Configure it with `~/.config/quickshell/ionix/config.json` — changes apply live, no restart. See `/etc/xdg/quickshell/ionix/defaults.json` for every key.
+  - Restart it with `Super+Shift+B`.
+  - Shipped as a git submodule and published to the AUR as `ionix-quickshell-git`, so it updates independently of ISO releases.
+- **Waybar** — still installed as a fallback, but no longer started automatically. Run `waybar` from a terminal (or `Ctrl+Super+Shift+B`) if you need it.
+- **ionix-shell** — custom AGS/Astal component providing a command palette (`Super+R`) and an `Alt+Tab` window switcher
 
 ### Screen Lock
 
@@ -251,6 +255,18 @@ Monitor layout can be managed by adding `hl.monitor({ ... })` rules to `~/.confi
 ### Prerequisites
 
 Ionix can be built **natively on Arch Linux** (requires root) or **inside Docker** on any Linux host.
+
+#### Submodules
+
+`ionix-quickshell` (the desktop shell) is a git submodule and is built into the ISO from the
+working tree. Fetch it before building — as your normal user, not root:
+
+```bash
+git submodule update --init --recursive
+```
+
+`docker-build.sh` does this for you. `build.sh` will not, because it runs as root and git refuses
+to touch a checkout owned by someone else; it fails with this instruction instead.
 
 #### Native Build Dependencies
 

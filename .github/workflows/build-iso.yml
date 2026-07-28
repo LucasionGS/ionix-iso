@@ -25,6 +25,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # ionix-quickshell is a submodule and is built into the local repo.
+          submodules: recursive
 
       - name: Free runner disk space
         uses: jlumbroso/free-disk-space@main

@@ -9,6 +9,9 @@ Ionix is a custom Arch Linux distribution built with **archiso**. It produces a 
 ## Build Commands
 
 ```bash
+# Fetch submodules first (as your normal user — build.sh runs as root and won't):
+git submodule update --init --recursive
+
 # Native build (Arch Linux only, requires root):
 sudo ./build.sh
 
@@ -37,7 +40,8 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 
 ## Build Pipeline (build.sh)
 
-1. **Step 1/4** — Builds ~35 AUR packages via `aur/build-aur.sh` into `localrepo/`
+1. **Step 1/4** — Builds ~35 AUR packages via `aur/build-aur.sh` into `localrepo/`, then the local
+   packages listed in that script's `LOCAL_PACKAGES` array (currently `submodules/ionix-quickshell`)
 2. **Step 2/4** — Copies the local repo to `/tmp/ionix-localrepo` for archiso access
 3. **Step 3/4** — Converts SVG branding assets (wallpaper, logo) to PNG using `rsvg-convert` or ImageMagick
 4. **Step 4/4** — Runs `mkarchiso` against `profile/` to produce the final ISO in `out/`
@@ -52,12 +56,18 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
   - `pacman.conf` — pacman config referencing the local `[ionix]` repo
   - `profiledef.sh` — archiso profile definition (boot modes, compression, file permissions)
 - **`aur/`** — AUR package build infrastructure; `build-aur.sh` builds packages in dependency order with sentinel files to skip already-built packages
+- **`submodules/`** — in-repo sources built into the local pacman repo
+  - `ionix-quickshell/` — the desktop shell (QML/Quickshell). Built from the working tree by
+    `build-aur.sh`'s `LOCAL_PACKAGES` loop, and separately published to the AUR as
+    `ionix-quickshell-git` (see its `packaging/aur/PKGBUILD`)
 - **`assets/`** — SVG branding assets (wallpaper, logo) converted to PNG at build time
 - **`includes/`** — Pre-built package cache (calamares)
 
 ### Key Architectural Patterns
 
 **Local AUR repository:** AUR packages are pre-built into a local pacman repo (`localrepo/`) that is injected into `pacman.conf` as the `[ionix]` repo, avoiding AUR helpers during the ISO build.
+
+**Local packages:** entries in `build-aur.sh`'s `LOCAL_PACKAGES` are built from directories in this repo instead of being cloned from the AUR. They are copied into a scratch dir first (makepkg must never write into a git checkout) and are **always rebuilt** — the sentinel-marker skip used for AUR packages would otherwise hide your own edits. Any previous artifact is deleted first, because the final `repo-add` globs the directory and two versions would make the database entry depend on glob ordering.
 
 **Layered Hyprland config:** System defaults live in `profile/airootfs/etc/hypr/hyprland.lua`, user config in `profile/airootfs/etc/skel/.config/hypr/hyprland.lua` which loads the system config with `dofile`, then allows user overrides.
 
@@ -70,7 +80,11 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 ### Desktop Stack
 
 - **Compositor:** Hyprland (Wayland) managed by UWSM
-- **Panel:** Waybar (custom Ionix theme)
+- **Panel:** ionix-quickshell (QML/Quickshell) — bar, popouts and OSD. Started by the
+  `ionix-quickshell` systemd **user unit** (pre-enabled via the `/etc/skel` symlink), not by
+  `exec-once`, so a QML runtime error self-heals via `Restart=on-failure`
+- **Panel (fallback):** Waybar is still installed and its themes still ship, but nothing starts it
+  automatically. `Ctrl+Super+Shift+B` launches it if the Quickshell bar misbehaves
 - **Shell:** ionix-shell (custom AGS/Astal component)
 - **Terminal:** kitty (primary), foot, tabby
 - **Shell:** fish + oh-my-posh
@@ -127,6 +141,17 @@ Tint using the deep background colors (`#1a1025` / `#0f0a18`) at the appropriate
 ## Working with This Repo
 
 - When adding new packages: edit `profile/packages.x86_64`. AUR packages must also be added to `aur/build-aur.sh` with correct dependency ordering.
+- When changing the desktop shell: edit `submodules/ionix-quickshell/ionix/**`. Iterate without
+  rebuilding the ISO — `make -C submodules/ionix-quickshell dev` symlinks the tree into
+  `~/.config/quickshell/ionix`, then `qs -c ionix` runs it and **hot-reloads on save**. Errors
+  report as `file:line` in the process output; there is no useful static type check, because
+  Quickshell's types aren't on a standard `qmllint` import path, so the runtime is the only checker.
+  Remove the symlink to go back to the packaged copy at `/etc/xdg/quickshell/ionix`.
+- Quickshell API traps worth knowing: `UPowerDevice.percentage`, `WifiNetwork.signalStrength` and
+  `BluetoothDevice.battery` are all **0..1 fractions**, not 0..100. Reading a Pipewire node's
+  `audio` requires a `PwObjectTracker` covering it, or it stays null. Hyprland here uses the **Lua**
+  config parser, so raw `Hyprland.dispatch("workspace 3")` fails to parse — go through
+  `services/Compositor.qml`, which quotes the argument when `Hyprland.usingLua`.
 - When modifying default user config: edit files under `profile/airootfs/etc/skel/.config/`.
 - When modifying system config: edit files under `profile/airootfs/etc/`.
 - When adding new scripts: add to `profile/airootfs/usr/local/bin/` and register permissions in `profile/profiledef.sh`'s `file_permissions` array.

@@ -1,0 +1,21 @@
+{
+  "_comment": "Tokyo Night — matches ~/.config/waybar/themes/tokyo-night.",
+  "theme": {
+    "bgDeep": "#1a1b26",
+    "bgWindow": "#24283b",
+    "bgCard": "#2f3549",
+    "hover": "#3b4261",
+    "border": "#414868",
+    "muted": "#565f89",
+    "text": "#c0caf5",
+    "textBright": "#ffffff",
+    "accent": "#7aa2f7",
+    "accentBright": "#7aa2f7",
+    "accentLight": "#bb9af7",
+    "green": "#9ece6a",
+    "orange": "#ff9e64",
+    "red": "#f7768e",
+    "cyan": "#7dcfff",
+    "link": "#bb9af7"
+  }
+}

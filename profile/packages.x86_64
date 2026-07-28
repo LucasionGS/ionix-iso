@@ -113,6 +113,9 @@ uwsm
 nwg-displays
 
 # --- UI Utilities ---
+quickshell
+# waybar is no longer autostarted (ionix-quickshell replaces it) but stays
+# installed as a manual fallback: run `waybar` from a terminal.
 waybar
 wlr-protocols
 swaync
@@ -261,5 +264,6 @@ ionix-openconnect-tools
 ionix-shell
 ionix-file-manager-git
 ioexplorer-git
+ionix-quickshell
 protonup-qt
 grim-hyprland-git

@@ -96,6 +96,35 @@ apply_waybar() {
     ok "waybar: applied theme '$theme'"
 }
 
+# ── Section: quickshell (ionix-quickshell) ──────────────────
+# Theme dir: ~/.config/quickshell/ionix/themes/<theme>/theme.json
+# Symlink:   ~/.config/quickshell/ionix/theme.json -> themes/<theme>/theme.json
+#
+# The shell watches theme.json and restyles live, so no reload is needed. It is a
+# separate file from the user's own config.json so switching themes never
+# overwrites personal tweaks — config.json wins over theme.json.
+
+get_theme_dir_quickshell() { echo "$THEME_BASE_DIR/quickshell/ionix/themes"; }
+
+apply_quickshell() {
+    local theme="$1"
+    local theme_dir="$THEME_BASE_DIR/quickshell/ionix/themes/$theme"
+    local target_dir="$THEME_BASE_DIR/quickshell/ionix"
+    local src="$theme_dir/theme.json"
+    local dst="$target_dir/theme.json"
+
+    if [[ ! -f "$src" ]]; then
+        msg "quickshell: no theme '$theme' found, skipping"
+        return 0
+    fi
+
+    mkdir -p "$target_dir"
+    rm -f "$dst"
+    ln -s "themes/$theme/theme.json" "$dst"
+
+    ok "quickshell: applied theme '$theme'"
+}
+
 # ── Section helpers ─────────────────────────────────────────
 # get_theme_dir returns the themes directory for a given section name.
 get_theme_dir() {
@@ -117,6 +146,13 @@ reload_services() {
     # Waybar
     if pgrep -x waybar &>/dev/null; then
         killall -SIGUSR2 waybar 2>/dev/null && msg "waybar: reloaded" || true
+    fi
+
+    # ionix-quickshell. It already watches theme.json and restyles itself, so this
+    # is belt-and-braces for the case where the file was replaced rather than
+    # written in place and the watch didn't fire.
+    if command -v qs &>/dev/null; then
+        qs -c ionix ipc call theme reload &>/dev/null && msg "quickshell: reloaded" || true
     fi
 }
 

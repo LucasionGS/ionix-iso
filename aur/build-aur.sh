@@ -74,6 +74,18 @@ AUR_PACKAGES=(
     "protonup-qt"
 )
 
+# Packages built from sources in this repository rather than cloned from the AUR.
+# Paths are relative to the repo root and must contain a PKGBUILD.
+#
+# These are always rebuilt: their sources change with the working tree, so the
+# marker-based skip used for AUR packages would hide your own edits. They are
+# cheap (no compile step), so this costs nothing against a 35-package AUR run.
+LOCAL_PACKAGES=(
+    "submodules/ionix-quickshell"
+)
+
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 cleanup() {
     echo "==> Cleaning up..."
     rm -rf "$BUILD_DIR"
@@ -97,6 +109,51 @@ chmod 440 /etc/sudoers.d/99-ionix-builder
 
 echo "==> Building AUR packages into: $LOCAL_REPO"
 echo "==> Build directory: $BUILD_DIR"
+
+# Build a prepared PKGBUILD directory, copy the results into the local repo,
+# install them so later packages can depend on them, and record the file list in
+# the sentinel marker. Shared by the AUR and local-package loops.
+#   $1 = package name (marker name)
+#   $2 = directory containing the PKGBUILD, already owned by $BUILD_USER
+build_pkgdir() {
+    local pkg="$1" pkg_dir="$2"
+    local marker="$LOCAL_REPO/.built-${pkg}"
+    local pkg_files=() f
+
+    # Build the package as the build user with a clean environment.
+    # env -i strips all inherited vars (PYTHONPATH, PYTHONHOME, etc.) that
+    # root's shell may have set and that break tools like meson.
+    pushd "$pkg_dir" > /dev/null
+    sudo -u "$BUILD_USER" env -i \
+        HOME="/home/$BUILD_USER" \
+        USER="$BUILD_USER" \
+        LOGNAME="$BUILD_USER" \
+        PATH="$PYTHON_WRAPPER_DIR:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+        PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig:/usr/share/pkgconfig" \
+        TERM="${TERM:-xterm}" \
+        makepkg -s --noconfirm --needed --noprogressbar
+    popd > /dev/null
+
+    # Copy all built package files to local repo (handles split packages)
+    for f in "$pkg_dir"/*.pkg.tar.zst "$pkg_dir"/*.pkg.tar.xz; do
+        [[ -f "$f" ]] || continue
+        cp "$f" "$LOCAL_REPO/"
+        pkg_files+=("$LOCAL_REPO/$(basename "$f")")
+    done
+
+    if [[ ${#pkg_files[@]} -eq 0 ]]; then
+        echo "WARNING: No package files found for $pkg"
+        return 1
+    fi
+
+    # Install the package locally so dependent packages can find it
+    pacman -U --noconfirm --overwrite "*" --ask 4 "${pkg_files[@]}"
+
+    # Write sentinel marker with the list of installed package files
+    printf '%s\n' "${pkg_files[@]}" > "$marker"
+
+    echo "==> Successfully built: $pkg"
+}
 
 for pkg in "${AUR_PACKAGES[@]}"; do
     echo ""
@@ -140,40 +197,41 @@ STUBEOF
         chown "$BUILD_USER:$BUILD_USER" "$PKG_DIR/PKGBUILD"
     fi
 
-    # Build the package as the build user with a clean environment.
-    # env -i strips all inherited vars (PYTHONPATH, PYTHONHOME, etc.) that
-    # root's shell may have set and that break tools like meson.
-    pushd "$PKG_DIR" > /dev/null
-    sudo -u "$BUILD_USER" env -i \
-        HOME="/home/$BUILD_USER" \
-        USER="$BUILD_USER" \
-        LOGNAME="$BUILD_USER" \
-        PATH="$PYTHON_WRAPPER_DIR:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
-        PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig:/usr/share/pkgconfig" \
-        TERM="${TERM:-xterm}" \
-        makepkg -s --noconfirm --needed --noprogressbar
-    popd > /dev/null
+    build_pkgdir "$pkg" "$PKG_DIR" || continue
+done
 
-    # Copy all built package files to local repo (handles split packages)
-    pkg_files=()
-    for f in "$PKG_DIR"/*.pkg.tar.zst "$PKG_DIR"/*.pkg.tar.xz; do
-        [[ -f "$f" ]] || continue
-        cp "$f" "$LOCAL_REPO/"
-        pkg_files+=("$LOCAL_REPO/$(basename "$f")")
-    done
+# ── Local packages (built from this repository) ──────────────────────────────
+for pkgpath in "${LOCAL_PACKAGES[@]}"; do
+    src="$REPO_ROOT/$pkgpath"
+    pkg="$(basename "$pkgpath")"
 
-    if [[ ${#pkg_files[@]} -eq 0 ]]; then
-        echo "WARNING: No package files found for $pkg"
-        continue
+    echo ""
+    echo "══════════════════════════════════════════════════"
+    echo "  Building (local): $pkg"
+    echo "══════════════════════════════════════════════════"
+
+    if [[ ! -f "$src/PKGBUILD" ]]; then
+        echo "ERROR: $src/PKGBUILD not found."
+        echo "       This is a git submodule. Fetch it with:"
+        echo "         git submodule update --init --recursive"
+        exit 1
     fi
 
-    # Install the package locally so dependent AUR packages can find it
-    pacman -U --noconfirm --overwrite "*" --ask 4 "${pkg_files[@]}"
+    # Copy out of the git tree: makepkg writes pkg/ and src/ next to the PKGBUILD,
+    # and it must never do that inside a checkout.
+    PKG_DIR="$BUILD_DIR/$pkg"
+    rm -rf "$PKG_DIR"
+    mkdir -p "$PKG_DIR"
+    cp -a "$src/." "$PKG_DIR/"
+    rm -rf "$PKG_DIR/.git" "$PKG_DIR/pkg" "$PKG_DIR/src"
+    chown -R "$BUILD_USER:$BUILD_USER" "$PKG_DIR"
 
-    # Write sentinel marker with the list of installed package files
-    printf '%s\n' "${pkg_files[@]}" > "$MARKER"
+    # Always rebuild, and drop any previous artifact first. repo-add below globs
+    # the whole directory, so leaving an older build there would make the database
+    # entry depend on glob ordering.
+    rm -f "$LOCAL_REPO/.built-${pkg}" "$LOCAL_REPO/${pkg}"-[0-9]*.pkg.tar.*
 
-    echo "==> Successfully built: $pkg"
+    build_pkgdir "$pkg" "$PKG_DIR" || continue
 done
 
 # Clean up sudoers entry

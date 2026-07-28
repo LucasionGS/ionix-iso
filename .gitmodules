@@ -1,0 +1,4 @@
+[submodule "submodules/ionix-quickshell"]
+	path = submodules/ionix-quickshell
+	url = https://github.com/LucasionGS/ionix-quickshell.git
+	branch = main

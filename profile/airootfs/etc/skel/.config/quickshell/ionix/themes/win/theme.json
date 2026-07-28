@@ -1,0 +1,16 @@
+{
+  "_comment": "Windows-style — bottom bar, squarer, centre-weighted. Matches ~/.config/waybar/themes/win.",
+  "bar": {
+    "position": "bottom",
+    "height": 48,
+    "radius": 8,
+    "floating": false,
+    "opacity": 0.92,
+    "margin": { "top": 0, "left": 0, "right": 0 }
+  },
+  "modules": {
+    "left": ["Launcher", "Taskbar"],
+    "center": ["Workspaces"],
+    "right": ["Tray", "AudioIndicator", "NetworkIndicator", "BluetoothIndicator", "BatteryIndicator", "Clock", "NotificationBell"]
+  }
+}

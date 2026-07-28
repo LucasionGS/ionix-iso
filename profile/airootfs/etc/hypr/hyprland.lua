@@ -165,6 +165,11 @@ bind_exec(mainMod .. " + period", "gnome-characters")
 bind_exec(mainMod .. " + L", "hyprlock -c /etc/hypr/hyprlock.conf --grace 2")
 bind_exec("CTRL + " .. mainMod .. " + R", "hyprctl reload")
 
+-- ── Shell ─────────────────────────────────────────────────────
+bind_exec(mainMod .. " + SHIFT + B", "systemctl --user restart ionix-quickshell")
+-- Escape hatch: bring up waybar if the Quickshell bar is misbehaving.
+bind_exec("CTRL + " .. mainMod .. " + SHIFT + B", "waybar")
+
 -- # ── Notifications ─────────────────────────────────────────────────
 bind_exec(mainMod .. " + N", "swaync-client -t")
 
@@ -295,16 +300,19 @@ bind_exec("CTRL + " .. mainMod .. " + mouse_up", [[hyprctl -q keyword cursor:zoo
 bind_exec("CTRL + " .. mainMod .. " + ALT + 0", "hyprctl -q keyword cursor:zoom_factor 1")
 
 -- ── Media Keys ────────────────────────────────────────────────
-bind_exec("XF86AudioRaiseVolume", "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+", { locked = true, repeating = true })
-bind_exec("XF86AudioLowerVolume", "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-", { locked = true, repeating = true })
-bind_exec("XF86AudioMute", "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
-bind_exec("XF86AudioMicMute", "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle")
+-- Volume and brightness go through the shell's IPC so the on-screen display gets
+-- the exact new value instead of polling for it. Each falls back to the original
+-- command with `||`, so the keys still work when the shell isn't running.
+bind_exec("XF86AudioRaiseVolume", "qs -c ionix ipc call audio increase || wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+", { locked = true, repeating = true })
+bind_exec("XF86AudioLowerVolume", "qs -c ionix ipc call audio decrease || wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-", { locked = true, repeating = true })
+bind_exec("XF86AudioMute", "qs -c ionix ipc call audio mute || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
+bind_exec("XF86AudioMicMute", "qs -c ionix ipc call audio micMute || wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle")
 bind_exec("XF86AudioPlay", "playerctl play-pause")
 bind_exec("XF86AudioNext", "playerctl next")
 bind_exec("XF86AudioPrev", "playerctl previous")
 bind_exec("XF86AudioStop", "playerctl stop")
-bind_exec("XF86MonBrightnessUp", "brightnessctl set '12.75+'", { locked = true, repeating = true })
-bind_exec("XF86MonBrightnessDown", "brightnessctl set '12.75-'", { locked = true, repeating = true })
+bind_exec("XF86MonBrightnessUp", "qs -c ionix ipc call brightness increase || brightnessctl set '12.75+'", { locked = true, repeating = true })
+bind_exec("XF86MonBrightnessDown", "qs -c ionix ipc call brightness decrease || brightnessctl set '12.75-'", { locked = true, repeating = true })
 
 -- ── Screenshot ────────────────────────────────────────────────
 bind_exec("Print", "hyprshot -m region --freeze --clipboard-only && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
@@ -360,6 +368,24 @@ hl.window_rule({ match = { class = "steam_app_.*", fullscreen = true }, no_anim 
 
 
 -- ══════════════════════════════════════════════════════════════
+-- ║  Layer Rules — ionix-quickshell surfaces                    ║
+-- ══════════════════════════════════════════════════════════════
+
+-- The shell namespaces every surface with an `ionix-` prefix (ionix-bar,
+-- ionix-osd), so one regex covers all of them.
+--
+-- blur_popups matters as much as blur: the popouts are xdg-popups of the bar
+-- surface, not layer surfaces of their own, so they are not covered by `blur`.
+--
+-- ignore_alpha keeps the blur from bleeding out of the bar's rounded corners into
+-- the fully transparent margin around it. (There is no `ignore_zero` field in the
+-- Lua API — ignore_alpha subsumes it.)
+hl.layer_rule({ match = { namespace = "ionix-.*" }, blur = true, blur_popups = true, ignore_alpha = 0.2 })
+hl.layer_rule({ match = { namespace = "ionix-bar" }, animation = "slide top" })
+hl.layer_rule({ match = { namespace = "ionix-osd" }, animation = "fade" })
+
+
+-- ══════════════════════════════════════════════════════════════
 -- ║  Alt-Tab                                                   ║
 -- ══════════════════════════════════════════════════════════════
 
@@ -381,7 +407,9 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("bash /etc/hypr/scripts/init.sh")
   hl.exec_cmd("hyprpolkitagent")
   hl.exec_cmd("swaync")
-  hl.exec_cmd("waybar")
+  -- The bar is ionix-quickshell, started by its systemd user unit (pre-enabled in
+  -- /etc/skel) so it restarts itself on failure. waybar stays installed as a
+  -- manual fallback but is deliberately not launched here.
   hl.exec_cmd("ioexplorer-spotlight --server")
   hl.exec_cmd("blueman-applet")
   hl.exec_cmd("gnome-keyring-daemon --start --components=secrets,pkcs11,ssh")

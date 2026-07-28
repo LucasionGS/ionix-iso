@@ -19,6 +19,14 @@ for arg in "$@"; do
     esac
 done
 
+# Fetch git submodules before entering the container.
+# This has to happen on the host: build.sh runs as root inside the container,
+# where git refuses to operate on a tree owned by another user (safe.directory).
+if [[ ! -f "$SCRIPT_DIR/submodules/ionix-quickshell/PKGBUILD" ]]; then
+    echo "==> Fetching git submodules..."
+    git -C "$SCRIPT_DIR" submodule update --init --recursive
+fi
+
 # Build the Docker image if it doesn't exist yet or a rebuild was requested
 if [[ "$REBUILD_IMAGE" == true ]] || ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
     echo "==> Building Docker image: $IMAGE_NAME"
