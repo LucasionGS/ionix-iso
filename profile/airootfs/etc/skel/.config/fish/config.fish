@@ -3,7 +3,7 @@
 set -gx SSH_AUTH_SOCK "$XDG_RUNTIME_DIR/keyring/ssh"
 # Auto-start desktop session via UWSM on TTY1
 if status is-login; and test (tty) = /dev/tty1
-    # Read session from kernel cmdline (set by GRUB: ionix.desktop=hyprland|gnome)
+    # Read session from kernel cmdline (set by GRUB: ionix.desktop=hyprland|gnome|kde)
     set session (string match -r 'ionix\.desktop=(\S+)' < /proc/cmdline | tail -1)
 
     if test -z "$session"
@@ -24,6 +24,14 @@ if status is-login; and test (tty) = /dev/tty1
             set -gx WLR_NO_HARDWARE_CURSORS 1
             
             sudo /usr/bin/systemctl start gdm.service
+        case kde
+            set -gx XDG_SESSION_TYPE wayland
+            set -gx XDG_CURRENT_DESKTOP KDE
+            set -gx XDG_SESSION_DESKTOP KDE
+            set -gx DESKTOP_SESSION plasma
+            set -gx MOZ_ENABLE_WAYLAND 1
+
+            exec startplasma-wayland
         case '*'
             uwsm start hyprland-uwsm.desktop
     end

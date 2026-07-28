@@ -1,36 +1,58 @@
 #!/usr/bin/env bash
 # Ionix First Login Setup
-# Runs on user's first Hyprland session to set up per-user configs.
-# Only runs once (checks for marker file).
+# Runs on desktop sessions to set up per-user configs.
+# Shared setup runs once; desktop-specific setup runs once per desktop.
 
-MARKER="$HOME/.local/share/ionix/first-login-done"
+BASE_MARKER="$HOME/.local/share/ionix/first-login-base-done"
+GNOME_MARKER="$HOME/.local/share/ionix/first-login-gnome-done"
+KDE_MARKER="$HOME/.local/share/ionix/first-login-kde-done"
+CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-}"
 
-if [[ -f "$MARKER" ]]; then
-    exit 0
+mkdir -p "$HOME/.local/share/ionix"
+
+# Shared first-login setup
+if [[ ! -f "$BASE_MARKER" ]]; then
+    # Clone NvChad starter config if nvim config doesn't exist yet
+    if [[ ! -d "$HOME/.config/nvim" ]]; then
+        git clone --depth 1 https://github.com/NvChad/starter "$HOME/.config/nvim" 2>/dev/null || true
+    fi
+
+    # Create standard XDG user directories
+    xdg-user-dirs-update 2>/dev/null || true
+
+    touch "$BASE_MARKER"
 fi
 
-mkdir -p "$(dirname "$MARKER")"
+# GNOME-specific defaults
+if [[ "$CURRENT_DESKTOP" == *GNOME* && ! -f "$GNOME_MARKER" ]]; then
+    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+    gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
+    gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true
 
-# Clone NvChad starter config if nvim config doesn't exist yet
-if [[ ! -d "$HOME/.config/nvim" ]]; then
-    git clone --depth 1 https://github.com/NvChad/starter "$HOME/.config/nvim" 2>/dev/null || true
+    # Load Ionix GNOME defaults (keybindings, theme, shell settings).
+    if [[ -f /usr/local/share/ionix/gnome-defaults.dconf ]]; then
+        dconf load / < /usr/local/share/ionix/gnome-defaults.dconf 2>/dev/null || true
+    fi
+
+    touch "$GNOME_MARKER"
 fi
 
-# Create standard XDG user directories
-xdg-user-dirs-update 2>/dev/null || true
+# KDE-specific defaults
+if [[ "$CURRENT_DESKTOP" == *KDE* && ! -f "$KDE_MARKER" ]]; then
+    kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeDark 2>/dev/null || true
+    kwriteconfig6 --file kdeglobals --group General --key Name "Breeze Dark" 2>/dev/null || true
+    kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle Breeze 2>/dev/null || true
+    kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark 2>/dev/null || true
+    kwriteconfig6 --file kdeglobals --group General --key font "Noto Sans,11,-1,5,50,0,0,0,0,0" 2>/dev/null || true
+    kwriteconfig6 --file kdeglobals --group General --key fixed "JetBrainsMono Nerd Font,11,-1,5,50,0,0,0,0,0" 2>/dev/null || true
+    kwriteconfig6 --file kcminputrc --group Mouse --key cursorTheme Adwaita 2>/dev/null || true
+    kwriteconfig6 --file kcminputrc --group Mouse --key cursorSize 24 2>/dev/null || true
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General --key Image "file:///usr/local/share/ionix/wallpaper.png" 2>/dev/null || true
 
-# Set dark color scheme for GTK/portal-aware apps
-gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
-gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
-gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true
+    plasma-apply-lookandfeel -a org.kde.breezedark.desktop >/dev/null 2>&1 || true
+    plasma-apply-wallpaperimage /usr/local/share/ionix/wallpaper.png >/dev/null 2>&1 || true
 
-# Load Ionix GNOME defaults (keybindings, theme, shell settings)
-# These are user-level dconf settings applied on first login.
-if [[ -f /usr/local/share/ionix/gnome-defaults.dconf ]]; then
-    dconf load / < /usr/local/share/ionix/gnome-defaults.dconf 2>/dev/null || true
+    touch "$KDE_MARKER"
 fi
-
-# Mark first login as complete
-touch "$MARKER"
 
 sleep 2 && [[ -d /run/archiso ]] && ionix-install & disown

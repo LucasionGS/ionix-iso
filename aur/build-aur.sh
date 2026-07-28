@@ -66,6 +66,7 @@ AUR_PACKAGES=(
     "libastal-4-git"                   # separate AUR pkg providing libastal-4
     "libcava-git"                      # required by libastal-cava-git
     "appmenu-glib-translator-git"      # required by libastal-tray-git
+    "quarrel-git"                      # provides quarrel; required by libastal-mpris/notifd/etc.
     "libastal-apps-git"
     "libastal-auth-git"
     "libastal-battery-git"

@@ -3,6 +3,6 @@ Type=Application
 Name=Ionix First Login
 Exec=/usr/local/bin/ionix-first-login
 NoDisplay=true
-OnlyShowIn=GNOME;
+OnlyShowIn=GNOME;KDE;
 X-GNOME-Autostart-enabled=true
 X-GNOME-AutoRestart=false

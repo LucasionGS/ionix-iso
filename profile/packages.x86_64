@@ -124,11 +124,19 @@ gnome-settings-daemon
 gnome-control-center
 gnome-tweaks
 gnome-shell-extensions
-# Do i only need this..?
-gnome
 xdg-desktop-portal-gnome
 gnome-backgrounds
 dconf-editor
+
+# --- KDE Plasma (alternative session) ---
+plasma-meta
+kde-applications-meta
+xdg-desktop-portal-kde
+kde-gtk-config
+konsole
+dolphin
+plasma-nm
+plasma-pa
 
 # --- Terminal and Shell ---
 kitty
@@ -235,7 +243,6 @@ wine-gecko
 # --- Other libraries ---
 libportal
 libportal-gtk4
-libsoup
 libsecret
 
 # --- AUR packages (from ionix local repo) ---
