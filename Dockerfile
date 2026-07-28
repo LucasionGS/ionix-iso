@@ -35,6 +35,7 @@ RUN pacman-key --init \
   json-glib \
   libgtop \
   wayland-protocols \
-  scdoc
+  scdoc \
+  dart-sass
 
 CMD ["/bin/bash"]

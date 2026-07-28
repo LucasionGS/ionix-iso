@@ -1,0 +1,37 @@
+#!/bin/sh
+# Ionix: Generate a KDE Plasma desktop boot entry
+# This runs during grub-mkconfig alongside the standard 10_linux script.
+
+set -e
+
+. /usr/share/grub/grub-mkconfig_lib
+
+CLASS="--class ionix --class gnu-linux --class gnu --class os"
+
+# Find the latest kernel
+LINUX=$(ls -1 /boot/vmlinuz-linux 2>/dev/null | head -1)
+INITRD=$(ls -1 /boot/initramfs-linux.img 2>/dev/null | head -1)
+
+if [ -z "$LINUX" ]; then
+    exit 0
+fi
+
+# Build cmdline: take the standard defaults but replace ionix.desktop=hyprland with kde
+CMDLINE_DEFAULT=$(echo "${GRUB_CMDLINE_LINUX_DEFAULT}" | sed 's/ionix\.desktop=[^ ]*/ionix.desktop=kde/')
+# If no ionix.desktop= was present, append it
+if ! echo "$CMDLINE_DEFAULT" | grep -q 'ionix\.desktop='; then
+    CMDLINE_DEFAULT="${CMDLINE_DEFAULT} ionix.desktop=kde"
+fi
+
+LINUX_REL="/$(make_system_path_relative_to_its_root "$LINUX")"
+INITRD_REL="/$(make_system_path_relative_to_its_root "$INITRD")"
+
+cat << EOF
+menuentry 'Ionix — KDE Plasma' ${CLASS} --id 'ionix-kde' {
+$(prepare_grub_to_access_device "${GRUB_DEVICE_BOOT}" | grub_add_tab)
+	echo	'Loading Linux ...'
+	linux	${LINUX_REL} root=${GRUB_DEVICE} rw ${CMDLINE_DEFAULT} ${GRUB_CMDLINE_LINUX}
+	echo	'Loading initial ramdisk ...'
+	initrd	${INITRD_REL}
+}
+EOF
