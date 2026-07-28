@@ -1,6 +1,8 @@
 work/
 out/
 localrepo/
+submodules/*/pkg/
+submodules/*/src/
 *.iso
 *.pkg.tar.zst
 *.pkg.tar.xz

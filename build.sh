@@ -34,8 +34,18 @@ echo "║  Ionix ISO Builder                                      ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# ── Step 1: Build AUR packages ───────────────────────────────
-echo "==> Step 1/4: Building AUR packages..."
+# ── Preflight: submodules ────────────────────────────────────
+# Fail fast rather than fetching: this script runs as root, and git refuses to
+# operate on a checkout owned by another user. Fetch on the host instead.
+if [[ ! -f "${SCRIPT_DIR}/submodules/ionix-quickshell/PKGBUILD" ]]; then
+    echo "ERROR: submodules/ionix-quickshell is empty."
+    echo "       Run this as your normal user first:"
+    echo "         git submodule update --init --recursive"
+    exit 1
+fi
+
+# ── Step 1: Build AUR and local packages ─────────────────────
+echo "==> Step 1/4: Building AUR and local packages..."
 chmod +x "${AUR_DIR}/build-aur.sh"
 "${AUR_DIR}/build-aur.sh" "$LOCAL_REPO"
 

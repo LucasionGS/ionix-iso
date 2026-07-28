@@ -6,6 +6,9 @@
 {"name": "Hyprland", "type": "LowLatency_RT"}
 
 # Panel and shell
+# ionix-shell-qs execs the real binary, so the name ananicy matches is "qs".
+{"name": "qs", "type": "LowLatency_RT"}
+{"name": "quickshell", "type": "LowLatency_RT"}
 {"name": "waybar", "type": "LowLatency_RT"}
 {"name": "ags", "type": "LowLatency_RT"}
 {"name": "gjs", "type": "LowLatency_RT"}

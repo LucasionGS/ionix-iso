@@ -1,0 +1,3 @@
+{
+  "_comment": "Default Ionix look. Empty because config/Theme.qml already ships these values; kept so `ionix-settheme ionix` has something to link to and to reset the other themes."
+}
