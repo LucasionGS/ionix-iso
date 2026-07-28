@@ -171,7 +171,10 @@ bind_exec(mainMod .. " + SHIFT + B", "systemctl --user restart ionix-quickshell"
 bind_exec("CTRL + " .. mainMod .. " + SHIFT + B", "waybar")
 
 -- # ── Notifications ─────────────────────────────────────────────────
-bind_exec(mainMod .. " + N", "swaync-client -t")
+-- The notification server is ionix-quickshell itself; swaync is still installed
+-- but must not run, because only one process can own org.freedesktop.Notifications.
+bind_exec(mainMod .. " + N", "qs -c ionix ipc call notifications toggle")
+bind_exec(mainMod .. " + SHIFT + N", "qs -c ionix ipc call notifications dnd")
 
 -- ── Wallpaper ─────────────────────────────────────────────────
 bind_exec("CTRL + " .. mainMod .. " + W", "bash ~/.config/ionix/scripts/promptwallpaper.sh")
@@ -406,7 +409,12 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("awww-daemon")
   hl.exec_cmd("bash /etc/hypr/scripts/init.sh")
   hl.exec_cmd("hyprpolkitagent")
-  hl.exec_cmd("swaync")
+  -- swaync is deliberately not started: ionix-quickshell owns
+  -- org.freedesktop.Notifications now, and two servers on that name means
+  -- whichever loses the race silently stops working. Dropping this line is not
+  -- enough on its own — swaync ships a D-Bus activation file for that same name,
+  -- so /etc/systemd/user/swaync.service is masked to /dev/null as well. Undo both
+  -- (and drop the shell's NotificationServer) to go back to swaync.
   -- The bar is ionix-quickshell, started by its systemd user unit (pre-enabled in
   -- /etc/skel) so it restarts itself on failure. waybar stays installed as a
   -- manual fallback but is deliberately not launched here.
