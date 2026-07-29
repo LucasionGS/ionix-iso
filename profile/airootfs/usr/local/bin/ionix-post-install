@@ -46,6 +46,10 @@ rm -f /etc/motd
 userdel -r liveuser 2>/dev/null || true
 
 # Remove live-session systemd services
+# systemd-firstboot is masked on the live medium so it never prompts for a
+# timezone on the console; the installed system gets locale/timezone/hostname
+# from Calamares, so unmask it rather than leaving the live mask behind.
+rm -f /etc/systemd/system/systemd-firstboot.service
 rm -f /etc/systemd/system/choose-mirror.service
 rm -f /etc/systemd/system/etc-pacman.d-gnupg.mount
 rm -f /etc/systemd/system/pacman-init.service

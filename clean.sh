@@ -15,6 +15,7 @@ sudo rm -rf /tmp/ionix-aur-build.*
 sudo rm -rf /tmp/ionix-python-wrapper.*
 # makepkg leftovers, in case anyone ran it inside a submodule checkout
 sudo rm -rf "${SCRIPT_DIR}"/submodules/*/pkg "${SCRIPT_DIR}"/submodules/*/src
+sudo rm -f "${SCRIPT_DIR}"/submodules/*/*.pkg.tar.*
 
 # Clean generated assets from airootfs (they get regenerated on build)
 rm -f "${SCRIPT_DIR}/profile/airootfs/usr/local/share/ionix/wallpaper.png"

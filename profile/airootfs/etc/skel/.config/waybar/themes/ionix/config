@@ -38,7 +38,7 @@
     "custom/launcher": {
         "format": "",
         "tooltip": false,
-        "on-click": "ioexplorer-start --top --left"
+        "on-click": "ioexplorer-spotlight"
     },
 
     "hyprland/workspaces": {

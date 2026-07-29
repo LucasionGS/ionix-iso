@@ -31,7 +31,6 @@ AUR_PACKAGES=(
     "yay"
     "oh-my-posh-bin"
     "calamares"
-    "shim-signed"
     "tabby-bin"
     "grim-hyprland-git"                # Replaces grim
     # astal core (build order: io first, then base, then everything else)
@@ -46,6 +45,7 @@ AUR_PACKAGES=(
     "libastal-bluetooth-git"
     "libastal-cava-git"
     "libastal-hyprland-git"
+    "quarrel-git"                      # provides `quarrel`, required by mpris/notifd
     "libastal-mpris-git"
     "libastal-network-git"
     "libastal-notifd-git"
@@ -82,6 +82,15 @@ AUR_PACKAGES=(
 # cheap (no compile step), so this costs nothing against a 35-package AUR run.
 LOCAL_PACKAGES=(
     "submodules/ionix-quickshell"
+    "aur/local/shim-signed"            # AUR version 404s; see that PKGBUILD's header
+)
+
+# Build-time tools that a PKGBUILD needs but does not declare in makedepends.
+# makepkg only installs what is declared, so without this the build dies deep
+# inside the package's build() with a "not found in $PATH" error.
+#   dart-sass -> provides `sass`, used by `ags bundle` for ionix-shell
+EXTRA_BUILD_DEPS=(
+    "dart-sass"
 )
 
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -110,6 +119,20 @@ chmod 440 /etc/sudoers.d/99-ionix-builder
 echo "==> Building AUR packages into: $LOCAL_REPO"
 echo "==> Build directory: $BUILD_DIR"
 
+if [[ ${#EXTRA_BUILD_DEPS[@]} -gt 0 ]]; then
+    echo "==> Installing undeclared build dependencies: ${EXTRA_BUILD_DEPS[*]}"
+    # Retry behind a db refresh: in a container image built a while ago the
+    # cached sync databases can predate the package being asked for.
+    pacman -S --needed --noconfirm "${EXTRA_BUILD_DEPS[@]}" \
+        || { pacman -Sy --noconfirm && pacman -S --needed --noconfirm "${EXTRA_BUILD_DEPS[@]}"; }
+fi
+
+# Packages whose build failed. Collected rather than fatal on the spot so one
+# run reports every broken package; the script exits non-zero at the end.
+# Without this, mkarchiso is the first thing to notice, and it only says
+# "target not found", giving no hint that the package failed to build hours ago.
+FAILED_PACKAGES=()
+
 # Build a prepared PKGBUILD directory, copy the results into the local repo,
 # install them so later packages can depend on them, and record the file list in
 # the sentinel marker. Shared by the AUR and local-package loops.
@@ -123,6 +146,12 @@ build_pkgdir() {
     # Build the package as the build user with a clean environment.
     # env -i strips all inherited vars (PYTHONPATH, PYTHONHOME, etc.) that
     # root's shell may have set and that break tools like meson.
+    #
+    # The exit status is checked explicitly: callers invoke this function as
+    # `build_pkgdir ... || ...`, which disables errexit for everything inside it,
+    # so a failing makepkg would otherwise fall through to the copy loop below
+    # and publish whatever stale .pkg.tar.zst happened to be lying around.
+    local rc=0
     pushd "$pkg_dir" > /dev/null
     sudo -u "$BUILD_USER" env -i \
         HOME="/home/$BUILD_USER" \
@@ -131,8 +160,13 @@ build_pkgdir() {
         PATH="$PYTHON_WRAPPER_DIR:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
         PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig:/usr/share/pkgconfig" \
         TERM="${TERM:-xterm}" \
-        makepkg -s --noconfirm --needed --noprogressbar
+        makepkg -s --noconfirm --needed --noprogressbar || rc=$?
     popd > /dev/null
+
+    if [[ $rc -ne 0 ]]; then
+        echo "ERROR: makepkg failed for $pkg (exit $rc)"
+        return 1
+    fi
 
     # Copy all built package files to local repo (handles split packages)
     for f in "$pkg_dir"/*.pkg.tar.zst "$pkg_dir"/*.pkg.tar.xz; do
@@ -197,7 +231,7 @@ STUBEOF
         chown "$BUILD_USER:$BUILD_USER" "$PKG_DIR/PKGBUILD"
     fi
 
-    build_pkgdir "$pkg" "$PKG_DIR" || continue
+    build_pkgdir "$pkg" "$PKG_DIR" || FAILED_PACKAGES+=("$pkg")
 done
 
 # ── Local packages (built from this repository) ──────────────────────────────
@@ -223,7 +257,11 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
     rm -rf "$PKG_DIR"
     mkdir -p "$PKG_DIR"
     cp -a "$src/." "$PKG_DIR/"
+    # Drop anything a previous in-tree `makepkg` left behind. A stale
+    # *.pkg.tar.* in particular makes makepkg refuse with "A package has already
+    # been built", and the copy loop would then ship that stale artifact.
     rm -rf "$PKG_DIR/.git" "$PKG_DIR/pkg" "$PKG_DIR/src"
+    rm -f "$PKG_DIR"/*.pkg.tar.*
     chown -R "$BUILD_USER:$BUILD_USER" "$PKG_DIR"
 
     # Always rebuild, and drop any previous artifact first. repo-add below globs
@@ -231,7 +269,7 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
     # entry depend on glob ordering.
     rm -f "$LOCAL_REPO/.built-${pkg}" "$LOCAL_REPO/${pkg}"-[0-9]*.pkg.tar.*
 
-    build_pkgdir "$pkg" "$PKG_DIR" || continue
+    build_pkgdir "$pkg" "$PKG_DIR" || FAILED_PACKAGES+=("$pkg")
 done
 
 # Clean up sudoers entry
@@ -244,3 +282,13 @@ repo-add "$LOCAL_REPO/ionix.db.tar.gz" "$LOCAL_REPO"/*.pkg.tar.* 2>/dev/null
 
 echo "==> AUR build complete. Packages in: $LOCAL_REPO"
 ls -la "$LOCAL_REPO"
+
+if [[ ${#FAILED_PACKAGES[@]} -gt 0 ]]; then
+    echo ""
+    echo "ERROR: ${#FAILED_PACKAGES[@]} package(s) failed to build:"
+    printf '  - %s\n' "${FAILED_PACKAGES[@]}"
+    echo ""
+    echo "They are listed in profile/packages.x86_64, so mkarchiso would fail"
+    echo "with 'target not found'. Fix the builds above, or drop the packages."
+    exit 1
+fi
