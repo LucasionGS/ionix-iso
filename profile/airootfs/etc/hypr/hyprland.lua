@@ -256,8 +256,8 @@ bind_workspace(mainMod .. " + Page_Down", "r-1")
 bind_workspace(mainMod .. " + Page_Up", "r+1")
 bind_workspace("CTRL + " .. mainMod .. " + Page_Down", "r-5")
 bind_workspace("CTRL + " .. mainMod .. " + Page_Up", "r+5")
-bind_workspace(mainMod .. " + mouse_up", "r+1")
-bind_workspace(mainMod .. " + mouse_down", "r-1")
+bind_workspace(mainMod .. " + mouse_up", "r-1")
+bind_workspace(mainMod .. " + mouse_down", "r+1")
 
 -- ── Move to Workspace ─────────────────────────────────────────
 bind_move_to_workspace(mainMod .. " + ALT + 1", 1, false)
