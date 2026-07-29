@@ -95,8 +95,9 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 - `ionix-install` — Launches the Calamares installer
 - `ionix-post-install` — Post-installation system configuration (runs inside chroot)
 - `ionix-first-login` — One-time user environment setup
-- `ionix-install-bootloader` / `grub-install-ionix` — Bootloader installation
-- `ionix-mount-efi` — EFI partition mounting helper
+- `grub-install` — PATH-priority wrapper adding `--no-nvram`, so a plain `grub-install` call
+  from inside the Calamares chroot does not fail trying to write EFI NVRAM
+- `ionix-session-selector` / `ionix-arrange-workspace` — session and workspace helpers
 
 ## Visual Theme
 
