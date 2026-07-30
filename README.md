@@ -52,7 +52,7 @@ Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth anim
 - **ionix-quickshell** — the status bar, written in QML on [Quickshell](https://quickshell.org). Floating, blurred and rounded, with workspaces, a window taskbar, media controls, system tray, and audio / network / bluetooth / battery indicators. Clicking an indicator opens an in-shell panel rather than launching a separate app: a calendar, an audio mixer with per-application volume sliders, a Wi-Fi picker with inline password entry, a bluetooth manager, a media player, and a power menu. Volume and brightness get an on-screen display.
   - Configure it with `~/.config/quickshell/ionix/config.json` — changes apply live, no restart. See `/etc/xdg/quickshell/ionix/defaults.json` for every key.
   - Restart it with `Super+Shift+B`.
-  - Shipped as a git submodule and published to the AUR as `ionix-quickshell-git`, so it updates independently of ISO releases.
+  - Developed as a git submodule and published to the AUR as `ionix-quickshell-git`. The ISO builds and ships that same package (from the submodule's working tree, versioned off its commit), so an installed system upgrades it with a plain `yay -Syu` — independently of ISO releases.
 - **Waybar** — still installed as a fallback, but no longer started automatically. Run `waybar` from a terminal (or `Ctrl+Super+Shift+B`) if you need it.
 - **ionix-shell** — custom AGS/Astal component providing a command palette (`Super+R`) and an `Alt+Tab` window switcher
 
@@ -259,7 +259,8 @@ Ionix can be built **natively on Arch Linux** (requires root) or **inside Docker
 #### Submodules
 
 `ionix-quickshell` (the desktop shell) is a git submodule and is built into the ISO from the
-working tree. Fetch it before building — as your normal user, not root:
+working tree, as the package `ionix-quickshell-git`. Fetch it before building — as your normal
+user, not root:
 
 ```bash
 git submodule update --init --recursive
