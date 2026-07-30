@@ -58,8 +58,9 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 - **`aur/`** — AUR package build infrastructure; `build-aur.sh` builds packages in dependency order with sentinel files to skip already-built packages
 - **`submodules/`** — in-repo sources built into the local pacman repo
   - `ionix-quickshell/` — the desktop shell (QML/Quickshell). Built from the working tree by
-    `build-aur.sh`'s `LOCAL_PACKAGES` loop, and separately published to the AUR as
-    `ionix-quickshell-git` (see its `packaging/aur/PKGBUILD`)
+    `build-aur.sh`'s `LOCAL_PACKAGES` loop, under the **same package name it is published to the
+    AUR as**, `ionix-quickshell-git` (see its `packaging/aur/PKGBUILD`), so the shipped copy is
+    upgradable with `yay -Syu`
 - **`assets/`** — SVG branding assets (wallpaper, logo) converted to PNG at build time
 - **`includes/`** — Pre-built package cache (calamares)
 
@@ -67,7 +68,9 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 
 **Local AUR repository:** AUR packages are pre-built into a local pacman repo (`localrepo/`) that is injected into `pacman.conf` as the `[ionix]` repo, avoiding AUR helpers during the ISO build.
 
-**Local packages:** entries in `build-aur.sh`'s `LOCAL_PACKAGES` are built from directories in this repo instead of being cloned from the AUR. They are copied into a scratch dir first (makepkg must never write into a git checkout) and are **always rebuilt** — the sentinel-marker skip used for AUR packages would otherwise hide your own edits. Any previous artifact is deleted first, because the final `repo-add` globs the directory and two versions would make the database entry depend on glob ordering.
+**Local packages:** entries in `build-aur.sh`'s `LOCAL_PACKAGES` are built from directories in this repo instead of being cloned from the AUR. They are copied into a scratch dir first (makepkg must never write into a git checkout) and are **always rebuilt** — the sentinel-marker skip used for AUR packages would otherwise hide your own edits. Any previous artifact is deleted first, because the final `repo-add` globs the directory and two versions would make the database entry depend on glob ordering; the names to delete are read back out of each PKGBUILD, since a local package need not build under its directory name.
+
+**Local packages that are also AUR packages:** `ionix-quickshell` builds as `ionix-quickshell-git`, the same name it is published under on the AUR. Since `ionix-post-install` strips the `[ionix]` repo from the installed system, pacman then treats it as a foreign package and `yay -Syu` upgrades it from the AUR normally. This only works while the version *scheme* matches on both sides: `build-aur.sh` writes `r<count>.<shorthash>` of the submodule commit into `.pkgver` in the scratch dir (the copy has no `.git` for a `pkgver()` to read), using the same formula as the submodule's `packaging/aur/aur-publish.sh`. Change one, change the other.
 
 **Layered Hyprland config:** System defaults live in `profile/airootfs/etc/hypr/hyprland.lua`, user config in `profile/airootfs/etc/skel/.config/hypr/hyprland.lua` which loads the system config with `dofile`, then allows user overrides.
 

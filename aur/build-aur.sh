@@ -80,6 +80,12 @@ AUR_PACKAGES=(
 # These are always rebuilt: their sources change with the working tree, so the
 # marker-based skip used for AUR packages would hide your own edits. They are
 # cheap (no compile step), so this costs nothing against a 35-package AUR run.
+#
+# A local package may build under a different name than its directory — the shell
+# submodule builds `ionix-quickshell-git`, the same name it is published under on
+# the AUR, so that the copy shipped on the ISO is upgradable with `yay -Syu` once
+# the installer drops the [ionix] repo. Names are read back from each PKGBUILD
+# below rather than assumed from the path.
 LOCAL_PACKAGES=(
     "submodules/ionix-quickshell"
     "aur/local/shim-signed"            # AUR version 404s; see that PKGBUILD's header
@@ -262,12 +268,55 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
     # been built", and the copy loop would then ship that stale artifact.
     rm -rf "$PKG_DIR/.git" "$PKG_DIR/pkg" "$PKG_DIR/src"
     rm -f "$PKG_DIR"/*.pkg.tar.*
+
+    # Resolve the version here, from the real checkout: .git was just stripped
+    # from the copy, so a -git style pkgver() has nothing to read there. The
+    # formula must stay identical to the one the package's AUR publish script
+    # uses, otherwise the shipped build and the AUR build of the same commit
+    # would compare as different versions.
+    #
+    # safe.directory=* because this script runs as root over a checkout owned by
+    # the invoking user, which git otherwise rejects as "dubious ownership". A
+    # submodule's .git is a gitlink into the superproject, so the exemption has
+    # to cover every path, not just $src.
+    if [[ -e "$src/.git" ]]; then
+        if ! git -c safe.directory='*' -C "$src" rev-parse HEAD > /dev/null 2>&1; then
+            echo "ERROR: $src is a git checkout but its history is unreadable."
+            echo "       A -git PKGBUILD there would be versioned from a placeholder."
+            FAILED_PACKAGES+=("$pkg")
+            continue
+        fi
+        printf "r%s.%s" \
+            "$(git -c safe.directory='*' -C "$src" rev-list --count HEAD)" \
+            "$(git -c safe.directory='*' -C "$src" rev-parse --short HEAD)" \
+            > "$PKG_DIR/.pkgver"
+        echo "==> $pkg version: $(cat "$PKG_DIR/.pkgver")"
+    fi
+
     chown -R "$BUILD_USER:$BUILD_USER" "$PKG_DIR"
 
     # Always rebuild, and drop any previous artifact first. repo-add below globs
     # the whole directory, so leaving an older build there would make the database
     # entry depend on glob ordering.
-    rm -f "$LOCAL_REPO/.built-${pkg}" "$LOCAL_REPO/${pkg}"-[0-9]*.pkg.tar.*
+    #
+    # The built package name is not necessarily the directory name (the shell
+    # submodule lives in submodules/ionix-quickshell but builds
+    # ionix-quickshell-git), so ask the PKGBUILD instead of guessing. Sourcing it
+    # in a subshell is safe: only the variable assignments run, not pkgver() or
+    # package().
+    mapfile -t pkg_names < <(
+        bash -c 'source "$1" > /dev/null 2>&1; printf "%s\n" "${pkgname[@]}"' _ "$PKG_DIR/PKGBUILD"
+    )
+    rm -f "$LOCAL_REPO/.built-${pkg}"
+    for name in "${pkg_names[@]}"; do
+        [[ -n "$name" ]] || continue
+        rm -f "$LOCAL_REPO/${name}"-*.pkg.tar.*
+    done
+    # Also sweep an artifact left by an earlier build under the directory name,
+    # for packages that have since been renamed (ionix-quickshell ->
+    # ionix-quickshell-git). Anchored on a digit so it cannot match the -git
+    # package's own r<count>.<hash> files.
+    rm -f "$LOCAL_REPO/${pkg}"-[0-9]*.pkg.tar.*
 
     build_pkgdir "$pkg" "$PKG_DIR" || FAILED_PACKAGES+=("$pkg")
 done
