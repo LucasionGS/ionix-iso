@@ -1,0 +1,213 @@
+/* ============================================================
+   IoExplorer — winix — Windows 11 Dark
+   ============================================================ */
+
+/* IOEXPLORER AUTO_GEN */
+/* theme.window_background=rgba(32,32,32,0.86) */
+/* theme.panel_background=rgba(39,39,39,0.92) */
+/* theme.muted_background=rgba(255,255,255,0.05) */
+/* theme.accent=rgb(0,120,212) */
+/* theme.selection=rgba(76,194,255,0.26) */
+/* theme.text=rgba(255,255,255,0.90) */
+/* theme.border=rgba(255,255,255,0.09) */
+/* theme.corner_radius=6 */
+
+window {
+background: rgba(32,32,32,0.86);
+color: rgba(255,255,255,0.90);
+}
+
+.topbar,
+.tab-strip,
+.sidebar,
+.start-menu-surface,
+.spotlight-surface,
+.spotlight-preview {
+background: rgba(39,39,39,0.92);
+border-color: rgba(255,255,255,0.09);
+}
+
+.toolbar-group,
+.breadcrumbs,
+.path-stack,
+.file-tab,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.start-menu-footer,
+.spotlight-row,
+.spotlight-prefix-badge,
+.spotlight-footer-key,
+.spotlight-chat-user,
+.spotlight-chat-code {
+background: rgba(255,255,255,0.05);
+}
+
+.toolbar-group,
+.breadcrumbs,
+.path-stack,
+.sidebar-nav-button,
+.content-list row,
+.computer-volume-list row,
+.settings-tabs button,
+.settings-actions-list row,
+.context-menu,
+.context-menu-item,
+.file-tab,
+.tab-new-button,
+.start-menu-surface,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.spotlight-surface,
+.spotlight-preview,
+.spotlight-row,
+.spotlight-chat-user,
+.spotlight-chat-code {
+border-radius: 6px;
+}
+
+.file-tab-button:checked,
+.sidebar-nav-button:checked,
+.sidebar-list row:selected,
+.content-list row.entry-selected,
+.content-grid flowboxchild.entry-selected,
+.start-menu-launcher:active,
+.start-menu-result:active,
+.spotlight-row:selected {
+background: rgba(76,194,255,0.26);
+}
+
+.start-menu-window,
+.start-menu-surface,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-user,
+.start-menu-section-title,
+.spotlight-surface,
+.spotlight-entry,
+.spotlight-row-title,
+.spotlight-section-label,
+.spotlight-chat-text,
+.spotlight-chat-code-text,
+.spotlight-chat-heading,
+.spotlight-preview-text {
+color: rgba(255,255,255,0.90);
+}
+
+.start-menu-surface {
+box-shadow: 0 26px 58px alpha(black, 0.36);
+}
+
+.spotlight-surface,
+.spotlight-preview {
+box-shadow: 0 26px 58px alpha(black, 0.36);
+}
+
+.start-menu-backdrop {
+background: alpha(rgba(32,32,32,0.86), 0.4);
+}
+
+.spotlight-backdrop {
+background: alpha(rgba(32,32,32,0.86), 0.34);
+}
+
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.start-menu-footer,
+.spotlight-hint,
+.spotlight-footer-key,
+.spotlight-chat-code {
+border: 1px solid alpha(rgba(255,255,255,0.09), 0.9);
+}
+
+.spotlight-footer {
+border-top: 1px solid alpha(rgba(255,255,255,0.09), 0.9);
+}
+
+.spotlight-prefix-badge {
+background: alpha(rgb(0,120,212), 0.24);
+}
+
+.start-menu-launcher:hover,
+.start-menu-result:hover,
+.start-menu-power:hover,
+.spotlight-row:hover {
+background: alpha(rgb(0,120,212), 0.18);
+}
+
+.computer-volume-progress progress {
+background: rgb(0,120,212);
+}
+
+.status-label,
+.settings-value,
+.settings-action-command,
+.spotlight-row-subtitle,
+.spotlight-hint,
+.spotlight-chat-role,
+.spotlight-chat-status,
+.spotlight-preview-status,
+.spotlight-preview-caption,
+.spotlight-chat-tool {
+color: alpha(rgba(255,255,255,0.90), 0.72);
+}
+/* /IOEXPLORER AUTO_GEN */
+
+/* ── Beyond the generated block ──────────────────────────────
+   Spots the generator does not reach, where data/styles/ioexplorer.css
+   would otherwise keep its built-in blue or a neutral grey.
+
+   These are plain CSS with the palette baked in. Recolouring via
+   Settings -> Theme rewrites the block above but not this, so a heavily
+   edited palette will drift from these few rules — reinstall the theme,
+   or edit them by hand.
+
+   Note the strokes here are white at low alpha rather than tinted: Windows
+   draws hairlines that way. The quickshell side of this theme cannot do the
+   same, because Theme.qml derives its borders from accentBright.
+   ──────────────────────────────────────────────────────────── */
+
+/* The bundled sheet has a brighter fill for a row that is both selected
+   and hovered. The generated block sets only the resting selection, so
+   without this the hover flashes blue. */
+.sidebar-nav-button:checked:hover,
+.sidebar-list row:selected:hover,
+.content-list row.entry-selected:hover,
+.content-grid flowboxchild.entry-selected:hover {
+  background: rgba(76,194,255,0.34);
+}
+
+.rubberband-selection {
+  background: rgba(76,194,255,0.20);
+  border: 1px solid rgba(76,194,255,0.70);
+}
+
+/* Surfaces the generated block does not list. */
+.details-panel {
+  background: rgba(39,39,39,0.92);
+  border-left: 1px solid rgba(255,255,255,0.09);
+}
+
+.filter-bar {
+  background: rgba(39,39,39,0.92);
+  border-top: 1px solid rgba(255,255,255,0.09);
+}
+
+.context-menu {
+  background: rgba(43,43,43,0.98);
+  border: 1px solid rgba(255,255,255,0.09);
+}
+
+.context-menu-item:hover {
+  background: rgba(255,255,255,0.07);
+}
+
+.computer-volume-progress trough {
+  background: rgba(255,255,255,0.05);
+}
