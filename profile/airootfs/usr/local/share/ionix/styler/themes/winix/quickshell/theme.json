@@ -1,0 +1,62 @@
+{
+  "bar": {
+    "_comment": "The Windows 11 taskbar: bottom, edge to edge, square, 48px. Bar.qml keys the whole layout off position !== \"bottom\", and its exclusiveZone is height + margin.top, which is 0 once floating is false — so this reserves exactly 48px and nothing floats. radius 0 also flattens Theme.rBar, the one shape lever the theme layer has. opacity feeds Theme.barFill = alpha(bgDeep, opacity); 0.78 over the compositor blur is acrylic rather than the heavier glass the other themes use.",
+    "height": 48,
+    "position": "bottom",
+    "floating": false,
+    "radius": 0,
+    "opacity": 0.78,
+    "nativeBlur": true,
+    "margin": { "top": 0, "left": 0, "right": 0 }
+  },
+
+  "modules": {
+    "_comment": "Arrays replace wholesale in Config.deepMerge, so each list is written out in full. Bar.qml anchors the centre section to the window's horizontalCenter, which is exactly what Windows 11 does with start + Task View + pinned apps. Left is the widgets slot. Right keeps the shipped order — tray chevron first, clock then the action-centre bell last — because that already matches Windows. Launcher stays in the list whatever else changes: Launcher.qml is where PowerPopout lives, so dropping it would take the right-click power menu with it.",
+    "left": ["MediaWidget"],
+    "center": ["Launcher", "Workspaces", "Taskbar"],
+    "right": ["Tray", "AudioIndicator", "NetworkIndicator", "BluetoothIndicator", "BatteryIndicator", "Clock", "NotificationBell"]
+  },
+
+  "launcher": {
+    "_comment": "U+F05B3, nf-md-microsoft_windows — the flat four-square logo, not the tilted nf-fa-windows flag. It comes from the Nerd Font, so theme.fontLogo below has to move off Ionix.ttf for it to render. command is deliberately left at the default: ioexplorer-start would be the closer analogue to a Start menu, but it is commented out in both the autostart and the keybind in /etc/hypr/hyprland.lua, so pointing at it would be a regression.",
+    "icon": "󰖳"
+  },
+
+  "clock": {
+    "_comment": "Clock.qml stacks time over date in one pill, which is the Windows corner clock. Full numeric date rather than the base theme's 'ddd d MMM'.",
+    "format": "HH:mm",
+    "dateFormat": "dd/MM/yyyy",
+    "showDate": true
+  },
+
+  "osd": {
+    "_comment": "OsdWindow anchors bottom with this margin. The default 120 would sit only 72px above a 48px taskbar; 140 gives the card room.",
+    "margin": 140
+  },
+
+  "theme": {
+    "_comment": "Windows 11 Fluent dark. accentBright is the load-bearing key: Theme.qml derives barBorder/panelBorder from it *and* it drives active items, sliders, switches, the clock underline and the taskbar active indicator — on Windows every one of those is literally the accent colour, so a single value gets them all right. fontFamily must stay a Nerd Font: IconButton and every module render their glyphs with it, so Segoe-style UI text is not available without breaking the icons. fontLogo is used only by Launcher, so that one is safe to repoint.",
+
+    "bgDeep": "#1b1b1b",
+    "bgWindow": "#202020",
+    "bgCard": "#2b2b2b",
+    "hover": "#383838",
+    "border": "#454545",
+    "muted": "#a0a0a0",
+    "text": "#e0e0e0",
+    "textBright": "#ffffff",
+    "accent": "#0078d4",
+    "accentBright": "#4cc2ff",
+    "accentLight": "#60cdff",
+
+    "green": "#6ccb5f",
+    "orange": "#f7630c",
+    "red": "#e81123",
+    "cyan": "#3a96dd",
+    "link": "#4cc2ff",
+
+    "fontFamily": "JetBrainsMono Nerd Font",
+    "fontMono": "JetBrainsMono Nerd Font",
+    "fontLogo": "JetBrainsMono Nerd Font"
+  }
+}
