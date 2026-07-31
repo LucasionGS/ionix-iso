@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+# Installation of the theme
+# Available variables:
+# THEME_DIR - Full directory path to the theme to be installed
+# THEME_NAME - The name of the theme being installed
+
+# Functions can be overridden to customize installation/uninstallation for specific sections, and one for additional custom requirements.
+# Copy this file into the theme directory and modify as needed. Functions present in the file will override the default installation behavior for the corresponding section.
+
+IONIX_BIN=/usr/local/share/ionix/bin
+
+# Waybar
+ionix_install_waybar() {
+  local dest="$HOME/.config/waybar"
+  mkdir -p "$dest"
+  ln -sf "$THEME_DIR/waybar/config" "$dest/config"
+  ln -sf "$THEME_DIR/waybar/style.css" "$dest/style.css"
+
+  # Reload waybar if it's running to apply the new configuration
+  if pgrep -x waybar &>/dev/null; then
+    killall -SIGUSR2 waybar 2>/dev/null && msg "waybar: reloaded" || true
+  fi
+}
+
+ionix_uninstall_waybar() {
+  rm -f "$HOME/.config/waybar/config"
+  rm -f "$HOME/.config/waybar/style.css"
+}
+
+# Quickshell (ionix-quickshell)
+#
+# The shell reads three layers: its shipped defaults, then theme.json (ours), then
+# the user's own config.json. Dropping a symlink in the middle slot restyles the
+# shell without touching anything the user wrote.
+#
+# Only JSON goes here — a shell.qml in this directory would shadow /etc/xdg and
+# take over the whole shell instead of overriding it.
+ionix_install_quickshell() {
+  local dest="$HOME/.config/quickshell/ionix"
+  mkdir -p "$dest"
+  ln -sf "$THEME_DIR/quickshell/theme.json" "$dest/theme.json"
+
+  ionix_reload_quickshell
+}
+
+ionix_uninstall_quickshell() {
+  rm -f "$HOME/.config/quickshell/ionix/theme.json"
+  ionix_reload_quickshell
+}
+
+# ln -sf replaces the symlink rather than writing through it, so the inode the
+# shell was watching disappears. Nudge it over IPC instead of trusting the watch.
+ionix_reload_quickshell() {
+  command -v qs &>/dev/null || return 0
+  qs -c ionix ipc call theme reload &>/dev/null && msg "quickshell: reloaded" || true
+}
+
+# IoExplorer (file manager + start menu + spotlight)
+#
+# theme.css is the path IoExplorer already falls back to when config.toml sets no
+# custom_css, so a symlink here themes it without editing the user's config.
+#
+# No reload nudge: LiveConfig watches the *directory* with WATCH_MOVES precisely
+# because saves replace the file rather than rewriting it, so swapping the symlink
+# is an event it already handles.
+ionix_install_ioexplorer() {
+  local dest="$HOME/.config/ioexplorer"
+  local css="$dest/theme.css"
+  local configured
+  mkdir -p "$dest"
+
+  # A theme.css that is a real file is the user's own — Settings -> Theme writes
+  # by renaming over the path, which replaces our symlink with their palette.
+  # Same reasoning as the kitty backup below, but it is never auto-restored:
+  # putting one theme's colours back while a different theme is active is worse
+  # than leaving the file for them to pick up.
+  if [[ -f "$css" && ! -L "$css" ]]; then
+    local backup="$css.bak"
+    local n=1
+    # Never overwrite an older backup — number instead. Losing a palette someone
+    # sat and tuned is not a reasonable cost for switching theme.
+    while [[ -e "$backup" ]]; do
+      backup="$css.bak.$((n++))"
+    done
+
+    msg "ioexplorer: existing theme.css found, backing up to $(basename "$backup")"
+    mv "$css" "$backup"
+  fi
+
+  ln -sf "$THEME_DIR/ioexplorer/theme.css" "$css"
+
+  # custom_css may point somewhere else entirely, in which case the file we just
+  # linked is simply never read.
+  configured="$(ionix_ioexplorer_custom_css)"
+  if [[ -n "$configured" && "$configured" != "$css" ]]; then
+    err "ioexplorer: config.toml sets custom_css = $configured"
+    err "ioexplorer: the theme installed to $css and will NOT be used until that is cleared"
+  fi
+}
+
+ionix_uninstall_ioexplorer() {
+  local css="$HOME/.config/ioexplorer/theme.css"
+
+  # Only ever remove our own symlink; a real file here is the user's palette.
+  if [[ -L "$css" ]]; then
+    rm -f "$css"
+  elif [[ -e "$css" ]]; then
+    msg "ioexplorer: theme.css is not our symlink, keeping it"
+  fi
+}
+
+# The custom_css path from config.toml, empty when unset. Last assignment wins,
+# matching how a TOML parser treats a duplicated key at the top level.
+ionix_ioexplorer_custom_css() {
+  local config="$HOME/.config/ioexplorer/config.toml"
+  [[ -f "$config" ]] || return 0
+  sed -n 's/^[[:space:]]*custom_css[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$config" | tail -n1
+}
+
+# Hyprland
+ionix_install_hyprland() {
+  local dest="$HOME/.config/hypr"
+  mkdir -p "$dest"
+  # ~/.config/hypr/theme.conf is sourced by the main hyprland.conf
+  ln -sf "$THEME_DIR/hyprland/theme.conf" "$dest/theme.conf" # Deprecated
+  ln -sf "$THEME_DIR/hyprland/theme.lua" "$dest/theme.lua"
+
+  hyprctl reload 2>/dev/null && msg "hyprland: reloaded" || true
+}
+
+ionix_uninstall_hyprland() {
+  rm -f "$HOME/.config/hypr/theme.conf" # Deprecated
+  rm -f "$HOME/.config/hypr/theme.lua"
+  hyprctl reload 2>/dev/null && msg "hyprland: reloaded" || true
+}
+
+# Wallpapers
+ionix_install_wallpaper() {
+  "$IONIX_BIN/ionix-wallpaper" "$THEME_DIR"/wallpaper/*
+  "$IONIX_BIN/ionix-cycle-wallpaper"
+}
+
+ionix_uninstall_wallpaper() {
+  # No specific uninstallation steps needed for wallpapers
+  :
+}
+
+# Kitty config
+ionix_install_kitty() {
+  local dest="$HOME/.config/kitty"
+  mkdir -p "$dest"
+
+  # Backup existing kitty.conf if it exists. kitty can't merge configurations...
+  if [[ -f "$dest/kitty.conf" ]]; then
+    msg "kitty: existing configuration found, backing up to kitty.conf.bak"
+    mv "$dest/kitty.conf" "$dest/kitty.conf.bak"
+  fi
+  
+  ln -sf "$THEME_DIR/kitty/kitty.conf" "$dest/kitty.conf"
+  
+}
+
+ionix_uninstall_kitty() {
+  if [[ -f "$HOME/.config/kitty/kitty.conf.bak" ]]; then
+    rm -f "$HOME/.config/kitty/kitty.conf"
+    msg "kitty: restoring backup configuration"
+    mv "$HOME/.config/kitty/kitty.conf.bak" "$HOME/.config/kitty/kitty.conf"
+  fi
+  # If no backup exists, keep it to avoid deleting user configuration
+}
+
+# Custom installation
+ionix_install_custom() {
+  # Add any custom installation steps here
+  :
+}
+
+ionix_uninstall_custom() {
+  :
+}

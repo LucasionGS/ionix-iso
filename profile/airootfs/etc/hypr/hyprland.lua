@@ -178,8 +178,8 @@ bind_exec(mainMod .. " + N", "qs -c ionix ipc call notifications toggle")
 bind_exec(mainMod .. " + SHIFT + N", "qs -c ionix ipc call notifications dnd")
 
 -- ── Wallpaper ─────────────────────────────────────────────────
-bind_exec("CTRL + " .. mainMod .. " + W", "bash ~/.config/ionix/scripts/promptwallpaper.sh")
-bind_exec(mainMod .. " + ALT + W", "bash ~/.config/ionix/cron/cycle-wallpaper.sh")
+bind_exec("CTRL + " .. mainMod .. " + W", "bash /usr/local/share/ionix/bin/ionix-wallpaper")
+bind_exec(mainMod .. " + ALT + W", "bash /usr/local/share/ionix/bin/ionix-cycle-wallpaper")
 
 -- ── Window Management ─────────────────────────────────────────
 hl.bind(mainMod .. " + Q", hl.dsp.window.close())

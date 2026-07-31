@@ -1,0 +1,15 @@
+{
+  "_comment": [
+    "Ionix — the base theme. ionix-quickshell already ships this palette in",
+    "config/Theme.qml, so there is deliberately nothing to override here.",
+    "",
+    "This file is symlinked to ~/.config/quickshell/ionix/theme.json. Keeping it",
+    "present-but-empty means switching back to 'ionix' actively clears whatever the",
+    "previous theme installed, rather than relying on its uninstall having run.",
+    "",
+    "The user's own ~/.config/quickshell/ionix/config.json is merged on top of this",
+    "file, so nothing here can clobber their personal overrides."
+  ],
+
+  "theme": {}
+}
