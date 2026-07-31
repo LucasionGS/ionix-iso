@@ -1,0 +1,38 @@
+{
+  "bar": {
+    "_comment": "Glassier and rounder than base Ionix. opacity feeds Theme.barFill = alpha(bgDeep, opacity); /etc/hypr already blurs behind the ionix-* layers, so 0.55 reads as glass rather than murk. bar.radius is the only shape lever the theme layer has — Theme.qml's other radii are hardcoded.",
+    "height": 42,
+    "position": "top",
+    "floating": true,
+    "radius": 20,
+    "opacity": 0.55,
+    "nativeBlur": true,
+    "margin": { "top": 8, "left": 12, "right": 12 }
+  },
+
+  "theme": {
+    "_comment": "Near-black base, neon violet primary, with cyan and magenta as the two secondary neons. accentBright is deliberately cyan and not a lighter violet: Theme.qml derives barBorder/panelBorder from it, so that one key is what puts a cyan hairline on every surface in the shell.",
+
+    "bgDeep": "#070312",
+    "bgWindow": "#0d0620",
+    "bgCard": "#1a0d33",
+    "hover": "#2a1350",
+    "border": "#7c1fd4",
+    "muted": "#8a6bb8",
+    "text": "#e6d9ff",
+    "textBright": "#ffffff",
+    "accent": "#b026ff",
+    "accentBright": "#00f0ff",
+    "accentLight": "#ff2bd6",
+
+    "green": "#00ff9f",
+    "orange": "#ffb800",
+    "red": "#ff2b5e",
+    "cyan": "#00f0ff",
+    "link": "#00f0ff",
+
+    "fontFamily": "JetBrainsMono Nerd Font",
+    "fontMono": "JetBrainsMono Nerd Font",
+    "fontLogo": "Ionix"
+  }
+}

@@ -1,0 +1,209 @@
+/* ============================================================
+   IoExplorer — ionix-pro — Neon Cyber
+   ============================================================ */
+
+/* IOEXPLORER AUTO_GEN */
+/* theme.window_background=rgba(7,3,18,0.72) */
+/* theme.panel_background=rgba(13,6,32,0.84) */
+/* theme.muted_background=rgba(7,3,18,0.34) */
+/* theme.accent=rgb(176,38,255) */
+/* theme.selection=rgba(176,38,255,0.36) */
+/* theme.text=rgba(230,217,255,0.96) */
+/* theme.border=rgba(0,240,255,0.28) */
+/* theme.corner_radius=10 */
+
+window {
+background: rgba(7,3,18,0.72);
+color: rgba(230,217,255,0.96);
+}
+
+.topbar,
+.tab-strip,
+.sidebar,
+.start-menu-surface,
+.spotlight-surface,
+.spotlight-preview {
+background: rgba(13,6,32,0.84);
+border-color: rgba(0,240,255,0.28);
+}
+
+.toolbar-group,
+.breadcrumbs,
+.path-stack,
+.file-tab,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.start-menu-footer,
+.spotlight-row,
+.spotlight-prefix-badge,
+.spotlight-footer-key,
+.spotlight-chat-user,
+.spotlight-chat-code {
+background: rgba(7,3,18,0.34);
+}
+
+.toolbar-group,
+.breadcrumbs,
+.path-stack,
+.sidebar-nav-button,
+.content-list row,
+.computer-volume-list row,
+.settings-tabs button,
+.settings-actions-list row,
+.context-menu,
+.context-menu-item,
+.file-tab,
+.tab-new-button,
+.start-menu-surface,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.spotlight-surface,
+.spotlight-preview,
+.spotlight-row,
+.spotlight-chat-user,
+.spotlight-chat-code {
+border-radius: 10px;
+}
+
+.file-tab-button:checked,
+.sidebar-nav-button:checked,
+.sidebar-list row:selected,
+.content-list row.entry-selected,
+.content-grid flowboxchild.entry-selected,
+.start-menu-launcher:active,
+.start-menu-result:active,
+.spotlight-row:selected {
+background: rgba(176,38,255,0.36);
+}
+
+.start-menu-window,
+.start-menu-surface,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-user,
+.start-menu-section-title,
+.spotlight-surface,
+.spotlight-entry,
+.spotlight-row-title,
+.spotlight-section-label,
+.spotlight-chat-text,
+.spotlight-chat-code-text,
+.spotlight-chat-heading,
+.spotlight-preview-text {
+color: rgba(230,217,255,0.96);
+}
+
+.start-menu-surface {
+box-shadow: 0 26px 58px alpha(black, 0.36);
+}
+
+.spotlight-surface,
+.spotlight-preview {
+box-shadow: 0 26px 58px alpha(black, 0.36);
+}
+
+.start-menu-backdrop {
+background: alpha(rgba(7,3,18,0.72), 0.4);
+}
+
+.spotlight-backdrop {
+background: alpha(rgba(7,3,18,0.72), 0.34);
+}
+
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.start-menu-footer,
+.spotlight-hint,
+.spotlight-footer-key,
+.spotlight-chat-code {
+border: 1px solid alpha(rgba(0,240,255,0.28), 0.9);
+}
+
+.spotlight-footer {
+border-top: 1px solid alpha(rgba(0,240,255,0.28), 0.9);
+}
+
+.spotlight-prefix-badge {
+background: alpha(rgb(176,38,255), 0.24);
+}
+
+.start-menu-launcher:hover,
+.start-menu-result:hover,
+.start-menu-power:hover,
+.spotlight-row:hover {
+background: alpha(rgb(176,38,255), 0.18);
+}
+
+.computer-volume-progress progress {
+background: rgb(176,38,255);
+}
+
+.status-label,
+.settings-value,
+.settings-action-command,
+.spotlight-row-subtitle,
+.spotlight-hint,
+.spotlight-chat-role,
+.spotlight-chat-status,
+.spotlight-preview-status,
+.spotlight-preview-caption,
+.spotlight-chat-tool {
+color: alpha(rgba(230,217,255,0.96), 0.72);
+}
+/* /IOEXPLORER AUTO_GEN */
+
+/* ── Beyond the generated block ──────────────────────────────
+   Spots the generator does not reach, where data/styles/ioexplorer.css
+   would otherwise keep its built-in blue or a neutral grey.
+
+   These are plain CSS with the palette baked in. Recolouring via
+   Settings -> Theme rewrites the block above but not this, so a heavily
+   edited palette will drift from these few rules — reinstall the theme,
+   or edit them by hand.
+   ──────────────────────────────────────────────────────────── */
+
+/* The bundled sheet has a brighter fill for a row that is both selected
+   and hovered. The generated block sets only the resting selection, so
+   without this the hover flashes blue. */
+.sidebar-nav-button:checked:hover,
+.sidebar-list row:selected:hover,
+.content-list row.entry-selected:hover,
+.content-grid flowboxchild.entry-selected:hover {
+  background: rgba(176,38,255,0.46);
+}
+
+.rubberband-selection {
+  background: rgba(176,38,255,0.2);
+  border: 1px solid rgba(176,38,255,0.78);
+}
+
+/* Surfaces the generated block does not list. */
+.details-panel {
+  background: rgba(13,6,32,0.84);
+  border-left: 1px solid rgba(0,240,255,0.28);
+}
+
+.filter-bar {
+  background: rgba(13,6,32,0.84);
+  border-top: 1px solid rgba(0,240,255,0.28);
+}
+
+.context-menu {
+  background: rgba(13,6,32,0.96);
+  border: 1px solid rgba(0,240,255,0.28);
+}
+
+.context-menu-item:hover {
+  background: rgba(176,38,255,0.18);
+}
+
+.computer-volume-progress trough {
+  background: rgba(7,3,18,0.34);
+}
