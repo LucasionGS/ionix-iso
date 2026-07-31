@@ -229,8 +229,8 @@ if [[ -z "$TARGET_ROOT" ]]; then
         install_packages
     else
         echo "─────────────────────────────────────────────────────"
-        read -r -p "Install/update packages from packages.x86_64? [Y/n]: " choice < /dev/tty
-        if [[ "$choice" != [Nn]* ]]; then
+        read -r -p "Install/update packages from packages.x86_64? [y/N]: " choice < /dev/tty
+        if [[ "$choice" == [Yy]* ]]; then
             install_packages
         else
             echo "Skipped package installation."
