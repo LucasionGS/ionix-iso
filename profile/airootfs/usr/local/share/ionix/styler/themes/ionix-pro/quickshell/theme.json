@@ -1,13 +1,13 @@
 {
   "bar": {
     "_comment": "Glassier and rounder than base Ionix. opacity feeds Theme.barFill = alpha(bgDeep, opacity); /etc/hypr already blurs behind the ionix-* layers, so 0.55 reads as glass rather than murk. bar.radius is the only shape lever the theme layer has — Theme.qml's other radii are hardcoded.",
-    "height": 42,
+    "height": 48,
     "position": "top",
     "floating": true,
     "radius": 20,
     "opacity": 0.55,
     "nativeBlur": true,
-    "margin": { "top": 8, "left": 12, "right": 12 }
+    "margin": { "top": 4, "left": 12, "right": 12 }
   },
 
   "theme": {

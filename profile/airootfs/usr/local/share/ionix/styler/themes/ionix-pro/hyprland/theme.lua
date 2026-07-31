@@ -6,8 +6,8 @@
 hl.config({
   general = {
     -- Slightly more air than base Ionix (2/2) so the glow below has room to read.
-    gaps_in = 4,
-    gaps_out = 10,
+    gaps_in = 3,
+    gaps_out = 4,
     border_size = 2,
 
     col = {
