@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+# $BIN_FILE — Install and switch Ionix desktop theme
+# Usage: $BIN_FILE <theme-name>
+#        $BIN_FILE --list
+#        $BIN_FILE --current
+
+set -euo pipefail
+
+BIN_FILE="ionixtheme"
+STYLER_DIR="$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/.." && pwd)"
+THEMES_DIR="$STYLER_DIR/themes"
+INSTALL_DEFAULT_FILE="$STYLER_DIR/install-default"
+CURRENT_THEME_FILE="$HOME/.config/ionix/current-theme"
+
+# ── Helpers ─────────────────────────────────────────────────
+
+msg()  { printf '\033[1;35m[ionix]\033[0m %s\n' "$*"; }
+err()  { printf '\033[1;31m[ionix]\033[0m %s\n' "$*" >&2; }
+ok()   { printf '\033[1;32m[ionix]\033[0m %s\n' "$*"; }
+
+usage() {
+    cat <<EOF
+Usage: $BIN_FILE <theme-name>
+       $BIN_FILE --list
+       $BIN_FILE --current
+
+Install and activate an Ionix desktop theme from this repository.
+
+Options:
+  --list      List available themes
+  --current   Show the current theme
+  -h, --help  Show this help message
+EOF
+}
+
+# Return the list of available theme names by scanning ./themes.
+list_themes() {
+    [[ -d "$THEMES_DIR" ]] || return 0
+
+    local theme_dir
+    for theme_dir in "$THEMES_DIR"/*/; do
+        [[ -d "$theme_dir" ]] || continue
+        basename "$theme_dir"
+    done | sort
+}
+
+get_current_theme() {
+    if [[ -f "$CURRENT_THEME_FILE" ]]; then
+        cat "$CURRENT_THEME_FILE"
+    else
+        echo "none"
+    fi
+}
+
+save_current_theme() {
+    mkdir -p "$(dirname "$CURRENT_THEME_FILE")"
+    printf '%s\n' "$1" > "$CURRENT_THEME_FILE"
+}
+
+# ── Install scripts ─────────────────────────────────────────
+
+clear_ionix_functions() {
+    local function_name
+
+    while IFS= read -r function_name; do
+        [[ -n "$function_name" ]] || continue
+        unset -f "$function_name"
+    done < <(declare -F | awk '$3 ~ /^ionix_(install|uninstall)_/ {print $3}')
+}
+
+load_installers() {
+    local theme_dir="$1"
+    local theme_install_file="$theme_dir/install"
+
+    if [[ ! -f "$INSTALL_DEFAULT_FILE" ]]; then
+        err "Missing default installer: $INSTALL_DEFAULT_FILE"
+        exit 1
+    fi
+
+    clear_ionix_functions
+
+    source "$INSTALL_DEFAULT_FILE"
+
+    if [[ -f "$theme_install_file" ]]; then
+        source "$theme_install_file"
+    fi
+}
+
+get_theme_functions() {
+    local prefix="$1"
+    declare -F | awk -v prefix="$prefix" 'index($3, prefix) == 1 {print $3}' | sort
+}
+
+run_theme_functions() {
+    local action="$1"
+    local prefix="ionix_${action}_"
+    local custom_function="${prefix}custom"
+    local functions=()
+    local function_name
+    local section
+
+    while IFS= read -r function_name; do
+        [[ -n "$function_name" ]] || continue
+        [[ "$function_name" == "$custom_function" ]] && continue
+
+        section="${function_name#$prefix}"
+        [[ -d "$THEME_DIR/$section" ]] || continue
+
+        functions+=("$function_name")
+    done < <(get_theme_functions "$prefix")
+
+    if declare -F "$custom_function" &>/dev/null; then
+        functions+=("$custom_function")
+    fi
+
+    if [[ ${#functions[@]} -eq 0 ]]; then
+        err "No ${action} functions found"
+        exit 1
+    fi
+
+    for function_name in "${functions[@]}"; do
+        msg "${action}: running ${function_name#$prefix}"
+        "$function_name"
+    done
+}
+
+run_installers() {
+    run_theme_functions "install"
+}
+
+run_uninstallers() {
+    run_theme_functions "uninstall"
+}
+
+# ── Main ────────────────────────────────────────────────────
+
+main() {
+    if [[ $# -lt 1 ]]; then
+        usage
+        exit 1
+    fi
+
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --list)
+            list_themes
+            exit 0
+            ;;
+        --current)
+            get_current_theme
+            exit 0
+            ;;
+        -*)
+            err "Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+
+    local theme="$1"
+    local theme_dir="$THEMES_DIR/$theme"
+    local current_theme
+    local current_theme_dir
+
+    if [[ ! -d "$theme_dir" ]]; then
+        err "Theme not found: $theme"
+        msg "Available themes:"
+        list_themes | sed 's/^/  /'
+        exit 1
+    fi
+
+    current_theme="$(get_current_theme)"
+
+    if [[ "$current_theme" != "none" ]]; then
+        current_theme_dir="$THEMES_DIR/$current_theme"
+
+        if [[ -d "$current_theme_dir" ]]; then
+            export THEME_DIR="$current_theme_dir"
+            export THEME_NAME="$current_theme"
+
+            msg "Uninstalling current theme: $current_theme"
+            load_installers "$current_theme_dir"
+            run_uninstallers
+        else
+            msg "Current theme '$current_theme' is not in this repository, skipping uninstall"
+        fi
+    fi
+
+    export THEME_DIR="$theme_dir"
+    export THEME_NAME="$theme"
+
+    msg "Switching to theme: $theme"
+
+    load_installers "$theme_dir"
+    run_installers
+
+    save_current_theme "$theme"
+
+    ok "Theme switched to '$theme'"
+}
+
+main "$@"

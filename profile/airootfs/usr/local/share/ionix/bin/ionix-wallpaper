@@ -2,7 +2,7 @@
 # Ionix - Wallpaper Picker
 # Set wallpaper(s) using awww. Opens a file dialog if no arguments given.
 #
-# Usage: promptwallpaper.sh [file1] [file2] ...
+# Usage: ionix-wallpaper [file1] [file2] ...
 
 IONIX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix"
 AWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"

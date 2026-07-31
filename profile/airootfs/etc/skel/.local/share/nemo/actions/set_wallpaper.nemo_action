@@ -1,7 +1,7 @@
 [Nemo Action]
 Name=Set Wallpaper
 Comment=Set the current image as wallpaper
-Exec=sh -c "bash ~/.config/ionix/scripts/promptwallpaper.sh %F"
+Exec=sh -c "bash /usr/local/share/ionix/bin/ionix-wallpaper %F"
 Selection=Any
 Extensions=jpeg;jpg;png;gif
 Icon-Name=view-grid-symbolic
