@@ -40,13 +40,26 @@ echo "    Project: $SCRIPT_DIR"
 echo "    Output:  $SCRIPT_DIR/out/"
 echo ""
 
+# Refresh the container's pacman databases before every build, not just when the
+# image is (re)built. The image ships whatever sync databases existed when it was
+# created, and Arch drops superseded package versions from its mirrors within
+# days — so against a cached image, every `makepkg -s` dependency install fails
+# with a 404 on a version the mirror no longer carries.
+#
+# Refresh the keyring first (an old keyring cannot verify newly signed packages),
+# and always pair -Sy with -Su: a bare -Sy leaves the container in a
+# partial-upgrade state, which breaks builds in far less obvious ways.
 docker run --rm \
     --privileged \
     --platform linux/amd64 \
     -v "$SCRIPT_DIR:$SCRIPT_DIR" \
     -w "$SCRIPT_DIR" \
     "$IMAGE_NAME" \
-    bash ./build.sh
+    bash -c 'set -e
+        echo "==> Refreshing container package databases..."
+        pacman -Sy --noconfirm --needed archlinux-keyring
+        pacman -Su --noconfirm
+        exec bash ./build.sh'
 
 echo ""
 echo "==> Build complete. ISO is in: $SCRIPT_DIR/out/"
