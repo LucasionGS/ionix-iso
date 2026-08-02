@@ -81,3 +81,36 @@ hl.layer_rule({ match = { namespace = "ionix-bar" }, animation = "slide bottom" 
 -- background_opacity (0.94), landing around 0.90 unfocused and 0.94 focused.
 hl.window_rule({ match = { class = "kitty" }, opacity = "0.96" })
 hl.window_rule({ match = { class = "kitty", focus = true }, opacity = "1.0" })
+
+-- ── hyprbars ──────────────────────────────────────────────────
+-- Geometry, glyphs and actions stay with /etc/hypr/hyprland.lua; this only
+-- repaints. The base config applies the bar from `config.reloaded`, which
+-- fires after this file is parsed, so plain assignment is enough.
+if ionix_bars then
+  local c = ionix_bars.colors
+
+  -- bgWindow at 0.78 — the same alpha this theme gives its shell bar, so the
+  -- title bar reads as the same acrylic rather than the heavier glass the
+  -- other themes use.
+  c.bar  = "rgba(202020c7)"
+  c.text = "rgba(e0e0e0ff)"
+
+  -- Windows leaves minimise and maximise as neutral chrome and colours only
+  -- close, so these two are deliberately the same border grey: the glyph, not
+  -- the colour, is what distinguishes them. The red is the actual Windows
+  -- close-button red.
+  c.minimize = "rgb(454545)"
+  c.maximize = "rgb(454545)"
+  c.close    = "rgb(e81123)"
+
+  -- Inverted against the other themes — light glyphs on dark buttons. A bgDeep
+  -- glyph would be unreadable on #454545, and white-on-red is what the real
+  -- close button does.
+  c.icon = "rgb(ffffff)"
+
+  -- 0x00000000 reads as "unset" to hyprbars, which leaves buttons at their own
+  -- colours when the window loses focus. That is the point: this theme sets
+  -- inactive_opacity 1.0 and dim_inactive false because Windows does not fade
+  -- what you are not looking at, and dimmed buttons would contradict it.
+  c.inactive_button = "rgba(00000000)"
+end

@@ -389,6 +389,155 @@ hl.layer_rule({ match = { namespace = "ionix-osd" }, animation = "fade" })
 
 
 -- ══════════════════════════════════════════════════════════════
+-- ║  Title Bars — hyprbars                                     ║
+-- ══════════════════════════════════════════════════════════════
+
+-- hyprbars is not shipped in packages.x86_64; it is opt-in via `hyprpm`. Every
+-- reference to it below is behind a `hl.plugin.hyprbars` check so a system
+-- without the plugin parses this file cleanly instead of erroring.
+--
+-- Themes override the look by assigning into `ionix_bars` -- see the bottom of
+-- this section for why that works despite themes being parsed after this file.
+
+ionix_bars = {
+  height         = 28,
+  padding        = 12,
+  button_padding = 8,
+  button_size    = 11,
+
+  text_font   = "JetBrainsMono Nerd Font",
+  text_size   = 11,
+  text_weight = 500,
+
+  colors = {
+    -- Heavy glass (~90%) over the window background, per the Ionix surface
+    -- convention: translucent enough that decoration.blur carries the
+    -- wallpaper through, opaque enough to read a title against.
+    bar             = "rgba(1a1025e6)",
+    text            = "rgba(e2d9f3ff)",
+    -- Buttons on unfocused windows drop to the dim/border violet so only the
+    -- focused window carries live colour.
+    inactive_button = "rgba(4a3d60ff)",
+
+    -- Close is the semantic error red rather than another violet: it is the
+    -- one destructive control on the bar and should not be a colour swap away
+    -- from the other two. Maximise/minimise are the bright and mid accents.
+    close    = "rgb(e74c3c)",
+    maximize = "rgb(a855f7)",
+    minimize = "rgb(9b59b6)",
+    -- Glyphs are punched out of the button in the deepest background.
+    icon     = "rgb(0f0a18)",
+  },
+}
+
+-- Minimise is a toggle, so it needs a branch rather than a fixed dispatcher.
+-- `hyprctl eval` runs in this same Lua state, so the button can just call this
+-- global by name. Global on purpose: a local would not be reachable from eval.
+function ionix_bars_toggle_minimize()
+  local win = hl.get_active_window()
+  if not win then return end
+
+  local ws = win.workspace
+  if ws and ws.special then
+    -- Drop it back onto the workspace the special one is overlaying, which is
+    -- the monitor's active_workspace -- that keeps pointing at the regular
+    -- workspace while a special is shown, since specials live in the separate
+    -- active_special_workspace field.
+    local mon = win.monitor or hl.get_active_monitor()
+    local target = mon and mon.active_workspace
+    if target then
+      hl.dispatch(hl.dsp.window.move({ workspace = target.id, follow = false }))
+    end
+  else
+    hl.dispatch(hl.dsp.window.move({ workspace = "special", follow = false }))
+  end
+end
+
+-- Buttons are not config values, so they come from the plugin's own Lua
+-- function rather than hl.config, and there is no API to clear them -- calling
+-- this twice within one parse would stack six buttons instead of three.
+function ionix_bars_apply()
+  if not hl.plugin.hyprbars then return end
+
+  local b = ionix_bars
+  local c = b.colors
+
+  hl.config({
+    plugin = {
+      hyprbars = {
+        bar_height         = b.height,
+        bar_padding        = b.padding,
+        bar_button_padding = b.button_padding,
+
+        bar_blur  = true,
+        bar_color = c.bar,
+
+        -- Left off so the general.col gradient border keeps wrapping the bar
+        -- rather than the bar painting over the top edge of the frame.
+        bar_precedence_over_border = false,
+        -- Reserves space, so the bar pushes the window down instead of
+        -- overlapping its first row of content.
+        bar_part_of_window = true,
+
+        bar_title_enabled = true,
+        bar_text_font     = b.text_font,
+        bar_text_size     = b.text_size,
+        bar_text_weight   = b.text_weight,
+        bar_text_align    = "center",
+        ["col.text"]      = c.text,
+
+        bar_buttons_alignment = "right",
+        inactive_button_color = c.inactive_button,
+        on_double_click       = [[hyprctl dispatch "hl.dsp.window.fullscreen({ mode = 'maximized', action = 'toggle' })"]],
+      },
+    },
+  })
+
+  -- Declared right-to-left: close ends up at the right edge.
+  --
+  -- `action` is spawned through a shell, so it re-enters Hyprland via hyprctl.
+  -- This build's dispatch takes Lua, not legacy dispatcher names -- "hyprctl
+  -- dispatch killactive" is a parse error, not a close. Clicking a bar focuses
+  -- its window first, so these active-window dispatchers land on the window
+  -- that was clicked even when it was not focused.
+  hl.plugin.hyprbars.add_button({
+    size     = b.button_size,
+    bg_color = c.close,
+    fg_color = c.icon,
+    icon     = "",
+    action   = [[hyprctl dispatch "hl.dsp.window.close()"]],
+  })
+  hl.plugin.hyprbars.add_button({
+    size     = b.button_size,
+    bg_color = c.maximize,
+    fg_color = c.icon,
+    icon     = "",
+    -- "maximized", not "fullscreen": real fullscreen hides the bar, which
+    -- would leave no button to click to undo it.
+    action   = [[hyprctl dispatch "hl.dsp.window.fullscreen({ mode = 'maximized', action = 'toggle' })"]],
+  })
+  hl.plugin.hyprbars.add_button({
+    size     = b.button_size,
+    bg_color = c.minimize,
+    fg_color = c.icon,
+    icon     = "",
+    -- Closest thing to minimise: park it on the special workspace, which
+    -- SUPER+S toggles back into view. Pressing it again from there restores
+    -- the window to the workspace underneath.
+    action   = [[hyprctl eval "ionix_bars_toggle_minimize()"]],
+  })
+end
+
+-- Applied from the event rather than inline, because this file is parsed
+-- *before* the user's theme.lua -- an inline call would bake in the colours
+-- above before a theme ever got to change them. config.reloaded fires after
+-- the whole parse, so a theme only has to assign into ionix_bars.colors.
+-- Re-adding on every reload is required, not merely harmless: the plugin drops
+-- its button list each time the config is parsed.
+hl.on("config.reloaded", ionix_bars_apply)
+
+
+-- ══════════════════════════════════════════════════════════════
 -- ║  Alt-Tab                                                   ║
 -- ══════════════════════════════════════════════════════════════
 
