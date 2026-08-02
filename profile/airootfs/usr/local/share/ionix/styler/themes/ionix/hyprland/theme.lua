@@ -1,1 +1,13 @@
--- Empty
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║  ionix — the base theme                                      ║
+-- ║  Symlinked to ~/.config/hypr/theme.lua by `ionixtheme`.       ║
+-- ╚══════════════════════════════════════════════════════════════╝
+
+-- /etc/hypr/hyprland.lua already *is* this theme: its general/decoration block
+-- and its `ionix_bars` defaults are the Ionix palette, so there is deliberately
+-- nothing to override here — including for hyprbars.
+--
+-- Keeping the file present-but-empty still matters. `ionixtheme` symlinks it
+-- over ~/.config/hypr/theme.lua, and the config is re-parsed from scratch on
+-- every reload, so switching back to ionix drops whatever the previous theme
+-- assigned instead of leaving it in force.

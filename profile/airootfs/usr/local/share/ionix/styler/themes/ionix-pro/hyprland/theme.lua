@@ -74,3 +74,36 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "ionixPr
 -- already sets for kitty; later window_rules win, so these are the ones that apply.
 hl.window_rule({ match = { class = "kitty" }, opacity = "0.72" })
 hl.window_rule({ match = { class = "kitty", focus = true }, opacity = "0.86" })
+
+-- ── hyprbars ──────────────────────────────────────────────────
+-- /etc/hypr/hyprland.lua owns the geometry, the button glyphs and the actions;
+-- this only repaints them. Assigning into `ionix_bars` is enough because the
+-- base config applies the bar from `config.reloaded`, which fires after this
+-- file has been parsed. Guarded so the theme still loads on a system whose
+-- /etc/hypr predates that section.
+if ionix_bars then
+  local c = ionix_bars.colors
+
+  -- bgCard at 0.8 rather than the base 0.9: this theme runs glassier
+  -- everywhere (its shell bar sits at 0.55), and the blur.vibrancy 0.25 set
+  -- above saturates what shows through instead of greying it out.
+  c.bar  = "rgba(1a0d33cc)"
+  c.text = "rgba(e6d9ffff)"
+
+  -- The three buttons are the three stops of the active_border gradient, in
+  -- the order the gradient runs them. That ties the bar into the frame rather
+  -- than bolting it on — worth more here than the base config's rule of giving
+  -- close a semantic red, because this theme's whole identity is that
+  -- violet -> cyan -> magenta line.
+  c.minimize = "rgb(b026ff)"
+  c.maximize = "rgb(00f0ff)"
+  c.close    = "rgb(ff2bd6)"
+
+  -- Glyphs punched out in bgDeep; the neons are bright enough to carry a
+  -- near-black cleanly at this size.
+  c.icon = "rgb(070312)"
+
+  -- `muted` is the palette's passive-icon role. Unfocused windows already lose
+  -- their glow entirely in this theme, so the buttons go quiet along with it.
+  c.inactive_button = "rgba(8a6bb8ff)"
+end
