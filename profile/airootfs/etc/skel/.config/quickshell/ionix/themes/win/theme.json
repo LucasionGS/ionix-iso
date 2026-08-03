@@ -11,6 +11,6 @@
   "modules": {
     "left": ["Launcher", "Taskbar"],
     "center": ["Workspaces"],
-    "right": ["Tray", "AudioIndicator", "NetworkIndicator", "BluetoothIndicator", "BatteryIndicator", "Clock", "NotificationBell"]
+    "right": ["Tray", "AudioIndicator", "NetworkIndicator", "BluetoothIndicator", "HueIndicator", "BatteryIndicator", "Clock", "NotificationBell"]
   }
 }
