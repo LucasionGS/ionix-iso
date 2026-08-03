@@ -17,10 +17,22 @@
     "right": ["Tray", "AudioIndicator", "NetworkIndicator", "BluetoothIndicator", "HueIndicator", "BatteryIndicator", "Clock", "NotificationBell"]
   },
 
-  "launcher": {
-    "_comment": "U+F05B3, nf-md-microsoft_windows — the flat four-square logo, not the tilted nf-fa-windows flag. It comes from the Nerd Font, so theme.fontLogo below has to move off Ionix.ttf for it to render. command is deliberately left at the default: ioexplorer-start would be the closer analogue to a Start menu, but it is commented out in both the autostart and the keybind in /etc/hypr/hyprland.lua, so pointing at it would be a regression.",
-    "icon": "󰖳"
-  },
+  "options": [
+    {
+      "_comment": "Rendered as a switch under 'Theme options' at the bottom of the start menu's settings page; the value is stored in settings.json under themes.winix.taskbarLeft. Windows 10 and everything before it left-aligned the taskbar, Windows 11 centred it and kept the old behaviour as a setting — this is that setting. There is no 'off' patch because the centred modules above already are the off state. 'on' respells left and center in full (arrays replace wholesale) and omits right, so the tray side merges through untouched. MediaWidget takes the centre it vacates rather than trailing the apps: the taskbar grows as windows open, so anything after it would drift. The patch merges above this file but below settings.json and config.json, so a modules key set by hand in config.json wins and the page then shows this row pinned instead of offering a switch that does nothing.",
+      "key": "taskbarLeft",
+      "title": "Left-aligned taskbar",
+      "subtitle": "Classic Windows: start and tasks on the left",
+      "glyph": "󰖳",
+      "default": false,
+      "on": {
+        "modules": {
+          "left": ["Launcher", "Workspaces", "Taskbar"],
+          "center": ["MediaWidget"]
+        }
+      }
+    }
+  ],
 
   "clock": {
     "_comment": "Clock.qml stacks time over date in one pill, which is the Windows corner clock. Full numeric date rather than the base theme's 'ddd d MMM'.",
@@ -56,7 +68,6 @@
     "link": "#4cc2ff",
 
     "fontFamily": "JetBrainsMono Nerd Font",
-    "fontMono": "JetBrainsMono Nerd Font",
-    "fontLogo": "JetBrainsMono Nerd Font"
+    "fontMono": "JetBrainsMono Nerd Font"
   }
 }
