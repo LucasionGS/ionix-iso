@@ -298,9 +298,31 @@ hl.bind("ALT + Left", hl.dsp.send_shortcut({ mods = "", key = "XF86Back", window
 hl.bind("ALT + Right", hl.dsp.send_shortcut({ mods = "", key = "XF86Forward", window = "activewindow" }))
 
 -- ── Zoom ──────────────────────────────────────────────────────
-bind_exec("CTRL + " .. mainMod .. " + mouse_down", [[hyprctl -q keyword cursor:zoom_factor $(hyprctl getoption cursor:zoom_factor -j | jq '.float * 1.1')]])
-bind_exec("CTRL + " .. mainMod .. " + mouse_up", [[hyprctl -q keyword cursor:zoom_factor $(hyprctl getoption cursor:zoom_factor -j | jq '(.float * 0.9) | if . < 1 then 1 else . end')]])
-bind_exec("CTRL + " .. mainMod .. " + ALT + 0", "hyprctl -q keyword cursor:zoom_factor 1")
+-- CTRL + SUPER + scroll zooms the screen around the cursor. Multiplicative so
+-- each tick feels the same at any zoom level, and clamped at 1 so scrolling out
+-- past "no zoom" cannot leave the screen shrunk inside the monitor.
+--
+-- Done in-process through hl.get_config/hl.config rather than by shelling out
+-- to `hyprctl keyword` + jq: scroll fires a bind per tick, and a spawned shell
+-- per tick lags visibly behind the wheel.
+ionix_zoom = {
+  step = 1.1,
+  max  = 10.0,
+}
+
+local function zoom_by(factor)
+  local current = tonumber(hl.get_config("cursor.zoom_factor")) or 1.0
+  local target = current * factor
+
+  if target < 1.0 then target = 1.0 end
+  if target > ionix_zoom.max then target = ionix_zoom.max end
+
+  hl.config({ cursor = { zoom_factor = target } })
+end
+
+hl.bind("CTRL + " .. mainMod .. " + mouse_up", function() zoom_by(ionix_zoom.step) end)
+hl.bind("CTRL + " .. mainMod .. " + mouse_down", function() zoom_by(1 / ionix_zoom.step) end)
+hl.bind("CTRL + " .. mainMod .. " + ALT + 0", function() hl.config({ cursor = { zoom_factor = 1.0 } }) end)
 
 -- ── Media Keys ────────────────────────────────────────────────
 -- Volume and brightness go through the shell's IPC so the on-screen display gets
