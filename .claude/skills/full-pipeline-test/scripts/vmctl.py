@@ -225,8 +225,23 @@ def do_start(args):
         "-drive", f"if=pflash,format=raw,readonly=on,file={OVMF_CODE}",
         "-drive", f"if=pflash,format=raw,file={efivars}",
         "-drive", f"file={disk},format=qcow2,if=virtio",
-        "-device", f"virtio-vga-gl,xres={args.width},yres={args.height}",
-        "-display", f"egl-headless,rendernode={args.rendernode}",
+    ]
+    # virtio-vga-gl + egl-headless puts the scanout on a dmabuf as soon as the
+    # guest's virtio-gpu driver takes over, and QMP screendump cannot read that
+    # back -- every capture fails with "no surface". Plain 2D virtio-vga keeps a
+    # host-side surface alive for the whole boot, at the cost of software GL in
+    # the guest. Screenshots are the entire point here, so 2D is the default.
+    if args.gl:
+        cmd += [
+            "-device", f"virtio-vga-gl,xres={args.width},yres={args.height}",
+            "-display", f"egl-headless,rendernode={args.rendernode}",
+        ]
+    else:
+        cmd += [
+            "-device", f"virtio-vga,xres={args.width},yres={args.height}",
+            "-display", "none",
+        ]
+    cmd += [
         "-device", "virtio-tablet-pci",   # absolute pointer: clicks land where told
         "-device", "virtio-keyboard-pci",
         "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
@@ -422,6 +437,9 @@ def main():
     s.add_argument("--width", default="1920")
     s.add_argument("--height", default="1080")
     s.add_argument("--rendernode", default="/dev/dri/renderD128")
+    s.add_argument("--gl", action="store_true",
+                   help="use virtio-vga-gl/egl-headless (faster guest GL, but "
+                        "screendump stops working once the guest takes over)")
     s.set_defaults(func=do_start)
 
     s = sub.add_parser("shot", help="write a PNG screenshot")

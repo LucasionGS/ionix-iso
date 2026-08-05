@@ -26,7 +26,17 @@ sudo ./build.sh
 
 # Test installed distro in QEMU (boots from disk only):
 ./test-distro.sh
+
+# Write the built ISO to a USB stick for real hardware:
+./flash-usb.sh                      # interactive picker
+./flash-usb.sh --list               # just show the disks
+./flash-usb.sh --device /dev/sdX --verify
 ```
+
+`flash-usb.sh` defaults to the newest `out/ionix-*.iso`, refuses the system disk outright, and
+requires the target's full device path to be typed back before it writes. It renders its own
+progress bar from `dd`'s byte counter (no `pv` dependency) and uses `oflag=direct` so the
+percentage tracks bytes actually on the stick rather than bytes parked in the page cache.
 
 **Native build dependencies:**
 ```bash
