@@ -4,10 +4,10 @@ componentName: ionix
 strings:
     productName:         "Ionix"
     shortProductName:    "Ionix"
-    version:             "2025.03"
-    shortVersion:        "2025.03"
-    versionedName:       "Ionix 2025.03"
-    shortVersionedName:  "Ionix 2025.03"
+    version:             "2026.08"
+    shortVersion:        "2026.08"
+    versionedName:       "Ionix 2026.08"
+    shortVersionedName:  "Ionix 2026.08"
     bootloaderEntryName: "Ionix"
 
 images:

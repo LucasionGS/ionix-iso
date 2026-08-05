@@ -1,0 +1,314 @@
+{
+  "title": "Ionix pipeline run — 5 Aug 2026",
+  "eyebrow": "Ionix ISO · release validation",
+  "heading": "Full pipeline run",
+  "lede": "A clean rebuild of every AUR package, a headless install driven entirely through QEMU screenshots, then a boot of the installed disk to see whether the desktop actually works — ending with a full web-to-wallpaper round trip. Every image below is a frame captured from the VM during that run.",
+  "verdict": "Passed, with two findings",
+  "verdict_state": "pass",
+  "facts": [
+    [
+      "Date",
+      "5 Aug 2026"
+    ],
+    [
+      "ISO",
+      "ionix-2026.08.05-x86_64.iso"
+    ],
+    [
+      "Size",
+      "3.9 GB"
+    ],
+    [
+      "AUR packages",
+      "41 rebuilt, 0 failed"
+    ],
+    [
+      "Install time",
+      "~14 min"
+    ],
+    [
+      "Installed packages",
+      "1274"
+    ]
+  ],
+  "notes": [
+    "<p><strong>Phase 1 produced no screenshots</strong> &mdash; it is a terminal build. <code>clean.sh</code> wiped <code>localrepo/</code> including every <code>.built-*</code> sentinel, so all ~41 AUR packages compiled from source. <code>docker-build.sh</code> exited 0 with no <code>FAILED_PACKAGES</code>.</p><p>The only <code>ERROR</code> lines in the build log are pytest collection failures inside one package&rsquo;s own test suite (a <code>vcr</code> API mismatch). That package still packaged cleanly.</p>",
+    "<p><strong>Two findings, both in Phase 5.</strong> Downloading a wallpaper from Google Images and setting it through <code>ctrl-super-w</code> cannot be completed as intended: Google serves every image as <code>.avif</code>, and the picker&rsquo;s only filter is <code>*.jpg *.jpeg *.png *.gif</code> with no <em>All files</em> option. Separately, <code>~/Pictures/Wallpapers</code> &mdash; the folder the picker opens in &mdash; ships empty.</p><p>The wallpaper mechanism itself is fine. Given a supported file it works end to end, which the last three frames show.</p>"
+  ],
+  "src": "/home/ion/.ionix-vm",
+  "phases": [
+    {
+      "num": "2",
+      "title": "Headless install",
+      "lede": "Booted the ISO on a blank 64 GiB disk and drove Calamares by screenshot.",
+      "shots": [
+        {
+          "file": "01-boot.png",
+          "title": "Installer auto-launches",
+          "note": "The live session reaches Hyprland and <code>ionix-first-login</code> starts Calamares on its own — nothing to click to get here."
+        },
+        {
+          "file": "02-locale.png",
+          "title": "Location, as shipped",
+          "note": "Defaults to America / New York."
+        },
+        {
+          "file": "03-region-dd.png",
+          "title": "Region list",
+          "note": "Opening the region combo to pick Europe."
+        },
+        {
+          "file": "04-europe.png",
+          "title": "Europe selected",
+          "note": "The zone falls back to Amsterdam and the number format follows it to Nederlands."
+        },
+        {
+          "file": "05-zone-dd.png",
+          "title": "Zone type-ahead",
+          "note": "Typing jumps the list straight to Copenhagen."
+        },
+        {
+          "file": "06-copenhagen.png",
+          "title": "Europe/Copenhagen set",
+          "note": "System language auto-follows to English (Denmark) — close, but not what we want."
+        },
+        {
+          "file": "07-lang.png",
+          "title": "System locale dialog",
+          "note": "Currently <code>en_DK.UTF-8</code>."
+        },
+        {
+          "file": "08-lang-da.png",
+          "title": "da_DK.UTF-8 selected",
+          "note": "Type-ahead again, this time in the locale list."
+        },
+        {
+          "file": "09-locale-done.png",
+          "title": "Locale complete",
+          "note": "Both language and number format now read dansk (Danmark)."
+        },
+        {
+          "file": "10-keyboard.png",
+          "title": "Danish layout, already chosen",
+          "note": "The keyboard page inherits Danish from the locale. From here the guest remaps punctuation, so every value typed afterwards was kept alphanumeric."
+        },
+        {
+          "file": "11-partition.png",
+          "title": "Partitioning",
+          "note": "One 64 GiB virtio disk, no existing table."
+        },
+        {
+          "file": "12-erase.png",
+          "title": "Erase disk",
+          "note": "Resolves to a 512 MiB FAT32 ESP plus a 63.5 GiB ext4 root, no swap."
+        },
+        {
+          "file": "13-users.png",
+          "title": "Users page",
+          "note": "Empty, with strong passwords and shared root password both on."
+        },
+        {
+          "file": "14-name.png",
+          "title": "The auto-derive trap",
+          "note": "Typing the full name silently fills login <code>lucasion</code> and hostname <code>lucasion-standardpc</code>."
+        },
+        {
+          "file": "15-userhost.png",
+          "title": "Corrected",
+          "note": "Both fields cleared and retyped as <code>ion</code> and <code>ionix</code>."
+        },
+        {
+          "file": "16-pass.png",
+          "title": "Password accepted",
+          "note": "Every field validates green and Next enables."
+        },
+        {
+          "file": "17-summary.png",
+          "title": "Summary",
+          "note": "Timezone, Danish keyboard, and the full partition plan for /dev/vda."
+        },
+        {
+          "file": "18-confirm.png",
+          "title": "Point of no return",
+          "note": "<code>prompt-install: true</code> adds this extra confirmation before anything is written."
+        },
+        {
+          "file": "19-installing.png",
+          "title": "Unpacking",
+          "note": "8% in — and the progress text is already Danish, so the locale took effect during the install itself."
+        },
+        {
+          "file": "21-finished.png",
+          "title": "All done",
+          "note": "About fourteen minutes from confirm to finish."
+        }
+      ]
+    },
+    {
+      "num": "3",
+      "title": "The installed system",
+      "lede": "Rebooted from disk with no ISO attached.",
+      "shots": [
+        {
+          "file": "22-lock.png",
+          "title": "hyprlock on first boot",
+          "note": "Autologin lands on the lock screen, and it already knows the user: <em>Welcome back, ion</em>."
+        },
+        {
+          "file": "23-desktop.png",
+          "title": "Desktop",
+          "note": "Wallpaper and the Quickshell bar, started by its systemd user unit rather than exec-once."
+        },
+        {
+          "file": "24-kitty.png",
+          "title": "kitty, fish, oh-my-posh",
+          "note": "<code>super-t</code>. The prompt confirms user and hostname in one line."
+        },
+        {
+          "file": "25-fastfetch.png",
+          "title": "Proof of a real system",
+          "note": "Arch, kernel 7.1.5, <strong>1274 packages</strong>, Hyprland 0.56.1 on Wayland, ext4 root, network up, and <code>Locale: da_DK.UTF-8</code>."
+        }
+      ]
+    },
+    {
+      "num": "4",
+      "title": "Desktop under test",
+      "lede": "Exercising the parts most likely to regress.",
+      "shots": [
+        {
+          "file": "26-winix.png",
+          "title": "ionixtheme winix",
+          "note": "The bar relocates to a bottom, centred taskbar and the date format changes — hyprland, kitty, quickshell and ioexplorer all restyle live."
+        },
+        {
+          "file": "27-ionix.png",
+          "title": "ionixtheme ionix",
+          "note": "Round-trip back. The kitty config is restored from the backup the styler made on the way in."
+        },
+        {
+          "file": "28-audio-popout.png",
+          "title": "Audio popout",
+          "note": "Output / Input / Apps tabs, volume slider and device list. QEMU exposes only a dummy sink."
+        },
+        {
+          "file": "30-clock.png",
+          "title": "Clock popout",
+          "note": "Calendar with Monday-first week ordering, matching the Danish locale, and today accented."
+        },
+        {
+          "file": "31-notif.png",
+          "title": "Notification centre",
+          "note": "<code>super-n</code>, with the do-not-disturb toggle."
+        },
+        {
+          "file": "29-net-popout.png",
+          "title": "The one non-result",
+          "note": "Clicking the green tray icon opened nothing. It reads as a real tray applet rather than a Quickshell module, so it is worth a look on hardware — but it is not a confirmed defect."
+        },
+        {
+          "file": "32-launcher.png",
+          "title": "Launcher",
+          "note": "<code>alt-space</code>. App names and descriptions render in Danish, so the locale reaches desktop entries too."
+        },
+        {
+          "file": "33-files.png",
+          "title": "ioexplorer",
+          "note": "Tiles beside kitty, and every XDG user directory exists."
+        },
+        {
+          "file": "34-ws2.png",
+          "title": "Workspace 2",
+          "note": "<code>super-2</code>. Empty, with the bar's active pill moved."
+        },
+        {
+          "file": "35-ws1.png",
+          "title": "Back to workspace 1",
+          "note": "Both windows exactly as they were left."
+        },
+        {
+          "file": "36-browser.png",
+          "title": "Chrome first run",
+          "note": "<code>super-w</code>. The first-run page is Danish, and gnome-keyring asks to create a default keyring."
+        },
+        {
+          "file": "37-chrome.png",
+          "title": "Keyring dismissed",
+          "note": "Chrome settles into the tiling layout."
+        }
+      ]
+    },
+    {
+      "num": "5",
+      "title": "Web to wallpaper",
+      "lede": "The longest path the desktop offers: browser to download to file chooser to background layer.",
+      "shots": [
+        {
+          "file": "41-chrome.png",
+          "title": "Chrome, in Danish",
+          "note": "<code>super-w</code>. The keyring prompt and a restore-pages bubble both need dismissing first."
+        },
+        {
+          "file": "42-search.png",
+          "title": "Searching",
+          "note": "Typed straight into the omnibox &mdash; no punctuation, so the Danish layout cannot corrupt it. Google answers with a consent wall."
+        },
+        {
+          "file": "44-images.png",
+          "title": "Google Images",
+          "note": "Results load fine, confirming real network egress from the guest."
+        },
+        {
+          "file": "45-preview.png",
+          "title": "Picking one",
+          "note": "A purple low-poly image, 740 &times; 555, in the preview panel."
+        },
+        {
+          "file": "46-ctxmenu.png",
+          "title": "Save image as",
+          "note": "The Chrome context menu is Danish: <em>Gem billede som&hellip;</em>"
+        },
+        {
+          "file": "47-savedlg.png",
+          "title": "First finding",
+          "note": "The save dialog reveals the format: <strong>.avif</strong>. Google&rsquo;s proxy re-encodes everything, whatever the source site hosts."
+        },
+        {
+          "file": "50-savedlg2.png",
+          "title": "Not a one-off",
+          "note": "A second, unrelated image saves as <code>.avif</code> too &mdash; and the first download is listed, 15.3 kB, sitting in <code>~/Downloads</code>."
+        },
+        {
+          "file": "51-picker.png",
+          "title": "Second finding",
+          "note": "<code>ctrl-super-w</code> opens the zenity picker at <code>~/Pictures/Wallpapers</code> &mdash; which ships <strong>empty</strong>. Note the filter at bottom right."
+        },
+        {
+          "file": "52-downloads.png",
+          "title": "The file is invisible",
+          "note": "Same <code>~/Downloads</code> the save dialog just listed a file in, and the picker shows nothing. The <code>.avif</code> is filtered out."
+        },
+        {
+          "file": "53-filter.png",
+          "title": "No way around it",
+          "note": "The filter dropdown has exactly one entry and no <em>All files</em> escape hatch, so the downloaded image simply cannot be reached."
+        },
+        {
+          "file": "56-pictures.png",
+          "title": "A supported file",
+          "note": "<code>grim</code> writes a PNG to <code>~/Pictures</code>. It appears immediately, with a thumbnail &mdash; so the picker is working, the format was the problem."
+        },
+        {
+          "file": "58-ws6.png",
+          "title": "Wallpaper set",
+          "note": "An empty workspace after <strong>OK</strong>. It looks like a terminal because the wallpaper <em>is</em> the screenshot &mdash; frozen at 17:03:59 while the live bar reads 17:07."
+        },
+        {
+          "file": "60-wallpaper-proof.png",
+          "title": "Proof",
+          "note": "Every window closed &mdash; the terminal&rsquo;s icon is gone from the bar &mdash; and the image is still there. Only the background layer can do that."
+        }
+      ]
+    }
+  ]
+}
