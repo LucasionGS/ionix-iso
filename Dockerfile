@@ -35,6 +35,7 @@ RUN pacman-key --init \
   json-glib \
   libgtop \
   wayland-protocols \
+  gtk4-layer-shell \
   scdoc
 
 CMD ["/bin/bash"]
