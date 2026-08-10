@@ -186,6 +186,19 @@ for a source colour and hard-fails headless; its `colors.surface*` roles are gre
 `palettes.secondary`/`palettes.primary` tones under `-t scheme-content`, which are CIE L\* and so hold
 text contrast steady across hues.
 
+### Theme options
+
+A theme's `quickshell/theme.json` may declare an `options` array that the start menu's settings page
+renders under *Theme options*; each entry's config patch merges just above the theme's own values
+and its state is stored per theme in `settings.json`. Besides the on/off form winix uses, an entry
+may carry a `choices` list — `{ value, label, glyph, patch }` — which renders as a segmented picker.
+`ionix-adaptive`'s `barPosition` is the worked example; `defaults.json`'s header documents both forms.
+
+**A theme with adaptive colours must put its `options` in the template *and* the static counterpart.**
+The generated `theme.json` replaces the static one wholesale, so an option declared only in the
+static file disappears the moment a wallpaper is read, and one declared only in the template never
+appears without matugen.
+
 ## Working with This Repo
 
 - When adding new packages: edit `profile/packages.x86_64`. AUR packages must also be added to `aur/build-aur.sh` with correct dependency ordering.
@@ -195,6 +208,17 @@ text contrast steady across hues.
   report as `file:line` in the process output; there is no useful static type check, because
   Quickshell's types aren't on a standard `qmllint` import path, so the runtime is the only checker.
   Remove the symlink to go back to the packaged copy at `/etc/xdg/quickshell/ionix`.
+- The bar turns. `bar.position` takes `top`/`bottom`/`left`/`right`, and everything downstream reads
+  `Config.barVertical` rather than re-testing the string. Rules that took a while to find, all
+  verified at runtime: a **`GridLayout` is the only layout type that turns** — leave `rows`/`columns`
+  at their `-1` default and `flow` alone decides row versus column — but **do not swap a Layout's
+  anchors between axes**, it keeps the stale pair and collapses to a negative size, so `Bar.qml`
+  positions its three sections with `x`/`y` instead. A `Grid` positioner is the same trick for
+  ordinary content, and its `horizontalItemAlignment`/`verticalItemAlignment` replace the per-child
+  `anchors.verticalCenter` a `Row` needed (children of a `Grid` must not anchor at all). A module
+  that hides itself does **not** free its slot: the layout sees the `Loader`, which stays visible, so
+  `Bar.qml` collapses `Layout.preferredWidth/Height` — never bind the Loader's own `visible` to
+  `item.visible`, which reports *effective* visibility and latches off permanently.
 - Quickshell API traps worth knowing: `UPowerDevice.percentage`, `WifiNetwork.signalStrength` and
   `BluetoothDevice.battery` are all **0..1 fractions**, not 0..100. Reading a Pipewire node's
   `audio` requires a `PwObjectTracker` covering it, or it stays null. Hyprland here uses the **Lua**
