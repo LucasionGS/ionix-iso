@@ -58,4 +58,9 @@ fi
 
 if [ -n "$FILE_PATH" ]; then
   awww img $AWWW_ARGS "$FILE_PATH"
+
+  # Re-derive colours if the active theme asked for them; a no-op otherwise.
+  # The path is passed explicitly rather than letting the generator read it back
+  # out of `awww query`, which would race the 2s transition above.
+  /usr/local/share/ionix/bin/ionix-adaptive-colors --wallpaper "$FILE_PATH" --quiet || true
 fi

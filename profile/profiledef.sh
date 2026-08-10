@@ -37,4 +37,5 @@ file_permissions=(
   ["/usr/local/share/ionix/styler/bin/ionixtheme"]="0:0:755"
   ["/usr/local/share/ionix/styler/install-completions.sh"]="0:0:755"
   ["/usr/local/share/ionix/bin/ionix-cycle-wallpaper"]="0:0:755"
+  ["/usr/local/share/ionix/bin/ionix-adaptive-colors"]="0:0:755"
 )

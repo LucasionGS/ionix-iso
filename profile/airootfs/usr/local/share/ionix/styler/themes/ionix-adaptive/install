@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  ionix-adaptive — the palette follows the wallpaper           ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Sourced twice, and must have NO side effects at source time — set variables
+# and define functions only:
+#   1. by `ionixtheme`, after install-default, so it can override installers
+#   2. by `ionix-adaptive-colors`, in a clean subshell, to read the knobs below
+#
+# What this file switches on is the machinery in install-default: with
+# USE_ADAPTIVE_COLORS set, every ionix_install_<section> links the file
+# ionix-adaptive-colors rendered into ~/.config/ionix/adaptive-colors/ instead
+# of this directory's own. The static files here stay as the fallback for when
+# there is no wallpaper, no matugen, or a template with a typo in it.
+
+export USE_ADAPTIVE_COLORS=true
+
+# ── Extraction ──────────────────────────────────────────────
+# scheme-content keeps the wallpaper's chroma in the tonal palettes, which is
+# where every surface below comes from. The default scheme-tonal-spot pins
+# neutral chroma near 6 and produces the grey Material You look — correct for
+# Material, wrong for a distro whose identity is saturated depth.
+export IONIX_ADAPTIVE_SCHEME=scheme-content
+export IONIX_ADAPTIVE_MODE=dark
+
+# Mandatory. Given an image with several plausible source colours, matugen 4
+# asks which one — and hard-fails with "a terminal was not detected" when there
+# is nobody to ask, which is every caller but a hand-typed one. 0 is the most
+# dominant colour.
+export IONIX_ADAPTIVE_SOURCE_INDEX=0
+
+# Both of these reach only matugen's `colors.*` roles, never the `palettes.*`
+# ladders the surfaces are cut from — so they are text-legibility knobs, not
+# depth knobs. A NEGATIVE lightness crushes colors.surface to #000000.
+export IONIX_ADAPTIVE_CONTRAST=0
+export IONIX_ADAPTIVE_LIGHTNESS_DARK=0
+
+# Used when an image has no scorable colour at all (a solid fill, say). The
+# Ionix accent, so a degenerate wallpaper lands on the distro's own violet
+# rather than matugen's stock blue.
+export IONIX_ADAPTIVE_FALLBACK_COLOR='#9b59b6'
+
+# ── The ladder ──────────────────────────────────────────────
+# Tone numbers are CIE L*, so a slot's *lightness* is fixed and only its hue
+# and chroma follow the wallpaper. That is what keeps text contrast within a
+# percent of the hand-tuned Ionix palette whatever image is on screen — an
+# HSL-based derivation would not.
+#
+# Pointed at the wallpaper Ionix ships, these tones reproduce the palette in
+# CLAUDE.md almost exactly: #150d1f/#20182a/#352d40 against #0f0a18/#1a1025/#2d2d3f.
+export IONIX_ADAPTIVE_SURFACE_PALETTE=secondary   # secondary | neutral_variant | neutral
+export IONIX_ADAPTIVE_ACCENT_PALETTE=primary
+
+export IONIX_ADAPTIVE_TONE_BGDEEP=5
+export IONIX_ADAPTIVE_TONE_BGWINDOW=10
+export IONIX_ADAPTIVE_TONE_BGCARD=20
+export IONIX_ADAPTIVE_TONE_HOVER=25
+export IONIX_ADAPTIVE_TONE_BORDER=30
+export IONIX_ADAPTIVE_TONE_MUTED=50
+export IONIX_ADAPTIVE_TONE_ACCENT_DEEP=40
+export IONIX_ADAPTIVE_TONE_ACCENT=50
+export IONIX_ADAPTIVE_TONE_ACCENT_BRIGHT=60
+export IONIX_ADAPTIVE_TONE_ACCENT_LIGHT=70
+export IONIX_ADAPTIVE_TONE_TEXT=80
+
+# ── Policy ──────────────────────────────────────────────────
+# static  — the 16 ANSI slots keep Ionix's fixed hues; only the background,
+#           foreground and bright/dim structural slots follow the wallpaper. A
+#           terminal palette is a contract with every program drawing into it,
+#           and `ls` colouring directories teal on a warm wallpaper is a bug.
+# tinted  — the violet ramp (4/5/12/13) follows the accent as well.
+export IONIX_ADAPTIVE_ANSI=static
+
+# Which monitor's wallpaper wins when they differ, since one palette has to.
+# Empty means the focused monitor.
+export IONIX_ADAPTIVE_OUTPUT=""
+
+# Seconds. 0 disables. Raise this if you cycle wallpapers on a timer: each
+# regeneration costs a `hyprctl reload`, which visibly re-flows every border.
+export IONIX_ADAPTIVE_MIN_INTERVAL=0

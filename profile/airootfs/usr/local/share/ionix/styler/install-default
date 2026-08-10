@@ -7,14 +7,62 @@
 # Functions can be overridden to customize installation/uninstallation for specific sections, and one for additional custom requirements.
 # Copy this file into the theme directory and modify as needed. Functions present in the file will override the default installation behavior for the corresponding section.
 
-IONIX_BIN=/usr/local/share/ionix/bin
+# Overridable so the tree can be exercised from a git checkout before it is
+# installed; nothing on a running system sets it.
+IONIX_BIN="${IONIX_BIN:-/usr/local/share/ionix/bin}"
+IONIX_ADAPTIVE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix/adaptive-colors"
+
+# ── Adaptive colours ────────────────────────────────────────
+#
+# A theme opts in by setting `export USE_ADAPTIVE_COLORS=true` in its own
+# `install` file, which ionixtheme sources after this one. Its colours are then
+# derived from the current wallpaper by ionix-adaptive-colors and land under
+# $IONIX_ADAPTIVE_DIR/<section>/<file>, mirroring the theme's own layout.
+#
+# Reset here, not just left unset. A theme switch uninstalls the outgoing theme
+# first, which means its `install` file has already been sourced into this same
+# process by the time the incoming one loads — so without this line, switching
+# from an adaptive theme to a plain one would leave the flag set and install the
+# old theme's generated files under the new theme's name. ionixtheme's
+# clear_ionix_functions unsets functions between loads but not variables, and
+# this file is sourced before the theme's own, which is what makes it the place
+# to state the default.
+USE_ADAPTIVE_COLORS=false
+#
+# Which file a section installs. The generated one when the theme opted in and
+# the generator actually produced something; the theme's own otherwise. That
+# fallback is what makes "no wallpaper", "no matugen", "matugen failed" and "the
+# live ISO" all degrade to a working theme instead of a broken one, so an
+# adaptive theme must ship a static file for every template it has.
+ionix_theme_file() {
+  local section="$1" file="$2"
+  local generated="$IONIX_ADAPTIVE_DIR/$section/$file"
+
+  if [[ "${USE_ADAPTIVE_COLORS:-false}" == true && -s "$generated" ]]; then
+    printf '%s\n' "$generated"
+  else
+    printf '%s\n' "$THEME_DIR/$section/$file"
+  fi
+}
+
+# Called by ionixtheme after the installers load and before they run, so
+# whatever it generates exists by the time the symlinks are made. A theme may
+# override it to prepare something else entirely.
+ionix_prepare() {
+  [[ "${USE_ADAPTIVE_COLORS:-false}" == true ]] || return 0
+  [[ -x "$IONIX_BIN/ionix-adaptive-colors" ]] || return 0
+
+  # --force because the theme is changing, which the stamp cannot see; and
+  # FROM_STYLER because run_installers is about to make every symlink itself.
+  IONIX_ADAPTIVE_FROM_STYLER=1 "$IONIX_BIN/ionix-adaptive-colors" --force || true
+}
 
 # Waybar
 ionix_install_waybar() {
   local dest="$HOME/.config/waybar"
   mkdir -p "$dest"
-  ln -sf "$THEME_DIR/waybar/config" "$dest/config"
-  ln -sf "$THEME_DIR/waybar/style.css" "$dest/style.css"
+  ln -sf "$(ionix_theme_file waybar config)" "$dest/config"
+  ln -sf "$(ionix_theme_file waybar style.css)" "$dest/style.css"
 
   # Reload waybar if it's running to apply the new configuration
   if pgrep -x waybar &>/dev/null; then
@@ -38,7 +86,7 @@ ionix_uninstall_waybar() {
 ionix_install_quickshell() {
   local dest="$HOME/.config/quickshell/ionix"
   mkdir -p "$dest"
-  ln -sf "$THEME_DIR/quickshell/theme.json" "$dest/theme.json"
+  ln -sf "$(ionix_theme_file quickshell theme.json)" "$dest/theme.json"
 
   ionix_reload_quickshell
 }
@@ -87,7 +135,7 @@ ionix_install_ioexplorer() {
     mv "$css" "$backup"
   fi
 
-  ln -sf "$THEME_DIR/ioexplorer/theme.css" "$css"
+  ln -sf "$(ionix_theme_file ioexplorer theme.css)" "$css"
 
   # custom_css may point somewhere else entirely, in which case the file we just
   # linked is simply never read.
@@ -122,16 +170,22 @@ ionix_install_hyprland() {
   local dest="$HOME/.config/hypr"
   mkdir -p "$dest"
   # ~/.config/hypr/theme.conf is sourced by the main hyprland.conf
-  ln -sf "$THEME_DIR/hyprland/theme.conf" "$dest/theme.conf" # Deprecated
-  ln -sf "$THEME_DIR/hyprland/theme.lua" "$dest/theme.lua"
+  ln -sf "$THEME_DIR/hyprland/theme.conf" "$dest/theme.conf" # Deprecated, never adaptive
+  ln -sf "$(ionix_theme_file hyprland theme.lua)" "$dest/theme.lua"
 
-  hyprctl reload 2>/dev/null && msg "hyprland: reloaded" || true
+  # &> not 2>: a successful `hyprctl reload` prints "ok" on stdout, which was
+  # tolerable once per theme switch and is noise now that a wallpaper change
+  # re-runs this installer.
+  hyprctl reload &>/dev/null && msg "hyprland: reloaded" || true
 }
 
 ionix_uninstall_hyprland() {
   rm -f "$HOME/.config/hypr/theme.conf" # Deprecated
   rm -f "$HOME/.config/hypr/theme.lua"
-  hyprctl reload 2>/dev/null && msg "hyprland: reloaded" || true
+  # &> not 2>: a successful `hyprctl reload` prints "ok" on stdout, which was
+  # tolerable once per theme switch and is noise now that a wallpaper change
+  # re-runs this installer.
+  hyprctl reload &>/dev/null && msg "hyprland: reloaded" || true
 }
 
 # Wallpapers
@@ -151,13 +205,29 @@ ionix_install_kitty() {
   mkdir -p "$dest"
 
   # Backup existing kitty.conf if it exists. kitty can't merge configurations...
-  if [[ -f "$dest/kitty.conf" ]]; then
+  #
+  # `! -L` matters: -f follows symlinks, so without it our own symlink counts as
+  # "an existing configuration" and gets renamed to .bak. That is survivable on a
+  # theme switch, which uninstalls first, but ionix-adaptive-colors re-runs this
+  # installer on every wallpaper change with no uninstall in between — which
+  # would eat a real user backup within a few keypresses.
+  if [[ -f "$dest/kitty.conf" && ! -L "$dest/kitty.conf" ]]; then
     msg "kitty: existing configuration found, backing up to kitty.conf.bak"
     mv "$dest/kitty.conf" "$dest/kitty.conf.bak"
   fi
-  
-  ln -sf "$THEME_DIR/kitty/kitty.conf" "$dest/kitty.conf"
-  
+
+  ln -sf "$(ionix_theme_file kitty kitty.conf)" "$dest/kitty.conf"
+
+  ionix_reload_kitty
+}
+
+# kitty re-reads its config on SIGUSR1 — the same signal `kitten @ load-config`
+# sends — so terminals that are already open follow a theme or wallpaper change
+# instead of waiting to be restarted.
+ionix_reload_kitty() {
+  pgrep -x kitty &>/dev/null || return 0
+  pkill -USR1 -x kitty 2>/dev/null && msg "kitty: reloaded"
+  return 0
 }
 
 ionix_uninstall_kitty() {
@@ -165,6 +235,7 @@ ionix_uninstall_kitty() {
     rm -f "$HOME/.config/kitty/kitty.conf"
     msg "kitty: restoring backup configuration"
     mv "$HOME/.config/kitty/kitty.conf.bak" "$HOME/.config/kitty/kitty.conf"
+    ionix_reload_kitty
   fi
   # If no backup exists, keep it to avoid deleting user configuration
 }

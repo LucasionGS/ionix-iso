@@ -152,6 +152,40 @@ UI surfaces that float over the wallpaper (drawers, launchers, overlays) should 
 
 Tint using the deep background colors (`#1a1025` / `#0f0a18`) at the appropriate alpha rather than solid fills.
 
+### Wallpaper-adaptive themes
+
+A theme can have its colours derived from the current wallpaper instead of stating them. It opts in
+with `export USE_ADAPTIVE_COLORS=true` in its `install` file; `profile/airootfs/usr/local/share/ionix/bin/ionix-adaptive-colors`
+then renders its templates against the wallpaper into `~/.config/ionix/adaptive-colors/`, and
+`install-default`'s `ionix_theme_file` makes each `ionix_install_<section>` link that instead of the
+theme's own file. `ionix-adaptive` is the first such theme; `ionix-adaptive/install` documents every knob.
+
+```
+themes/<name>/adaptive/<section>/<file>   # template, tokens below
+themes/<name>/<section>/<file>            # MANDATORY static counterpart
+```
+
+The static counterpart is not optional: it is what gets installed when there is no wallpaper, no
+matugen, or a template that fails to render, and it is what the start menu's theme picker reads for
+the preview swatch. Generate it by rendering the template with the base Ionix palette so the two
+cannot drift structurally.
+
+Three token forms per slot, because the four consumers want three syntaxes — `{{accent}}` → `#9b59b6`,
+`{{accent.raw}}` → `9b59b6` (hyprland's `rgb()`/`rgba()`), `{{accent.rgb}}` → `155,89,182` (GTK CSS).
+Alpha belongs in the template (`rgba({{bgDeep.rgb}},0.74)`), not the token. Slots are the eleven
+palette roles above plus `accentDeep`, `link`, `shadow`, `green`/`orange`/`red`/`cyan` and `ansi0`–`ansi15`;
+a surviving `{{token}}` makes the generator refuse that one file and fall back.
+
+Triggered by `ionix-wallpaper`, `ionix-cycle-wallpaper`, `ionixtheme` and `etc/hypr/scripts/init.sh` —
+awww has no hook mechanism. The generator exits 0 silently when the active theme has not opted in, so
+those call it unconditionally.
+
+matugen traps, all verified: `--source-color-index 0` is **mandatory** or matugen 4 tries to prompt
+for a source colour and hard-fails headless; its `colors.surface*` roles are grey (chroma ~5) and its
+`base16` block is a monochrome ramp, so neither is usable — the palette comes from
+`palettes.secondary`/`palettes.primary` tones under `-t scheme-content`, which are CIE L\* and so hold
+text contrast steady across hues.
+
 ## Working with This Repo
 
 - When adding new packages: edit `profile/packages.x86_64`. AUR packages must also be added to `aur/build-aur.sh` with correct dependency ordering.
@@ -166,6 +200,10 @@ Tint using the deep background colors (`#1a1025` / `#0f0a18`) at the appropriate
   `audio` requires a `PwObjectTracker` covering it, or it stays null. Hyprland here uses the **Lua**
   config parser, so raw `Hyprland.dispatch("workspace 3")` fails to parse — go through
   `services/Compositor.qml`, which quotes the argument when `Hyprland.usingLua`.
+- When changing the styler or a theme: `bin/ionixtheme` and `bin/ionix-adaptive-colors` both hardcode
+  `/usr/local/share/ionix`, so to exercise a checkout without installing it, set `IONIX_STYLER_DIR`
+  and `IONIX_BIN` at the repo paths (plus `HOME`, `XDG_CONFIG_HOME` and `XDG_CACHE_HOME` at a scratch
+  dir — `XDG_CONFIG_HOME` is set on a live Ionix session and will otherwise defeat a fake `HOME`).
 - When modifying default user config: edit files under `profile/airootfs/etc/skel/.config/`.
 - When modifying system config: edit files under `profile/airootfs/etc/`.
 - When adding new scripts: add to `profile/airootfs/usr/local/bin/` and register permissions in `profile/profiledef.sh`'s `file_permissions` array.

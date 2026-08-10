@@ -195,6 +195,15 @@ main() {
     msg "Switching to theme: $theme"
 
     load_installers "$theme_dir"
+
+    # Generic pre-install hook. install-default defines it to regenerate
+    # wallpaper-derived colours for themes that asked for them; a theme may
+    # override it to prepare anything else. It runs before the installers so
+    # whatever it produces exists by the time the symlinks are made.
+    if declare -F ionix_prepare &>/dev/null; then
+        ionix_prepare
+    fi
+
     run_installers
 
     save_current_theme "$theme"
