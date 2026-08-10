@@ -181,6 +181,7 @@ ttf-font-awesome
 # --- Theming ---
 gtk3
 gtk4
+gtk4-layer-shell
 gnome-themes-extra
 papirus-icon-theme
 
