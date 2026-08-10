@@ -129,11 +129,9 @@ window#waybar {
     100% { box-shadow: 0 0 8px rgba(247, 118, 142, 0.3); }
 }
 
-/* ── Custom Modules: VPN / SSH / Docker ─────────────────── */
+/* ── Custom Modules: VPN ────────────────────────────────── */
 #custom-vpn,
-#custom-vpn-windscribe,
-#custom-ssh,
-#custom-docker {
+#custom-vpn-windscribe {
     font-size: 12px;
     padding: 0 10px;
     margin: 8px 1px;
@@ -145,9 +143,7 @@ window#waybar {
 }
 
 #custom-vpn:hover,
-#custom-vpn-windscribe:hover,
-#custom-ssh:hover,
-#custom-docker:hover {
+#custom-vpn-windscribe:hover {
     background-color: rgba(187, 154, 247, 0.1);
     color: #cdb4ff;
     text-shadow: 0 0 8px rgba(187, 154, 247, 0.5);

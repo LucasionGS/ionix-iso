@@ -24,8 +24,6 @@
     "modules-right": [
         "custom/vpn/disabled",
         "custom/vpn-windscribe",
-        "custom/ssh",
-        "custom/docker",
         "network",
         "bluetooth",
         "pulseaudio",
@@ -154,7 +152,6 @@
         "return-type": "json",
         "interval": 5,
         "format": "{}",
-        "on-click": "ags request -i ionix-shell 'vpn'",
         "on-click-right": "oc s 2>/dev/null | xargs -I{} notify-send 'VPN Status' '{}'",
         "on-click-middle": "if oc s 2>/dev/null | grep -q 'connected to VPN'; then oc dc && notify-send 'VPN' 'Disconnected'; else oc p && notify-send 'VPN' 'Connected'; fi",
         "tooltip": true
@@ -165,24 +162,9 @@
         "return-type": "json",
         "interval": 5,
         "format": "{}",
-        "on-click": "ags request -i ionix-shell 'vpn'",
         "on-click-right": "windscribe-cli status 2>/dev/null | xargs -I{} notify-send 'Windscribe Status' '{}'",
         "on-click-middle": "if windscribe-cli status 2>/dev/null | grep -q 'Connect state: Connected'; then windscribe-cli disconnect && notify-send 'Windscribe' 'Disconnected'; else windscribe-cli connect best && notify-send 'Windscribe' 'Connected to best location'; fi",
         "tooltip": true
-    },
-
-    "custom/ssh": {
-        "format": "SSH",
-        "tooltip": true,
-        "tooltip-format": "SSH Panel",
-        "on-click": "ags request -i ionix-shell 'ssh'"
-    },
-
-    "custom/docker": {
-        "format": "Docker",
-        "tooltip": true,
-        "tooltip-format": "Docker Panel",
-        "on-click": "ags request -i ionix-shell 'docker'"
     },
 
     "custom/toxen-prev": {

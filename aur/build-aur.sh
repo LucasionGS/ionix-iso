@@ -24,48 +24,18 @@ ln -sf "$PYTHON_BUILD" "$PYTHON_WRAPPER_DIR/python3"
 chmod +x "$PYTHON_WRAPPER_DIR/python" "$PYTHON_WRAPPER_DIR/python3"
 
 # AUR packages in dependency order
-# libastal-io-git is the foundation; all other astal libs depend on it.
-# libastal-git (split) provides libastal + libastal-4; required by aylurs-gtk-shell-git.
-# libastal-meta is a metapackage requiring every libastal-* sublib.
 AUR_PACKAGES=(
     "yay"
     "oh-my-posh-bin"
     "calamares"
     "tabby-bin"
     "grim-hyprland-git"                # Replaces grim
-    # astal core (build order: io first, then base, then everything else)
-    "libastal-io-git"
-    "libastal-git"
-    "libastal-4-git"                   # separate AUR pkg providing libastal-4
-    "libcava-git"                      # required by libastal-cava-git
-    "appmenu-glib-translator-git"      # required by libastal-tray-git
-    "libastal-apps-git"
-    "libastal-auth-git"
-    "libastal-battery-git"
-    "libastal-bluetooth-git"
-    "libastal-cava-git"
-    "libastal-hyprland-git"
-    "quarrel-git"                      # provides `quarrel`, required by mpris/notifd
-    "libastal-mpris-git"
-    "libastal-network-git"
-    "libastal-notifd-git"
-    "wl-vapi-gen"
-    "libastal-wl-git"
-    "libastal-powerprofiles-git"
-    "libastal-river-git"
-    "libastal-greet-git"
-    "libastal-tray-git"
-    "libastal-wireplumber-git"
-    "libastal-gjs-git"
-    "libastal-meta"
-    "aylurs-gtk-shell-git"
     "google-chrome"
-    # ionix tooling (openconnect-sso before ionix-openconnect-tools; ionix-openconnect-tools before ionix-shell)
+    # ionix tooling (openconnect-sso before ionix-openconnect-tools)
     "python-gevent-eventemitter"
     "python-vcrpy"
     "openconnect-sso-git"
     "ionix-openconnect-tools"
-    "ionix-shell"
     "ionix-file-manager-git"
     "ioexplorer-git"
     # Gaming
@@ -94,10 +64,8 @@ LOCAL_PACKAGES=(
 # Build-time tools that a PKGBUILD needs but does not declare in makedepends.
 # makepkg only installs what is declared, so without this the build dies deep
 # inside the package's build() with a "not found in $PATH" error.
-#   dart-sass -> provides `sass`, used by `ags bundle` for ionix-shell
-EXTRA_BUILD_DEPS=(
-    "dart-sass"
-)
+# Currently empty; the machinery below stays because the situation recurs.
+EXTRA_BUILD_DEPS=()
 
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -217,9 +185,9 @@ for pkg in "${AUR_PACKAGES[@]}"; do
     sudo -u "$BUILD_USER" git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "$PKG_DIR"
 
     # If the AUR repo is empty (no PKGBUILD), generate a stub.
-    # Some astal sub-packages exist as reserved AUR names but have no content yet.
-    # The stub provides the virtual package name (strips -git suffix) so that
-    # libastal-meta and other dependents can resolve their dependencies.
+    # Some AUR names are reserved but have no content yet. The stub provides the
+    # virtual package name (strips the -git suffix) so that metapackages and
+    # other dependents can still resolve their dependencies.
     if [[ ! -f "$PKG_DIR/PKGBUILD" ]]; then
         echo "==> WARNING: $pkg has no PKGBUILD (empty AUR repo), generating stub..."
         provides_name="${pkg%-git}"

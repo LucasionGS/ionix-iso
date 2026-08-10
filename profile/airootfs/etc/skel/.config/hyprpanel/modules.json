@@ -14,7 +14,7 @@
         "hideOnEmpty": false,
         "scrollThreshold": 4,
         "actions": {
-            "onLeftClick": "ags request -i ionix-shell \"vpn\"",
+            "onLeftClick": "",
             "onRightClick": "oc s | notify-send 'VPN Status' \"$(cat)\"",
             "onMiddleClick": "if oc dc; then notify-send 'VPN Disconnected' 'You have been disconnected from the VPN.'; else oc p && notify-send 'VPN Connected' 'Connected to primary VPN.'; fi",
             "onScrollUp": "",
@@ -36,33 +36,11 @@
         "hideOnEmpty": false,
         "scrollThreshold": 4,
         "actions": {
-            "onLeftClick": "ags request -i ionix-shell \"vpn\"",
+            "onLeftClick": "",
             "onRightClick": "windscribe-cli status | notify-send 'Windscribe Status' \"$(cat)\"",
             "onMiddleClick": "if windscribe-cli status | grep -q 'Connect state: Connected'; then windscribe-cli disconnect && notify-send 'Windscribe' 'Disconnected'; else windscribe-cli connect best && notify-send 'Windscribe' 'Connected to best location'; fi",
             "onScrollUp": "",
             "onScrollDown": ""
-        }
-    },
-    "custom/ionix/ssh": {
-        "icon": "",
-        "label": "SSH",
-        "tooltip": "SSH panel",
-        "truncationSize": -1,
-        "hideOnEmpty": false,
-        "scrollThreshold": 4,
-        "actions": {
-            "onLeftClick": "ags request -i ionix-shell \"ssh\""
-        }
-    },
-    "custom/ionix/docker": {
-        "icon": "",
-        "label": "Docker",
-        "tooltip": "Docker panel",
-        "truncationSize": -1,
-        "hideOnEmpty": false,
-        "scrollThreshold": 4,
-        "actions": {
-            "onLeftClick": "ags request -i ionix-shell \"docker\""
         }
     }
 }

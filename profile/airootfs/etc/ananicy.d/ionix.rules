@@ -10,8 +10,6 @@
 {"name": "qs", "type": "LowLatency_RT"}
 {"name": "quickshell", "type": "LowLatency_RT"}
 {"name": "waybar", "type": "LowLatency_RT"}
-{"name": "ags", "type": "LowLatency_RT"}
-{"name": "gjs", "type": "LowLatency_RT"}
 
 # Wallpaper daemon
 {"name": "awww-daemon", "type": "BG_Nice"}

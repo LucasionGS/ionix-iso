@@ -16,11 +16,9 @@ Add the name to `profile/packages.x86_64` under the matching `# --- Section ---`
 Two files, and the order inside one of them matters:
 
 1. **`aur/build-aur.sh` → `AUR_PACKAGES` array.** Array order IS build order: each package is `pacman -U`-installed into the build container right after building, so later entries can resolve it as a dependency. Place the new entry **after every AUR package it depends on** (check its PKGBUILD's `depends`/`makedepends` for other AUR names). Existing ordering chains to respect:
-   - `libastal-io-git` → `libastal-git` → all other `libastal-*` → `libastal-meta` last
-   - `libcava-git` before `libastal-cava-git`; `appmenu-glib-translator-git` before `libastal-tray-git`; `quarrel-git` before `libastal-mpris-git`/`libastal-notifd-git`
-   - `openconnect-sso-git` → `ionix-openconnect-tools` → `ionix-shell`
-2. **`profile/packages.x86_64`** → add the name to the trailing `# --- AUR packages (from ionix local repo) ---` block — but **only if it should be explicitly installed**. Dependency-only packages (like the `libastal-*` sublibs) go in `AUR_PACKAGES` only.
-3. If the build needs a tool its PKGBUILD doesn't declare (precedent: `dart-sass` for `ags bundle`), add it to `EXTRA_BUILD_DEPS` in `build-aur.sh`.
+   - `python-gevent-eventemitter`/`python-vcrpy` → `openconnect-sso-git` → `ionix-openconnect-tools`
+2. **`profile/packages.x86_64`** → add the name to the trailing `# --- AUR packages (from ionix local repo) ---` block — but **only if it should be explicitly installed**. Packages pulled in only as a dependency of another AUR package go in `AUR_PACKAGES` only.
+3. If the build needs a tool its PKGBUILD doesn't declare, add it to `EXTRA_BUILD_DEPS` in `build-aur.sh` (currently empty).
 
 ## 3. Local (in-repo) package
 
