@@ -1,6 +1,23 @@
 {
   "_comment": "Static fallback, GENERATED from ../adaptive/quickshell/theme.json with the base Ionix palette. Installed when there is no wallpaper to read, no matugen, or a template that failed to render. It is also the file services/Themes.qml reads for this theme's preview swatch in the start menu picker, so it must stay valid JSON — the picker shows these colours rather than the live wallpaper-derived ones. Edit the template and re-render rather than editing here.",
 
+  "options": [
+    {
+      "_comment": "Rendered under 'Theme options' at the bottom of the start menu's settings page, as a four-way picker rather than a switch — see the 'choices' form documented in config/Config.qml. The value is stored in settings.json under themes.ionix-adaptive.barPosition. 'top' carries no patch because the shipped default already is the top edge; the other three set bar.position, which modules/Bar.qml keys the whole layout off. left/right turn the bar into a vertical dock and every module stacks and re-anchors itself, so nothing else has to be respelled here. The patch merges above this file but below settings.json and config.json, so a bar.position set by hand in config.json wins and the page then shows this row pinned instead of offering a picker that does nothing.",
+      "key": "barPosition",
+      "title": "Bar position",
+      "subtitle": "Which screen edge the bar docks to",
+      "glyph": "\udb84\udcac",
+      "default": "top",
+      "choices": [
+        { "value": "top", "label": "Top", "glyph": "\udb85\udd13" },
+        { "value": "bottom", "label": "Bottom", "glyph": "\udb84\udca9", "patch": { "bar": { "position": "bottom" } } },
+        { "value": "left", "label": "Left", "glyph": "\udb84\udcaa", "patch": { "bar": { "position": "left" } } },
+        { "value": "right", "label": "Right", "glyph": "\udb84\udcab", "patch": { "bar": { "position": "right" } } }
+      ]
+    }
+  ],
+
   "theme": {
     "_comment": "Exactly the keys config/Theme.qml reads, and no more. barFill, panelFill, pillFill, pillBorder, barBorder, panelBorder and divider are all derived from these inside Theme.qml — emitting them here would freeze relationships the shell is meant to compute. accentBright is the load-bearing one: barBorder and panelBorder are both alpha() of it. The font keys are deliberately absent so they inherit the shipped Nerd Font, which every module renders its glyphs with.",
 
