@@ -189,10 +189,13 @@ text contrast steady across hues.
 ### Theme options
 
 A theme's `quickshell/theme.json` may declare an `options` array that the start menu's settings page
-renders under *Theme options*; each entry's config patch merges just above the theme's own values
-and its state is stored per theme in `settings.json`. Besides the on/off form winix uses, an entry
-may carry a `choices` list — `{ value, label, glyph, patch }` — which renders as a segmented picker.
-`ionix-adaptive`'s `barPosition` is the worked example; `defaults.json`'s header documents both forms.
+renders under *Theme options* as switches; each entry's config patch merges just above the theme's
+own values and its state is stored per theme in `settings.json`. Only booleans are rendered —
+anything genuinely one-of-N belongs in that page's own `settingsGroups` rows instead, where it
+applies under every theme rather than only the one that thought to declare it. `bar.position` is the
+worked example: a `choices` list on a settings row renders a `Segmented` picker, and because
+`settings.json` merges above `theme.json` a theme's own position (winix docks to the bottom) reads as
+a default the user's pick then outlives.
 
 **A theme with adaptive colours must put its `options` in the template *and* the static counterpart.**
 The generated `theme.json` replaces the static one wholesale, so an option declared only in the
