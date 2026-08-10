@@ -1,0 +1,25 @@
+{
+  "_comment": "Template. ionix-adaptive-colors renders this against the current wallpaper and writes ~/.config/ionix/adaptive-colors/quickshell/theme.json, which install-default symlinks to ~/.config/quickshell/ionix/theme.json. ../../quickshell/theme.json is the same file with the Ionix palette baked in — that one is also what the start menu's theme picker reads for this theme's preview swatch, so it must stay valid JSON.",
+
+  "theme": {
+    "_comment": "Exactly the keys config/Theme.qml reads, and no more. barFill, panelFill, pillFill, pillBorder, barBorder, panelBorder and divider are all derived from these inside Theme.qml — emitting them here would freeze relationships the shell is meant to compute. accentBright is the load-bearing one: barBorder and panelBorder are both alpha() of it. The font keys are deliberately absent so they inherit the shipped Nerd Font, which every module renders its glyphs with.",
+
+    "bgDeep": "{{bgDeep}}",
+    "bgWindow": "{{bgWindow}}",
+    "bgCard": "{{bgCard}}",
+    "hover": "{{hover}}",
+    "border": "{{border}}",
+    "muted": "{{muted}}",
+    "text": "{{text}}",
+    "textBright": "{{textBright}}",
+    "accent": "{{accent}}",
+    "accentBright": "{{accentBright}}",
+    "accentLight": "{{accentLight}}",
+
+    "green": "{{green}}",
+    "orange": "{{orange}}",
+    "red": "{{red}}",
+    "cyan": "{{cyan}}",
+    "link": "{{link}}"
+  }
+}

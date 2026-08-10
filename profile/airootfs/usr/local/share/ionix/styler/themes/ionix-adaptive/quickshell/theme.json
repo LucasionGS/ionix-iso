@@ -1,0 +1,25 @@
+{
+  "_comment": "Static fallback, GENERATED from ../adaptive/quickshell/theme.json with the base Ionix palette. Installed when there is no wallpaper to read, no matugen, or a template that failed to render. It is also the file services/Themes.qml reads for this theme's preview swatch in the start menu picker, so it must stay valid JSON — the picker shows these colours rather than the live wallpaper-derived ones. Edit the template and re-render rather than editing here.",
+
+  "theme": {
+    "_comment": "Exactly the keys config/Theme.qml reads, and no more. barFill, panelFill, pillFill, pillBorder, barBorder, panelBorder and divider are all derived from these inside Theme.qml — emitting them here would freeze relationships the shell is meant to compute. accentBright is the load-bearing one: barBorder and panelBorder are both alpha() of it. The font keys are deliberately absent so they inherit the shipped Nerd Font, which every module renders its glyphs with.",
+
+    "bgDeep": "#0f0a18",
+    "bgWindow": "#1a1025",
+    "bgCard": "#2d2d3f",
+    "hover": "#3a2d50",
+    "border": "#4a3d60",
+    "muted": "#6b5f80",
+    "text": "#c4b5fd",
+    "textBright": "#e2d9f3",
+    "accent": "#9b59b6",
+    "accentBright": "#a855f7",
+    "accentLight": "#c084fc",
+
+    "green": "#2ecc71",
+    "orange": "#f39c12",
+    "red": "#e74c3c",
+    "cyan": "#48dbfb",
+    "link": "#7c3aed"
+  }
+}

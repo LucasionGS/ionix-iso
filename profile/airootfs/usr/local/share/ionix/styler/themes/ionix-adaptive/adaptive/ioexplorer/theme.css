@@ -1,0 +1,228 @@
+/* ============================================================
+   IoExplorer — ionix-adaptive — colours from the wallpaper
+
+   Template. ionix-adaptive-colors renders this against the current
+   wallpaper and writes ~/.config/ionix/adaptive-colors/ioexplorer/theme.css;
+   ../../ioexplorer/theme.css is the same file with the Ionix palette
+   baked in, used whenever a wallpaper cannot be read.
+
+   GTK CSS wants decimal triples, which is what the .rgb token form is;
+   the alpha stays here so each surface keeps its own opacity. The
+   triples are unspaced because IoExplorer parses the theme.* values
+   below back out of this file and writes them that way.
+
+   Symlinked to ~/.config/ioexplorer/theme.css by ionixtheme, which is
+   the path IoExplorer falls back to when config.toml sets no custom_css
+   — so installing a theme needs no edit to the user's config.
+
+   The block below is managed by IoExplorer: Settings -> Theme reads the
+   `theme.*` comments back into its colour pickers, and rewrites ONLY what
+   sits between the AUTO_GEN markers. Doing that turns the symlink into a
+   real file of their own, which ionixtheme then leaves alone.
+   ============================================================ */
+
+/* IOEXPLORER AUTO_GEN */
+/* theme.window_background=rgba({{bgDeep.rgb}},0.74) */
+/* theme.panel_background=rgba({{bgWindow.rgb}},0.86) */
+/* theme.muted_background=rgba({{bgDeep.rgb}},0.32) */
+/* theme.accent=rgb({{accentBright.rgb}}) */
+/* theme.selection=rgba({{accentBright.rgb}},0.34) */
+/* theme.text=rgba({{textBright.rgb}},0.94) */
+/* theme.border=rgba({{accentBright.rgb}},0.2) */
+/* theme.corner_radius=8 */
+
+window {
+background: rgba({{bgDeep.rgb}},0.74);
+color: rgba({{textBright.rgb}},0.94);
+}
+
+.topbar,
+.tab-strip,
+.sidebar,
+.start-menu-surface,
+.spotlight-surface,
+.spotlight-preview {
+background: rgba({{bgWindow.rgb}},0.86);
+border-color: rgba({{accentBright.rgb}},0.2);
+}
+
+.toolbar-group,
+.breadcrumbs,
+.path-stack,
+.file-tab,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.start-menu-footer,
+.spotlight-row,
+.spotlight-prefix-badge,
+.spotlight-footer-key,
+.spotlight-chat-user,
+.spotlight-chat-code {
+background: rgba({{bgDeep.rgb}},0.32);
+}
+
+.toolbar-group,
+.breadcrumbs,
+.path-stack,
+.sidebar-nav-button,
+.content-list row,
+.computer-volume-list row,
+.settings-tabs button,
+.settings-actions-list row,
+.context-menu,
+.context-menu-item,
+.file-tab,
+.tab-new-button,
+.start-menu-surface,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.spotlight-surface,
+.spotlight-preview,
+.spotlight-row,
+.spotlight-chat-user,
+.spotlight-chat-code {
+border-radius: 8px;
+}
+
+.file-tab-button:checked,
+.sidebar-nav-button:checked,
+.sidebar-list row:selected,
+.content-list row.entry-selected,
+.content-grid flowboxchild.entry-selected,
+.start-menu-launcher:active,
+.start-menu-result:active,
+.spotlight-row:selected {
+background: rgba({{accentBright.rgb}},0.34);
+}
+
+.start-menu-window,
+.start-menu-surface,
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-user,
+.start-menu-section-title,
+.spotlight-surface,
+.spotlight-entry,
+.spotlight-row-title,
+.spotlight-section-label,
+.spotlight-chat-text,
+.spotlight-chat-code-text,
+.spotlight-chat-heading,
+.spotlight-preview-text {
+color: rgba({{textBright.rgb}},0.94);
+}
+
+.start-menu-surface {
+box-shadow: 0 26px 58px alpha(black, 0.36);
+}
+
+.spotlight-surface,
+.spotlight-preview {
+box-shadow: 0 26px 58px alpha(black, 0.36);
+}
+
+.start-menu-backdrop {
+background: alpha(rgba({{bgDeep.rgb}},0.74), 0.4);
+}
+
+.spotlight-backdrop {
+background: alpha(rgba({{bgDeep.rgb}},0.74), 0.34);
+}
+
+.start-menu-search,
+.start-menu-launcher,
+.start-menu-result,
+.start-menu-power,
+.start-menu-footer,
+.spotlight-hint,
+.spotlight-footer-key,
+.spotlight-chat-code {
+border: 1px solid alpha(rgba({{accentBright.rgb}},0.2), 0.9);
+}
+
+.spotlight-footer {
+border-top: 1px solid alpha(rgba({{accentBright.rgb}},0.2), 0.9);
+}
+
+.spotlight-prefix-badge {
+background: alpha(rgb({{accentBright.rgb}}), 0.24);
+}
+
+.start-menu-launcher:hover,
+.start-menu-result:hover,
+.start-menu-power:hover,
+.spotlight-row:hover {
+background: alpha(rgb({{accentBright.rgb}}), 0.18);
+}
+
+.computer-volume-progress progress {
+background: rgb({{accentBright.rgb}});
+}
+
+.status-label,
+.settings-value,
+.settings-action-command,
+.spotlight-row-subtitle,
+.spotlight-hint,
+.spotlight-chat-role,
+.spotlight-chat-status,
+.spotlight-preview-status,
+.spotlight-preview-caption,
+.spotlight-chat-tool {
+color: alpha(rgba({{textBright.rgb}},0.94), 0.72);
+}
+/* /IOEXPLORER AUTO_GEN */
+
+/* ── Beyond the generated block ──────────────────────────────
+   Spots the generator does not reach, where data/styles/ioexplorer.css
+   would otherwise keep its built-in blue or a neutral grey.
+
+   These are plain CSS with the palette baked in. Recolouring via
+   Settings -> Theme rewrites the block above but not this, so a heavily
+   edited palette will drift from these few rules — reinstall the theme,
+   or edit them by hand.
+   ──────────────────────────────────────────────────────────── */
+
+/* The bundled sheet has a brighter fill for a row that is both selected
+   and hovered. The generated block sets only the resting selection, so
+   without this the hover flashes blue. */
+.sidebar-nav-button:checked:hover,
+.sidebar-list row:selected:hover,
+.content-list row.entry-selected:hover,
+.content-grid flowboxchild.entry-selected:hover {
+  background: rgba({{accentBright.rgb}},0.44);
+}
+
+.rubberband-selection {
+  background: rgba({{accentBright.rgb}},0.2);
+  border: 1px solid rgba({{accentBright.rgb}},0.78);
+}
+
+/* Surfaces the generated block does not list. */
+.details-panel {
+  background: rgba({{bgWindow.rgb}},0.86);
+  border-left: 1px solid rgba({{accentBright.rgb}},0.2);
+}
+
+.filter-bar {
+  background: rgba({{bgWindow.rgb}},0.86);
+  border-top: 1px solid rgba({{accentBright.rgb}},0.2);
+}
+
+.context-menu {
+  background: rgba({{bgWindow.rgb}},0.96);
+  border: 1px solid rgba({{accentBright.rgb}},0.2);
+}
+
+.context-menu-item:hover {
+  background: rgba({{accentBright.rgb}},0.18);
+}
+
+.computer-volume-progress trough {
+  background: rgba({{bgDeep.rgb}},0.32);
+}

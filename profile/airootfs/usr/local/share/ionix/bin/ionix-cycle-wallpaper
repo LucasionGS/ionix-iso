@@ -25,7 +25,10 @@ fi
 
 declare -A CURRENT_WALLPAPERS
 for display in "${DISPLAYS[@]}"; do
-  current_wall=$(awww query | grep "^$display:" | grep -oP '(?<=image: ).*')
+  # awww prefixes every query line with ": " before the output name, so an
+  # anchored "^$display:" never matches — which silently left CURRENT_WALLPAPERS
+  # empty and degraded "a different image per display" to "a random one".
+  current_wall=$(awww query | grep "^: *$display:" | grep -oP '(?<=image: ).*')
   if [ -n "$current_wall" ]; then
     CURRENT_WALLPAPERS["$display"]="$(realpath "$current_wall")"
   fi
@@ -65,3 +68,9 @@ for display in "${DISPLAYS[@]}"; do
   echo "Setting wallpaper for $display: $(basename "$selected_wallpaper")"
   awww img $AWWW_ARGS --outputs "$display" "$selected_wallpaper"
 done
+
+# Once, after the loop: every display now has a different image, so exactly one
+# of them has to win the palette, and the generator picks the focused monitor's.
+# Calling this inside the loop would regenerate N times and leave whichever
+# display happened to be iterated last. A no-op unless the theme opted in.
+/usr/local/share/ionix/bin/ionix-adaptive-colors --quiet || true
