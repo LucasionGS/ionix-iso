@@ -1,6 +1,6 @@
 ---
 name: theme-app
-description: Theme an application to match the Ionix purple palette, or make an app's theme switchable via the ionixtheme styler. Use when styling any app config (GTK, kitty, waybar, walker, CSS, JSON, QML, hyprland) to the distro look, or when adding an app to the styler theme system. Encodes the palette roles, glass convention, per-syntax translation patterns, and styler registration.
+description: Theme an application to match the Ionix purple palette, or make an app's theme switchable via the ionixtheme styler. Use when styling any app config (GTK, kitty, waybar, CSS, JSON, QML, hyprland) to the distro look, or when adding an app to the styler theme system. Encodes the palette roles, glass convention, per-syntax translation patterns, and styler registration.
 ---
 
 # Theming an app for Ionix
@@ -10,7 +10,7 @@ There is **no shared palette file** — every consumer re-declares the palette i
 ## Recipe
 
 1. Copy the role→hex table from `CLAUDE.md` §Visual Theme into the app's syntax.
-2. Open the config with a header comment naming the roles next to the hexes (see `profile/airootfs/etc/skel/.config/waybar/themes/ionix/style.css` and `.../walker/themes/ionix/style.css` for the pattern) — future edits then map colors back to roles.
+2. Open the config with a header comment naming the roles next to the hexes (see `profile/airootfs/etc/skel/.config/waybar/themes/ionix/style.css` for the pattern) — future edits then map colors back to roles.
 3. Place the config under `profile/airootfs/etc/skel/.config/<app>/` (skel is copied wholesale; no manifest). If the app also reads a system-wide config under `etc/xdg/`, prefer skel — the kitty precedent shows the two locations fully diverge over time.
 4. Any executable helper needs a `file_permissions` entry in `profile/profiledef.sh`.
 

@@ -143,8 +143,7 @@ tree-sitter-cli
 # --- Wallpapers ---
 awww
 
-# --- HyprPanel dependencies (official repos) ---
-dart-sass
+# --- Desktop support libraries (official repos) ---
 wl-clipboard
 upower
 gvfs
@@ -245,23 +244,12 @@ libsecret
 yay
 google-chrome
 tabby-bin
-libastal-git
-libastal-4-git
-libastal-gjs-git
-libcava-git
-appmenu-glib-translator-git
-wl-vapi-gen
-libastal-wl-git
-libastal-powerprofiles-git
-libastal-meta
-aylurs-gtk-shell-git
 oh-my-posh-bin
 calamares
 python-gevent-eventemitter
 python-vcrpy
 openconnect-sso-git
 ionix-openconnect-tools
-ionix-shell
 ionix-file-manager-git
 ioexplorer-git
 ionix-quickshell-git

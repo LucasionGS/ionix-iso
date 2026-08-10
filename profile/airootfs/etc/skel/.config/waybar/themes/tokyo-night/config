@@ -13,9 +13,7 @@
         "custom/launcher",
         "hyprland/workspaces",
         "wlr/taskbar",
-        "custom/vpn-windscribe",
-        "custom/ssh",
-        "custom/docker"
+        "custom/vpn-windscribe"
     ],
 
     "modules-center": [
@@ -150,21 +148,6 @@
         "return-type": "json",
         "interval": 5,
         "format": "{}",
-        "on-click": "ags request -i ionix-shell 'vpn'",
         "tooltip": true
-    },
-
-    "custom/ssh": {
-        "format": "SSH",
-        "tooltip": true,
-        "tooltip-format": "SSH Panel",
-        "on-click": "ags request -i ionix-shell 'ssh'"
-    },
-
-    "custom/docker": {
-        "format": "Docker",
-        "tooltip": true,
-        "tooltip-format": "Docker Panel",
-        "on-click": "ags request -i ionix-shell 'docker'"
     }
 }

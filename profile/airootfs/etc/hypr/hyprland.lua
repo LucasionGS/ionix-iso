@@ -159,7 +159,7 @@ bind_exec(mainMod .. " + E", "ioexplorer")
 bind_exec(mainMod .. " + B", "kitty btop")
 bind_exec(mainMod .. " + SUPER_L", "qs -c ionix ipc call start toggle || ioexplorer-spotlight")
 bind_exec("ALT + Space", "ioexplorer-spotlight")
-bind_exec(mainMod .. " + R", "ags request -i ionix-shell \"command-palette\"")
+bind_exec(mainMod .. " + R", "ioexplorer-spotlight")
 bind_exec(mainMod .. " + V", "copyq toggle")
 bind_exec(mainMod .. " + period", "gnome-characters")
 bind_exec(mainMod .. " + L", "hyprlock -c /etc/hypr/hyprlock.conf --grace 2")
@@ -563,13 +563,15 @@ hl.on("config.reloaded", ionix_bars_apply)
 -- ║  Alt-Tab                                                   ║
 -- ══════════════════════════════════════════════════════════════
 
--- Tab/Shift+Tab cycle through windows while Alt is held
-bind_exec("ALT + Tab", "ags request -i ionix-shell window-switcher next", { repeating = true })
-bind_exec("SHIFT + ALT + Tab", "ags request -i ionix-shell window-switcher prev", { repeating = true })
+-- Alt+Tab jumps straight back to the previously focused window, which is what
+-- the overwhelming majority of Alt+Tab presses are for.
+hl.bind("ALT + Tab", hl.dsp.focus({ urgent_or_last = true }))
 
--- Releasing Alt confirms and focuses the selected window
-bind_exec("ALT + Alt_L", "ags request -i ionix-shell window-switcher confirm", { release = true, transparent = true })
-hl.bind("ALT + Alt_L", hl.dsp.submap("reset"), { release = true, transparent = true })
+-- Shift+Alt+Tab walks the rest of the workspace, one window per press.
+-- Only forwards: Hyprland's Lua API exposes `cycle_next` but no reverse form
+-- (no `cycle_prev`, and `cycle_next` silently ignores every argument spelling
+-- for "previous"), so a backwards binding would be a no-op that looks bound.
+hl.bind("SHIFT + ALT + Tab", hl.dsp.window.cycle_next({}), { repeating = true })
 
 
 -- ══════════════════════════════════════════════════════════════

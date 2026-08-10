@@ -98,7 +98,6 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
   `exec-once`, so a QML runtime error self-heals via `Restart=on-failure`
 - **Panel (fallback):** Waybar is still installed and its themes still ship, but nothing starts it
   automatically. `Ctrl+Super+Shift+B` launches it if the Quickshell bar misbehaves
-- **Shell:** ionix-shell (custom AGS/Astal component)
 - **Terminal:** kitty (primary), foot, tabby
 - **Shell:** fish + oh-my-posh
 - **Login flow:** TTY autologin → fish → auto-starts Hyprland via UWSM

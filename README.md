@@ -22,7 +22,7 @@ Ionix is designed for developers, power users, and gamers who want the bleeding-
 
 | Category | What's Included |
 |---|---|
-| **Desktop** | Hyprland (Wayland), ionix-quickshell bar, ionix-shell command palette |
+| **Desktop** | Hyprland (Wayland), ionix-quickshell bar, ioexplorer spotlight launcher |
 | **Shell** | Fish + oh-my-posh prompt, NvChad for Neovim (auto-configured on first login) |
 | **Terminals** | kitty (primary), foot, Tabby |
 | **Browser** | Google Chrome |
@@ -54,7 +54,6 @@ Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth anim
   - Restart it with `Super+Shift+B`.
   - Developed as a git submodule and published to the AUR as `ionix-quickshell-git`. The ISO builds and ships that same package (from the submodule's working tree, versioned off its commit), so an installed system upgrades it with a plain `yay -Syu` — independently of ISO releases.
 - **Waybar** — still installed as a fallback, but no longer started automatically. Run `waybar` from a terminal (or `Ctrl+Super+Shift+B`) if you need it.
-- **ionix-shell** — custom AGS/Astal component providing a command palette (`Super+R`) and an `Alt+Tab` window switcher
 
 ### Screen Lock
 
@@ -62,7 +61,7 @@ Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth anim
 
 ### App Launcher
 
-- **Walker** — icon-based application drawer (`Super+R or SUPER_L`)
+- **ioexplorer spotlight** — application launcher / command palette (`Super+R`, `Alt+Space`, or tapping `Super`)
 
 ### Login Flow
 
@@ -148,8 +147,8 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 | `Super+W` | Open Google Chrome |
 | `Super+E` | Open Nemo file manager |
 | `Super+B` | Open btop system monitor |
-| `Super+R` | Toggle nwg-drawer app drawer |
-| `Alt+Space` | Open ionix-shell command palette |
+| `Super+R` | Open the ioexplorer spotlight launcher |
+| `Alt+Space` | Open the ioexplorer spotlight launcher |
 | `Super+V` | Toggle CopyQ clipboard manager |
 | `Super+L` | Lock screen |
 | `Ctrl+Super+R` | Reload Hyprland config |
@@ -175,7 +174,8 @@ Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
 | `Super+Alt+Arrow keys` | Resize window |
 | `Super+G` | Toggle window group |
 | `Super+P` | Pin window (always on top) |
-| `Alt+Tab` / `Shift+Alt+Tab` | Cycle through windows |
+| `Alt+Tab` | Jump back to the previously focused window |
+| `Shift+Alt+Tab` | Cycle forward through the workspace's windows |
 
 ### Workspaces
 
@@ -313,7 +313,7 @@ sudo ./build.sh
 
 The build proceeds in four steps:
 
-1. **AUR packages** — ~35 AUR packages (including ionix-shell, Calamares, etc.) are compiled into a local `localrepo/` pacman repository.
+1. **AUR packages** — a dozen AUR packages (Calamares, google-chrome, the ionix tooling, etc.) are compiled into a local `localrepo/` pacman repository.
 2. **Local repo** — the local repo is staged at `/tmp/ionix-localrepo` for use by archiso.
 3. **Branding assets** — SVG wallpaper and logo are rasterised to PNG with `rsvg-convert` (or ImageMagick as a fallback).
 4. **ISO assembly** — `mkarchiso` builds the final squashfs-compressed ISO in `./out/`.

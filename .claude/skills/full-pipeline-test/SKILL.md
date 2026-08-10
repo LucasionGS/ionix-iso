@@ -46,7 +46,7 @@ export IONIX_VM_RUNDIR=/home/ion/.ionix-vm
 
 Redirect to a log and run it with `run_in_background: true`; it will outlive many turns. Prefer `docker-build.sh` over `sudo ./build.sh` — it pins the toolchain and refreshes `archlinux-keyring` first, avoiding the stale-mirror 404s a cached image otherwise hits.
 
-A full clean build takes roughly **two hours**. Calamares and the `libastal-*` set dominate the first half; the rest are quick.
+A full clean build takes roughly **an hour**. Calamares dominates it; the rest are quick.
 
 The build ends with the ISO in `out/`. `build-aur.sh` deliberately exits non-zero listing `FAILED_PACKAGES` rather than letting mkarchiso fail later with a bare `target not found`, so read the tail of the output even when an ISO appears:
 
