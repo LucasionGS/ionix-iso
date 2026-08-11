@@ -25,8 +25,8 @@ hl.config({
     rounding_power = 4,
 
     inactive_opacity = 0.94,
-    dim_inactive = true,
-    dim_strength = 0.18,
+    -- dim_inactive = false,
+    -- dim_strength = 0.18,
 
     blur = {
       enabled = true,
@@ -74,6 +74,11 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "ionixPr
 -- already sets for kitty; later window_rules win, so these are the ones that apply.
 hl.window_rule({ match = { class = "kitty" }, opacity = "0.72" })
 hl.window_rule({ match = { class = "kitty", focus = true }, opacity = "0.86" })
+
+hl.window_rule({
+  match = { float = true },
+  opaque = true -- Avoid transparency on a floating window
+})
 
 -- ── hyprbars ──────────────────────────────────────────────────
 -- /etc/hypr/hyprland.lua owns the geometry, the button glyphs and the actions;

@@ -575,6 +575,67 @@ hl.bind("SHIFT + ALT + Tab", hl.dsp.window.cycle_next({}), { repeating = true })
 
 
 -- ══════════════════════════════════════════════════════════════
+-- ║  Silly cursor                                              ║
+-- ══════════════════════════════════════════════════════════════
+
+if hl.plugin.dynamic_cursors then
+  hl.config({
+    plugin = {
+      dynamic_cursors = {
+        mode = "tilt"
+      }
+    }
+  })
+end
+
+-- ══════════════════════════════════════════════════════════════
+-- ║  Layout switcher                                           ║
+-- ══════════════════════════════════════════════════════════════
+
+-- SUPER + J walks the tiling layouts and says which one just took over, because
+-- the switch is otherwise invisible until the next window opens.
+--
+-- Only the two layouts Hyprland itself ships are listed. `general:layout` takes
+-- any name without complaining -- a plugin layout that is not loaded (hy3,
+-- scroller) leaves windows untiled rather than erroring -- so an entry here has
+-- to be a layout that is actually present. Global, so a user config that loads a
+-- plugin layout can append to it and get it in the cycle without re-binding.
+ionix_layouts = {
+  { name = "dwindle", title = "Dwindle", body = "New windows split the tile they open on" },
+  { name = "master",  title = "Master",  body = "One master tile, the rest stacked beside it" },
+}
+
+-- Swapped in-process through hl.get_config/hl.config, the same way the zoom
+-- binds do it, rather than shelling out to `hyprctl keyword`.
+local function cycle_layout()
+  local current = hl.get_config("general.layout")
+  -- Falls through to the first entry when the active layout is not in the list
+  -- (a plugin layout, or a theme that set its own), which is the useful landing
+  -- spot: it puts the cycle back on known ground.
+  local index = 1
+
+  for i, layout in ipairs(ionix_layouts) do
+    if layout.name == current then
+      index = i % #ionix_layouts + 1
+      break
+    end
+  end
+
+  local target = ionix_layouts[index]
+  hl.config({ general = { layout = target.name } })
+
+  -- notify-send rather than a `qs ipc` call: ionix-quickshell owns
+  -- org.freedesktop.Notifications, so this lands in its toasts anyway, and it
+  -- keeps working for anyone who switched the notification server back.
+  hl.exec_cmd(string.format(
+    [[notify-send -a Hyprland -t 1500 "Layout: %s" "%s"]],
+    target.title, target.body))
+end
+
+hl.bind(mainMod .. " + J", cycle_layout)
+
+
+-- ══════════════════════════════════════════════════════════════
 -- ║  Autostart                                                 ║
 -- ══════════════════════════════════════════════════════════════
 
