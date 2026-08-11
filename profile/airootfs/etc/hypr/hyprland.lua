@@ -582,7 +582,10 @@ if hl.plugin.dynamic_cursors then
   hl.config({
     plugin = {
       dynamic_cursors = {
-        mode = "tilt"
+        mode = "tilt",
+        shake = {
+          enabled = false,
+        }
       }
     }
   })
