@@ -3,6 +3,12 @@
     "/usr/share/hypr/stubs"
   ],
   "Lua.diagnostics.globals": [
-    "hl"
+    "hl",
+    "mainMod",
+    "ionix_zoom",
+    "ionix_bars",
+    "ionix_bars_toggle_minimize",
+    "ionix_bars_apply",
+    "ionix_layouts"
   ]
 }

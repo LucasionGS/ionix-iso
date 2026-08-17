@@ -340,9 +340,9 @@ bind_exec("XF86MonBrightnessUp", "qs -c ionix ipc call brightness increase || br
 bind_exec("XF86MonBrightnessDown", "qs -c ionix ipc call brightness decrease || brightnessctl set '12.75-'", { locked = true, repeating = true })
 
 -- ── Screenshot ────────────────────────────────────────────────
-bind_exec("Print", "hyprshot -m region --freeze --clipboard-only && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
-bind_exec("CTRL + Print", "hyprshot -m output --freeze --clipboard-only && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
-bind_exec(mainMod .. " + Print", [[hyprshot -m region --freeze -o ~/Pictures -f "screenshot-$(date +%Y%m%d-%H%M%S).png" && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768]])
+bind_exec("Print", "hyprshot -s -m region --freeze --clipboard-only && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
+bind_exec("CTRL + Print", "hyprshot -s -m output --freeze --clipboard-only && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
+bind_exec(mainMod .. " + Print", [[hyprshot -s -m region --freeze -o ~/Pictures -f "screenshot-$(date +%Y%m%d-%H%M%S).png" && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768]])
 bind_exec("CTRL + " .. mainMod .. " + Print", "grim /tmp/fullscreen_screenshot.png && cat /tmp/fullscreen_screenshot.png | wl-copy && rm /tmp/fullscreen_screenshot.png && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
 
 
