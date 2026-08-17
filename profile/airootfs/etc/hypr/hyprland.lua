@@ -375,12 +375,6 @@ hl.window_rule({ match = { class = "com.github.hluk.copyq" }, float = true })
 hl.window_rule({ match = { class = "com.github.hluk.copyq" }, size = { 622, 652 } })
 hl.window_rule({ match = { class = "com.github.hluk.copyq" }, center = true })
 
--- Alt-tab switcher
-hl.window_rule({ match = { class = "alttab" }, no_anim = true })
-hl.window_rule({ match = { class = "alttab" }, stay_focused = true })
-hl.window_rule({ match = { class = "alttab" }, workspace = "special:alttab" })
-hl.window_rule({ match = { class = "alttab" }, border_size = 0 })
-
 -- Gaming - bypass compositor effects for performance
 hl.window_rule({ match = { class = "gamescope" }, immediate = true })
 hl.window_rule({ match = { class = "steam_app_.*" }, immediate = true })
@@ -408,6 +402,10 @@ hl.window_rule({ match = { class = "steam_app_.*", fullscreen = true }, no_anim 
 hl.layer_rule({ match = { namespace = "ionix-.*" }, blur = true, blur_popups = true, ignore_alpha = 0.2 })
 hl.layer_rule({ match = { namespace = "ionix-bar" }, animation = "slide top" })
 hl.layer_rule({ match = { namespace = "ionix-osd" }, animation = "fade" })
+-- The switcher animates its panel itself; fade only covers the backdrop dim,
+-- which sits below ignore_alpha so the compositor blurs the panel, not the
+-- whole screen.
+hl.layer_rule({ match = { namespace = "ionix-switcher" }, animation = "fade" })
 
 
 -- ══════════════════════════════════════════════════════════════
@@ -563,15 +561,23 @@ hl.on("config.reloaded", ionix_bars_apply)
 -- ║  Alt-Tab                                                   ║
 -- ══════════════════════════════════════════════════════════════
 
--- Alt+Tab jumps straight back to the previously focused window, which is what
--- the overwhelming majority of Alt+Tab presses are for.
-hl.bind("ALT + Tab", hl.dsp.focus({ urgent_or_last = true }))
+-- Windows-style switcher drawn by ionix-quickshell: each press is one IPC call
+-- (the first opens the overlay already on the previous window, so a quick tap
+-- still flips between the two most recent), Shift walks backwards — which the
+-- Lua dispatcher API itself cannot do, cycle_next has no reverse form — and the
+-- overlay commits on Alt release. Tab never reaches the overlay: these binds
+-- consume it even while the overlay's layer surface holds the keyboard.
+--
+-- The fallbacks keep the keystroke alive when the shell is down, and must use
+-- the Lua dispatcher form: under this config the dispatch IPC evaluates its
+-- argument as `return hl.dispatch(<arg>)`, so legacy strings fail to parse.
+bind_exec("ALT + Tab", "qs -c ionix ipc call switcher next || hyprctl dispatch 'hl.dsp.focus({ urgent_or_last = true })'", { repeating = true })
+bind_exec("SHIFT + ALT + Tab", "qs -c ionix ipc call switcher prev || hyprctl dispatch 'hl.dsp.window.cycle_next({})'", { repeating = true })
 
--- Shift+Alt+Tab walks the rest of the workspace, one window per press.
--- Only forwards: Hyprland's Lua API exposes `cycle_next` but no reverse form
--- (no `cycle_prev`, and `cycle_next` silently ignores every argument spelling
--- for "previous"), so a backwards binding would be a no-op that looks bound.
-hl.bind("SHIFT + ALT + Tab", hl.dsp.window.cycle_next({}), { repeating = true })
+-- Commit on the physical Alt release even when the release beats the overlay's
+-- keyboard-focus handshake (the quick-tap race). The shell no-ops instantly
+-- when no session is open. `release` is what classic bindr spells here.
+bind_exec("ALT + ALT_L", "qs -c ionix ipc call switcher commit", { release = true })
 
 
 -- ══════════════════════════════════════════════════════════════
