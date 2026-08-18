@@ -1,365 +1,418 @@
 <div align="center">
 
+<!-- <img src="docs/ionix-logo.png" width="120" alt="Ionix logo"> -->
+
 # Ionix
 
 **A modern, gaming-ready Arch Linux distribution powered by Hyprland**
 
-*Beautiful by default. Fast by design. Familiar to use.*
+*Beautiful by default. Fast by design. Built for efficiency and customizability.*
 
+</div>
+
+![The Ionix desktop: the ionix-quickshell bar across the top, an audio visualiser and the IoExplorer file manager tiled on the left, and a terminal showing fastfetch on the right](docs/screenshots/desktop.webp)
+
+---
+
+## What Ionix is
+
+Ionix is an Arch Linux distribution with the desktop already built. It ships as a bootable live
+ISO with a graphical installer, and what you get after installing is what you see above - a
+[Hyprland](https://hyprland.org/) Wayland session with a purpose-built shell, a themed terminal,
+a configured editor, gaming tuned in, and no post-install checklist to work through.
+
+The distinctive part is the shell. Most Hyprland setups are a pile of dotfiles glued to a
+general-purpose bar. Ionix ships **ionix-quickshell**, a desktop shell written specifically for
+it: a start menu, a taskbar, an Alt-Tab switcher with live window previews, and settings you
+change by clicking them. It is a tiling Wayland compositor that behaves like a desktop you
+already know how to use.
+
+Underneath, nothing is hidden or wrapped. It is Arch: `pacman`, the AUR, rolling releases, the
+wiki. If you already know Arch, everything you know still applies.
+
+**Ionix is for you if** you want a fast, current, Wayland desktop without spending a weekend
+assembling one; you game on Linux and would rather not hand-tune kernel parameters; or you want
+Arch as a daily driver with the setup already done.
+
+**Ionix is not for you if** building your own desktop is the part you enjoy. That is a completely
+reasonable thing to want - and Ionix is the opposite of it. Install plain Arch instead.
+
+> **Project status.** Ionix is a small, actively developed project, and there is no tagged
+> release yet - you build the ISO yourself (see [BUILDING.md](BUILDING.md)) or pull the artifact
+> from a CI run. It installs and boots on real hardware and in QEMU, and it is used daily by
+> myself. Expect rough edges, and expect things to move. Changes are based on things I want to see
+> in my own desktop, which will be the system's baseline.
+
+---
+
+## Highlights
+
+| | |
+|---|---|
+| **Familiar, not foreign** | Start menu, taskbar, and an Alt-Tab switcher with live previews - on a tiling compositor |
+| **Themes that switch everything** | One command restyles the shell, Hyprland, kitty and the file manager together |
+| **Colours from your wallpaper** | The `ionix-adaptive` theme derives its whole palette from whatever image is on screen |
+| **Built for gaming** | SteamOS-style kernel tuning, with Steam, Lutris, Proton and MangoHud preloaded |
+| **Two desktops, one install** | Hyprland or a full GNOME session, chosen at the boot menu |
+| **The desktop updates itself** | The shell is a normal AUR package, so `yay -Syu` advances it without a new ISO |
+| **Rolling Arch underneath** | Full `pacman` and AUR access; nothing wrapped, nothing hidden |
+
+---
+
+## The desktop
+
+### The bar
+
+The bar floats, blurs what is behind it, and rounds its corners. Left to right it carries the
+launcher button, workspaces, a window taskbar, now-playing media, the system tray, and
+indicators for audio, network, bluetooth, Philips Hue and battery, then the clock and the
+notification bell. There is one bar per monitor.
+
+It also turns. `bar.position` takes `top`, `bottom`, `left` or `right`; dock it to a side edge
+and every module restacks vertically, the clock switches to a stacked format, and popouts open
+sideways instead of downward.
+
+![The Ionix desktop with the bar docked to the right-hand screen edge as a vertical strip, its modules stacked top to bottom](docs/screenshots/bar-vertical.webp)
+
+### Start menu
+
+Tap `Super` and you get a start menu: pinned tiles, the apps you actually use, what is currently
+running, and a footer with your identity, a theme picker and power controls.
+
+![The Ionix start menu open over the desktop, showing pinned application tiles, a list of running applications, and a footer with user, settings, theme and power buttons](docs/screenshots/start-menu.webp)
+
+The search box covers four different things at once. Typing `net` here returns shell actions
+(Wi-Fi, notifications), matching applications, **and your open windows** - and picking a window
+raises it rather than starting a second copy of the app. Theme names match too, so switching
+theme is something you can type.
+
+![The start menu with "net" typed into the search box, showing results grouped into Actions, Applications and Open Windows](docs/screenshots/start-menu-search.webp)
+
+### Alt-Tab
+
+`Alt+Tab` opens a switcher overlay with a live preview of every window, in most-recently-used
+order. Hold `Alt` to browse, `Shift+Alt+Tab` walks backwards, and it commits when you let go of
+`Alt` - so a quick tap flips between the two windows you were just using. It can span every
+workspace or stay on the current one.
+
+![The Alt-Tab switcher overlay showing five window cards with live previews: a system monitor, an audio visualiser, a terminal, a code editor and the file manager](docs/screenshots/alt-tab-switcher.webp)
+
+### Panels, not applets
+
+Clicking an indicator opens a panel drawn by the shell itself rather than launching a separate
+application. The audio panel is a full mixer with a slider for every application that is making
+sound. The network panel lists Wi-Fi networks and takes the password inline. There are panels
+for bluetooth devices, a calendar, the media player, a
+power menu with power-profile switching, and Philips Hue lights.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/audio-mixer.webp" alt="The audio panel's Apps tab, with an independent volume slider for each application currently playing sound"></td>
+<td width="50%"><img src="docs/screenshots/notifications.webp" alt="Three notification toasts stacked in the corner of the screen, from Steam, ionixtheme and pacman"></td>
+</tr>
+</table>
+
+The shell is also the notification server, so notifications are styled like everything else
+rather than borrowed from another daemon.
+
+### Settings you can click
+
+The gear in the start menu opens a settings page inside the shell. Bar position, which
+indicators appear, notification popups, the on-screen display and the Alt-Tab switcher are all
+switches here - no file editing. Anything you have pinned by hand in `config.json` shows up
+greyed out and labelled, so the two never fight.
+
+<div align="center">
+<img src="docs/screenshots/settings-page.webp" width="620" alt="The in-shell settings page listing bar position, indicator switches, notification options and window switcher options">
 </div>
 
 ---
 
-## Overview
+## Themes
 
-Ionix is a custom Arch Linux–based operating system built around the [Hyprland](https://hyprland.org/) Wayland compositor. It ships as a bootable live ISO with a graphical installer (Calamares), giving you a polished, fully configured desktop the moment installation finishes — no post-install configuration required.
+`ionixtheme <name>` restyles the shell, Hyprland, kitty and the file manager in one go, and
+reloads each of them in place - open terminals restyle without being restarted. The same
+switcher lives in the start menu footer with live colour previews, and you can just type a theme
+name into search.
 
-Ionix is designed for developers, power users, and gamers who want the bleeding-edge rolling-release Arch ecosystem without spending hours assembling a desktop from scratch.
+Three of the four shipped themes, on the same desktop:
+
+| `ionix` | `ionix-pro` | `winix` |
+|---|---|---|
+| ![The base Ionix theme: deep purple and violet accents with a floating top bar](docs/screenshots/theme-ionix.webp) | ![The ionix-pro theme: near-black surfaces with neon violet and cyan accents](docs/screenshots/theme-ionix-pro.webp) | ![The winix theme: a Windows 11 style bottom-docked bar, square corners and Fluent blue accents](docs/screenshots/theme-winix.webp) |
+| The default. Deep purple, floating bar. | Near-black with neon violet and cyan. | Windows 11 Fluent: bottom bar, edge to edge. |
+
+### Colours from your wallpaper
+
+The fourth theme, `ionix-adaptive`, does not state its colours - it derives them. Set a wallpaper
+and the entire palette follows the image, across the shell, Hyprland's borders, the terminal and
+the file manager. Same desktop, same windows, two different wallpapers:
+
+| | |
+|---|---|
+| ![The Ionix desktop under a cool blue wallpaper, with the entire interface rendered in matching blues and violets](docs/screenshots/adaptive-cool.webp) | ![The same desktop under a warm sepia wallpaper, with the entire interface rendered in matching ambers and oranges](docs/screenshots/adaptive-warm.webp) |
+
+The lightness of every colour slot is fixed and only hue and chroma follow the image, so text
+contrast stays where it was designed to be no matter what you point it at. It re-derives itself
+whenever the wallpaper changes and at login, and falls back to the theme's static colours if
+anything goes wrong.
+
+Wallpapers themselves are handled by `awww`: `Ctrl+Super+W` opens a picker, and `Super+Alt+W`
+deals a different random wallpaper to each monitor.
 
 ---
 
-## Features at a Glance
+## Keyboard shortcuts
 
-| Category | What's Included |
-|---|---|
-| **Desktop** | Hyprland (Wayland), ionix-quickshell bar, ioexplorer spotlight launcher |
-| **Shell** | Fish + oh-my-posh prompt, NvChad for Neovim (auto-configured on first login) |
-| **Terminals** | kitty (primary), foot, Tabby |
-| **Browser** | Google Chrome |
-| **Files** | Nemo file manager with context-menu integration |
-| **Gaming** | Steam, GameMode, MangoHud, Gamescope, Lutris, OBS Studio, Wine (Staging) |
-| **Audio** | PipeWire (with PulseAudio + JACK compatibility) |
-| **Bluetooth** | BlueZ + Blueman |
-| **GPU** | AMD, Intel, NVIDIA (auto-detected and configured during install) |
-| **Installer** | Calamares graphical installer, auto-launched on boot |
+All of these live in `/etc/hypr/hyprland.lua`. Override any of them in
+`~/.config/hypr/hyprland.lua`. `Super` is the modifier throughout.
 
----
-
-## Desktop Environment
-
-Ionix uses **Hyprland** — a dynamic tiling Wayland compositor with smooth animations, rounded corners, and blur effects out of the box.
-
-### Visual Style
-
-- Rounded window corners (12 px rounding)
-- Background blur and drop shadows
-- Purple-accented window borders
-- Dark GTK and icon theme (Adwaita Dark / Papirus-Dark)
-- Animated workspace transitions
-
-### Panel & Shell
-
-- **ionix-quickshell** — the status bar, written in QML on [Quickshell](https://quickshell.org). Floating, blurred and rounded, with workspaces, a window taskbar, media controls, system tray, and audio / network / bluetooth / battery indicators. Clicking an indicator opens an in-shell panel rather than launching a separate app: a calendar, an audio mixer with per-application volume sliders, a Wi-Fi picker with inline password entry, a bluetooth manager, a media player, and a power menu. Volume and brightness get an on-screen display.
-  - Configure it with `~/.config/quickshell/ionix/config.json` — changes apply live, no restart. See `/etc/xdg/quickshell/ionix/defaults.json` for every key.
-  - Restart it with `Super+Shift+B`.
-  - Developed as a git submodule and published to the AUR as `ionix-quickshell-git`. The ISO builds and ships that same package (from the submodule's working tree, versioned off its commit), so an installed system upgrades it with a plain `yay -Syu` — independently of ISO releases.
-- **Waybar** — still installed as a fallback, but no longer started automatically. Run `waybar` from a terminal (or `Ctrl+Super+Shift+B`) if you need it.
-
-### Screen Lock
-
-- **hyprlock** — lockscreen triggered with `Super+L` or on idle via hypridle
-
-### App Launcher
-
-- **ioexplorer spotlight** — application launcher / command palette (`Super+R`, `Alt+Space`, or tapping `Super`)
-
-### Login Flow
-
-The system auto-logs in to a TTY on boot, starts the Fish shell, and launches Hyprland via UWSM automatically — no display manager required.
-
----
-
-## Pre-installed Applications
-
-### Productivity & Development
-
-| App | Purpose |
-|---|---|
-| **Neovim** + NvChad | Modal text editor, auto-configured on first login |
-| **kitty** | GPU-accelerated terminal (with transparency) |
-| **foot** | Lightweight Wayland terminal (also runs as a server for fast launches) |
-| **Tabby** | Feature-rich tabbed terminal (`Ctrl+Alt+T`) |
-| **Fish** | User-friendly shell with syntax highlighting and autocompletion |
-| **oh-my-posh** | Cross-shell prompt engine with the Ionix theme |
-| **btop** | Resource monitor |
-| **fastfetch** | System information display |
-| **yay** | AUR helper |
-
-### Internet & Communication
-
-| App | Purpose |
-|---|---|
-| **Google Chrome** | Primary web browser |
-| **NetworkManager** | Network management with GUI (`nm-connection-editor`) |
-| **openconnect-sso** | VPN client with SSO support |
-
-### Gaming
-
-| App | Purpose |
-|---|---|
-| **Steam** | Game library and launcher |
-| **Lutris** | Game manager for non-Steam titles |
-| **Wine (Staging)** | Windows compatibility layer + winetricks |
-| **ProtonUp-Qt** | Manage Proton and Wine-GE versions |
-| **GameMode** | CPU/GPU performance governor during gameplay |
-| **MangoHud** | In-game performance overlay |
-| **Gamescope** | Micro-compositor for resolution scaling and frame limiting |
-| **OBS Studio** | Screen recording and streaming |
-| **AntiMicroX** | Gamepad-to-keyboard/mouse mapper |
-
-### System Utilities
-
-| App | Purpose |
-|---|---|
-| **CopyQ** | Clipboard manager with history (`Super+V`) |
-| **Blueman** | Bluetooth GUI |
-| **pavucontrol** | PipeWire/PulseAudio volume control |
-| **nwg-displays** | Multi-monitor layout manager |
-| **hyprpicker** | Color picker |
-| **hyprshot** | Screenshot tool |
-| **Docker** | Container runtime |
-
----
-
-## Gaming Optimizations
-
-Ionix ships SteamOS-inspired kernel tweaks for improved in-game performance:
-
-- `vm.max_map_count = 2147483642` — required by many Proton/Wine titles
-- Split-lock mitigation disabled — prevents frame drops in older games
-- Reduced memory compaction stalls
-- Increased UDP receive buffers for online play
-- Raised file descriptor limits (`524288`) for heavily-modded games
-- **ananicy-cpp** — automatic CPU priority management for games and background tasks
-
----
-
-## Key Bindings
-
-> **`$mainMod` = Super (Windows key)**
-
-### Applications
+### Essentials
 
 | Shortcut | Action |
 |---|---|
-| `Super+T` | Open kitty terminal |
-| `Ctrl+Alt+T` | Open Tabby terminal |
-| `Super+W` | Open Google Chrome |
-| `Super+E` | Open Nemo file manager |
-| `Super+B` | Open btop system monitor |
-| `Super+R` | Open the ioexplorer spotlight launcher |
-| `Alt+Space` | Open the ioexplorer spotlight launcher |
-| `Super+V` | Toggle CopyQ clipboard manager |
-| `Super+L` | Lock screen |
-| `Ctrl+Super+R` | Reload Hyprland config |
+| Tap `Super` | Toggle the start menu |
+| `Super+R` / `Alt+Space` | Spotlight launcher |
+| `Super+T` | Terminal (kitty) |
+| `Super+E` | File manager (IoExplorer) |
+| `Super+W` | Google Chrome |
+| `Super+Q` | Close window |
+| `Alt+Tab` | Window switcher (hold `Alt` to browse) |
+| `Super+1`…`0` | Go to workspace 1–10 |
+| `Super+V` | Clipboard history (CopyQ) |
+| `Super+L` | Lock the screen |
 
-### Screenshots
-
-| Shortcut | Action |
-|---|---|
-| `Print` | Area screenshot → clipboard |
-| `Ctrl+Print` | Full screen screenshot → clipboard |
-| `Super+Print` | Area screenshot → `~/Pictures/` |
-| `Shift+Print` | Active monitor screenshot → clipboard |
-
-### Window Management
+### Windows
 
 | Shortcut | Action |
 |---|---|
-| `Super+Q` | Close active window |
 | `Super+Space` | Toggle floating |
-| `Super+F` | Fullscreen |
-| `Super+Arrow keys` | Move focus |
-| `Super+Shift+Arrow keys` | Move window |
-| `Super+Alt+Arrow keys` | Resize window |
-| `Super+G` | Toggle window group |
-| `Super+P` | Pin window (always on top) |
-| `Alt+Tab` | Jump back to the previously focused window |
-| `Shift+Alt+Tab` | Cycle forward through the workspace's windows |
+| `Super+F` / `Super+D` | Fullscreen / maximise |
+| `Super+Alt+F` | Fake fullscreen (window thinks it is fullscreen) |
+| `Super+P` | Pin above everything |
+| `Super+J` | Cycle tiling layout (dwindle ↔ master) |
+| `Super+←↑→↓` | Move focus (also `Super+[` and `Super+]`) |
+| `Super+Shift+←↑→↓` | Move the window |
+| `Super+Alt+←↑→↓` | Resize (add `Shift` for 2 px steps) |
+| `Super+Shift+U` | Jump to the urgent window, or the last one |
+| `Super+G` / `Super+Shift+G` | Group windows / lock the group |
+| `Super+Ctrl+Tab` | Next window within a group |
 
 ### Workspaces
 
 | Shortcut | Action |
 |---|---|
-| `Super+1`…`0` | Switch to workspace 1–10 |
-| `Ctrl+Super+Right/Left` | Next/previous workspace |
-| `Super+Alt+1`…`0` | Move window to workspace (silent) |
-| `Super+S` | Toggle scratchpad workspace |
+| `Ctrl+Super+←→` | Previous / next workspace |
+| `Super+PgUp` / `PgDn` | Next / previous workspace (±5 with `Ctrl`) |
+| `Ctrl+Super+Alt+←→` | Workspace on the other monitor |
+| `Super+Alt+1`…`0` | Send window to a workspace, stay put |
+| `Ctrl+Super+Shift+1`…`0` | Send window to a workspace and follow it |
+| `Super+S` / `Super+Shift+S` | Toggle the scratchpad / throw a window into it |
+| `Super+numpad 1`…`9` | Snap this workspace's windows into a grid, laid out like the numpad |
+| `Super+numpad 0` | Put everything back under the tiler |
 
-### Media Keys
+### Screenshots
 
 | Shortcut | Action |
 |---|---|
-| `XF86AudioRaiseVolume` | Volume up |
-| `XF86AudioLowerVolume` | Volume down |
-| `XF86AudioMute` | Toggle mute |
-| `XF86AudioPlay` | Play/pause |
-| `XF86AudioNext/Prev` | Next/previous track |
-| `XF86MonBrightnessUp/Down` | Screen brightness |
+| `Print` | Select a region → clipboard |
+| `Ctrl+Print` | This monitor → clipboard |
+| `Super+Print` | Select a region → `~/Pictures/` |
+| `Ctrl+Super+Print` | Every monitor → clipboard |
+
+### Desktop and shell
+
+| Shortcut | Action |
+|---|---|
+| `Super+N` / `Super+Shift+N` | Notification centre / do not disturb |
+| `Ctrl+Super+W` | Wallpaper picker |
+| `Super+Alt+W` | Shuffle wallpapers across all monitors |
+| `Ctrl+Super+scroll` | Zoom the screen around the cursor (`Ctrl+Super+Alt+0` resets) |
+| `Super+.` | Emoji and symbol picker |
+| `Alt+←` / `Alt+→` | Back / forward in the focused window |
+| `Super+B` | btop in a terminal |
+| `Ctrl+Alt+T` | Tabby terminal |
+| `Super+Shift+B` | Restart the shell |
+| `Ctrl+Super+Shift+B` | Launch Waybar (escape hatch if the shell misbehaves) |
+| `Ctrl+Super+R` | Reload the Hyprland config |
+
+### Mouse
+
+| Gesture | Action |
+|---|---|
+| `Super+drag` / `Super+right-drag` | Move / resize a window |
+| `Super+scroll` | Change workspace |
+| `Super+Shift+scroll` | Cycle within a window group |
+
+Media and brightness keys work as expected. Volume and brightness route through the shell so the
+on-screen display shows the exact new value, with `wpctl` and `brightnessctl` as fallbacks if the
+shell is not running.
 
 ---
 
-## Installation
+## Under the hood
 
-1. **Download** the Ionix ISO (or [build it yourself](#building-ionix)).
-2. **Boot** from the ISO (USB drive or DVD).
-3. The live session logs in automatically. **Click the installer icon** on the desktop or run `ionix-install` in a terminal.
-4. Follow the **Calamares** graphical installer — choose your language, timezone, keyboard layout, partition scheme, and create your user account.
-5. After installation completes, **reboot** and remove the installation media.
+The shell is [fish](https://fishshell.com/) with an [oh-my-posh](https://ohmyposh.dev/) prompt,
+`zoxide` for directory jumping, and `lsd`, `bat`, `ripgrep`, `fd` and `fzf` in place of the
+classic tools. Neovim is preinstalled and clones the [NvChad](https://nvchad.com/) starter
+configuration the first time you log in. `kitty` is the default terminal; `foot` runs as a server
+for near-instant launches, and `Tabby` is there if you want tabs and panes.
 
-### Post-Installation (Automatic)
-
-When you first log in, Ionix automatically:
-
-- Sets Fish as the default shell for your user
-- Clones the NvChad starter config for Neovim
-- Sets up standard XDG user directories
-- Applies the dark theme for GTK and portal-aware apps
-
-### NVIDIA GPUs
-
-NVIDIA is detected automatically during installation. If an NVIDIA GPU is found:
-
-- DRM modesetting is enabled (`nvidia_drm modeset=1 fbdev=1`)
-- NVIDIA kernel modules are injected into the initramfs for early loading
-- The `nvidia-open` driver is pre-installed
-
-If no NVIDIA GPU is found, the NVIDIA packages are removed to save disk space.
-
-### Secure Boot
-
-Ionix includes `shim-signed`, `sbctl`, and `mokutil` for Secure Boot support. Manual enrollment of your own keys via `sbctl` is possible after installation.
+![A maximised kitty terminal showing fastfetch output over the wallpaper, with the oh-my-posh fish prompt below it displaying the current directory and git branch](docs/screenshots/terminal.webp)
 
 ---
 
-## Customizing Hyprland
+## What's installed
 
-User configuration lives in `~/.config/hypr/hyprland.lua`. This file loads the system defaults from `/etc/hypr/hyprland.lua` first, so you only need to add overrides:
+**Desktop:** Hyprland, ionix-quickshell, IoExplorer and Nemo, hyprlock, CopyQ, Blueman,
+pavucontrol, nwg-displays, hyprshot, hyprpicker, wf-recorder, Papirus icons.
+
+**Terminals and shell:** kitty, foot, Tabby, fish, oh-my-posh, btop, htop, fastfetch, bat,
+ripgrep, fd, fzf, jq, zoxide, lsd.
+
+**Development:** Neovim with NvChad, git, Docker, Python, Node.js, and `yay` for the AUR.
+
+**Internet:** Google Chrome, NetworkManager with its GUI, and `openconnect-sso` for VPNs with
+single sign-on.
+
+**Gaming:** Steam, Lutris, Wine Staging with winetricks, ProtonUp-Qt, GameMode, MangoHud,
+Gamescope, OBS Studio, AntiMicroX, and `ananicy-cpp` for automatic process priorities.
+
+**Graphics:** Mesa with Vulkan for AMD and Intel, `nvidia-open` for NVIDIA, plus the 32-bit
+libraries games need. Audio is PipeWire with PulseAudio, ALSA and JACK compatibility.
+
+**A second desktop:** a full GNOME session is installed alongside Hyprland. Pick **Ionix - GNOME**
+at the boot menu and GDM starts instead, with Ionix's GNOME defaults already applied.
+
+The authoritative list is [`profile/packages.x86_64`](profile/packages.x86_64).
+
+### Gaming tuning
+
+Ionix ships SteamOS-inspired kernel settings out of the box
+([`99-ionix-gaming.conf`](profile/airootfs/etc/sysctl.d/99-ionix-gaming.conf)):
+
+- `vm.max_map_count = 2147483642` - required by many Proton and Wine titles
+- Split-lock mitigation disabled - older games trip it and get serialised by the kernel
+- Reduced memory compaction stalls and a shorter page-lock unfairness window
+- NMI watchdog off
+- Larger UDP buffers for online play
+- `ananicy-cpp` managing CPU priorities for games and background tasks
+
+---
+
+## Installing
+
+1. **Get an ISO.** There is no published release yet, so build it - see
+   [BUILDING.md](BUILDING.md) - or take the artifact from a CI run.
+2. **Write it to a USB stick** with `./flash-usb.sh`. It picks the newest ISO in `out/`, refuses
+   to offer your system disk, and makes you type the target device path back before it writes.
+3. **Boot it.** The live session logs in by itself and the installer opens about two seconds
+   later. If you close it, run `ionix-install` or use the desktop entry.
+4. **Work through Calamares** - language, timezone, keyboard, partitioning, and your user account.
+
+![The Calamares installer on its partitioning page, with the purple Ionix sidebar branding and options to erase the disk or partition manually](docs/screenshots/installer.webp)
+
+5. **Reboot** and remove the installation media.
+
+### What the installer sets up for you
+
+Installation does more than copy files. It makes fish your login shell, enables autologin on
+tty1, turns on NetworkManager, bluetooth, power-profiles-daemon and ananicy-cpp, removes the
+live-session artefacts, installs a proper kernel and initramfs in place of the archiso one,
+drops the local `[ionix]` repository and initialises the pacman keyring so the system can update
+itself immediately.
+
+It also handles graphics: with an NVIDIA card it enables DRM modesetting
+(`nvidia_drm modeset=1 fbdev=1`) and puts the NVIDIA modules in the initramfs for early loading.
+With no NVIDIA card it removes the NVIDIA packages entirely to save the disk space.
+
+For Secure Boot, `shim-signed`, `sbctl` and `mokutil` are installed so you can enrol your own
+keys after installation.
+
+### First login
+
+The first Hyprland session clones the NvChad configuration for Neovim, creates the standard XDG
+user directories, and applies the dark GTK and icon themes. It runs once and then gets out of
+the way.
+
+---
+
+## Making it yours
+
+**The shell.** Four levels, in increasing order of commitment: the settings page for the common
+switches; `~/.config/quickshell/ionix/config.json` for anything else, which is deep-merged over
+the defaults and applied live without a restart; a `user.qml` for your own QML; and
+`ionix-shell-fork mine` to copy the whole shell somewhere you can rewrite it. Every available key
+is documented in `/etc/xdg/quickshell/ionix/defaults.json`.
+
+**Hyprland.** Your config lives at `~/.config/hypr/hyprland.lua` and loads the system defaults
+first, so you only write the differences:
 
 ```lua
-# Example: change keyboard layout to US
+-- Use a US keyboard layout
 hl.config({ input = { kb_layout = "us" } })
 
-# Example: add a custom keybinding
+-- Add your own keybinding
 hl.bind(mainMod .. " + code:60", hl.dsp.exec_cmd("yourapp"))
+
+-- Pin a monitor layout
+hl.monitor({ output = "DP-1", mode = "2560x1440@144", position = "0x0", scale = 1 })
 ```
 
-Monitor layout can be managed by adding `hl.monitor({ ... })` rules to `~/.config/hypr/hyprland.lua`.
+**Themes.** `ionixtheme --list` shows what is available and `ionixtheme <name>` switches. To make
+your own, copy a shipped theme out of `/usr/local/share/ionix/styler/themes/` and edit it.
 
 ---
 
-## Building Ionix
+## Keeping it updated
 
-> This section is intended for developers who want to compile the ISO from source.
-
-### Prerequisites
-
-Ionix can be built **natively on Arch Linux** (requires root) or **inside Docker** on any Linux host.
-
-#### Submodules
-
-`ionix-quickshell` (the desktop shell) is a git submodule and is built into the ISO from the
-working tree, as the package `ionix-quickshell-git`. Fetch it before building — as your normal
-user, not root:
+Ionix is rolling, so there is nothing special to do:
 
 ```bash
-git submodule update --init --recursive
+sudo pacman -Syu    # everything from the Arch repositories
+yay -Syu            # the above, plus the AUR - including the Ionix shell
 ```
 
-`docker-build.sh` does this for you. `build.sh` will not, because it runs as root and git refuses
-to touch a checkout owned by someone else; it fails with this instruction instead.
+The desktop shell is published to the AUR as `ionix-quickshell-git`, and the installer removes the
+local `[ionix]` repository, so `yay` treats it as an ordinary foreign package and upgrades it in
+place. You do not need a new ISO to get a newer desktop.
 
-#### Native Build Dependencies
+---
+
+## Building from source
 
 ```bash
-sudo pacman -S --needed --noconfirm \
-    archiso base-devel git \
-    meson cmake extra-cmake-modules \
-    python nodejs npm \
-    rust go cargo \
-    gobject-introspection
+git submodule update --init --recursive   # as your user, not root
+./docker-build.sh                         # any Linux host with Docker
+sudo ./build.sh                           # or natively, on Arch
 ```
 
-Install Python build tools:
+Full instructions, the build pipeline, QEMU testing, USB writing and the repository layout are in
+**[BUILDING.md](BUILDING.md)**.
 
-```bash
-sudo python -m ensurepip   # if pip is not already available
-sudo python -m pip install meson setuptools
-```
+---
 
-> **Python 3.14 note:** `gobject-introspection` from the Arch repos is compiled against Python 3.14.
-> Python 3.14 must be present at `/usr/bin/python3.14` but does **not** need to be the system default.
-> The build script selects the correct Python automatically.
+## Contributing
 
-### Build with Docker (Recommended for non-Arch hosts)
+Issues and pull requests are welcome. Two things worth knowing before you start:
 
-Any Linux machine with Docker installed can build the ISO without an Arch system:
+- The desktop shell lives in [its own repository](https://github.com/LucasionGS/ionix-quickshell)
+  and enters this one as a submodule - shell changes belong there, not here.
+- `CLAUDE.md` documents the architecture, the conventions and a good number of hard-won traps.
+  It is the fastest way to understand why things are arranged the way they are.
 
-```bash
-# Build the ISO (builds the Docker image on first run)
-./docker-build.sh
+---
 
-# Force a rebuild of the Docker image
-./docker-build.sh --rebuild-image
-```
+## Credits
 
-The ISO is written to `./out/`.
+Ionix is assembled from other people's excellent work: [Arch Linux](https://archlinux.org/) and
+archiso, [Hyprland](https://hyprland.org/), [Quickshell](https://quickshell.org/),
+[Calamares](https://calamares.io/), [matugen](https://github.com/InioX/matugen),
+[awww](https://github.com/LGFae/swww), [NvChad](https://nvchad.com/),
+[oh-my-posh](https://ohmyposh.dev/) and the [Papirus](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme)
+icon theme.
 
-### Native Build (Arch Linux only)
+## License
 
-```bash
-sudo ./build.sh
-```
-
-The build proceeds in four steps:
-
-1. **AUR packages** — a dozen AUR packages (Calamares, google-chrome, the ionix tooling, etc.) are compiled into a local `localrepo/` pacman repository.
-2. **Local repo** — the local repo is staged at `/tmp/ionix-localrepo` for use by archiso.
-3. **Branding assets** — SVG wallpaper and logo are rasterised to PNG with `rsvg-convert` (or ImageMagick as a fallback).
-4. **ISO assembly** — `mkarchiso` builds the final squashfs-compressed ISO in `./out/`.
-
-### Testing the ISO
-
-**Test the live environment** (boots from ISO):
-
-```bash
-./test.sh
-```
-
-**Test the installed system** (boots from a virtual disk):
-
-```bash
-./test-distro.sh
-```
-
-Both scripts use QEMU with KVM, OVMF (UEFI firmware), and `virtio-vga-gl` for GPU acceleration. A 64 GB `qcow2` virtual disk (`ionix-test.qcow2`) is created automatically on first run.
-
-### Cleaning Build Artifacts
-
-```bash
-./clean.sh
-```
-
-This removes `out/`, `work/`, `localrepo/`, and any generated PNG assets.
-
-### Repository Layout
-
-```
-ionix-iso/
-├── assets/               # SVG branding (wallpaper, logo) — converted to PNG at build time
-├── aur/
-│   └── build-aur.sh      # Builds AUR packages into localrepo/ in dependency order
-├── includes/             # Pre-built Calamares package cache
-├── profile/              # archiso profile
-│   ├── airootfs/         # Root filesystem overlay (becomes the live ISO's filesystem)
-│   │   ├── etc/          # System configuration (hyprland, calamares, fish, etc.)
-│   │   └── usr/local/bin/# Ionix scripts (ionix-install, ionix-post-install, ...)
-│   ├── packages.x86_64   # Full package list (official repos + local AUR repo)
-│   ├── pacman.conf       # pacman config referencing the local [ionix] repo
-│   └── profiledef.sh     # archiso profile definition
-├── build.sh              # Main build entry point (run as root)
-├── docker-build.sh       # Docker wrapper for build.sh
-├── clean.sh              # Remove all build artifacts
-├── test.sh               # Boot ISO in QEMU
-└── test-distro.sh        # Boot installed disk image in QEMU
-```
+Ionix is released under the GNU General Public License v3.0 - see [LICENSE](LICENSE). The
+packages it bundles are covered by their own licenses.
