@@ -361,6 +361,9 @@ hl.window_rule({ match = { title = "(Picture in picture)" }, pin = true })
 hl.window_rule({ match = { class = "kitty" }, opacity = "0.8" })
 hl.window_rule({ match = { class = "kitty", focus = true }, opacity = "0.9" })
 
+-- Kitty:float floats at 80% of the monitor it opens on
+hl.window_rule({ match = { class = "kitty:float" }, float = true, size = { 1280, 768 }, center = true })
+
 -- System dialogs
 hl.window_rule({ match = { class = "blueman-manager" }, float = true })
 hl.window_rule({ match = { class = "blueman-manager" }, center = true })
