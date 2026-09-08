@@ -30,6 +30,19 @@ if [[ -f /usr/local/share/ionix/gnome-defaults.dconf ]]; then
     dconf load / < /usr/local/share/ionix/gnome-defaults.dconf 2>/dev/null || true
 fi
 
+# Nudge about the fingerprint reader, if there is one. The installer has
+# already wired PAM up by this point, but enrolling is per-user and needs a
+# session, so this is the first moment it can actually be done. Skipped on the
+# live medium, where there is no persistent user to enroll against.
+if [[ ! -d /run/archiso ]] \
+   && command -v notify-send >/dev/null 2>&1 \
+   && ionix-fingerprint detect --quiet 2>/dev/null; then
+    notify-send --icon=fingerprint --app-name=Ionix \
+        "Fingerprint reader ready" \
+        "Run <tt>ionix-fingerprint enroll</tt> in a terminal to set up unlock by finger." \
+        2>/dev/null || true
+fi
+
 # Mark first login as complete
 touch "$MARKER"
 
