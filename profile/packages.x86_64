@@ -194,6 +194,11 @@ gnome-keyring
 # --- Misc hardware support ---
 broadcom-wl
 b43-fwcutter
+# Fingerprint readers. Always shipped, never assumed: fprintd is D-Bus
+# activated rather than a service, so on a machine with no sensor it just sits
+# there. ionix-post-install decides per machine whether to wire it into PAM,
+# and `ionix-fingerprint` can do the same later for a USB reader.
+fprintd
 
 # --- GPU Drivers (AMD/Intel) ---
 mesa

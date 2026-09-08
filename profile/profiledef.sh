@@ -25,6 +25,7 @@ file_permissions=(
   ["/usr/local/bin/ionix-first-login"]="0:0:755"
   ["/usr/local/bin/ionix-install"]="0:0:755"
   ["/usr/local/bin/ionix-arrange-workspace"]="0:0:755"
+  ["/usr/local/bin/ionix-fingerprint"]="0:0:755"
   ["/usr/local/bin/grub-install"]="0:0:755"
   ["/usr/local/bin/ionix-session-selector"]="0:0:755"
   ["/etc/grub.d/11_ionix_gnome"]="0:0:755"

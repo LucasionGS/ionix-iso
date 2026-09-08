@@ -113,6 +113,15 @@ else
     pacman -Rns --noconfirm nvidia-open nvidia-utils lib32-nvidia-utils egl-wayland libva-nvidia-driver 2>/dev/null || true
 fi
 
+# Fingerprint: wire PAM up only where there is actually a sensor. Detection
+# reads the hardware tables libfprint ships, so it works here in the chroot
+# with no D-Bus and no running fprintd. fprintd itself stays installed either
+# way — it is D-Bus activated, so it costs nothing idle, and leaving it means a
+# USB reader plugged in later needs only `sudo ionix-fingerprint enable`.
+if /usr/local/bin/ionix-fingerprint detect --quiet 2>/dev/null; then
+    /usr/local/bin/ionix-fingerprint enable --quiet || true
+fi
+
 # Remove bin files we added to /usr/local/bin during the live session
 rm -f /usr/local/bin/ionix-install
 rm -f /usr/local/bin/grub-install
