@@ -655,20 +655,8 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("awww-daemon")
   hl.exec_cmd("bash /etc/hypr/scripts/init.sh")
   hl.exec_cmd("hyprpolkitagent")
-  -- swaync is deliberately not started: ionix-quickshell owns
-  -- org.freedesktop.Notifications now, and two servers on that name means
-  -- whichever loses the race silently stops working. Dropping this line is not
-  -- enough on its own — swaync ships a D-Bus activation file for that same name,
-  -- so /etc/systemd/user/swaync.service is masked to /dev/null as well. Undo both
-  -- (and drop the shell's NotificationServer) to go back to swaync.
-  -- The bar is ionix-quickshell, started by its systemd user unit (pre-enabled in
-  -- /etc/skel) so it restarts itself on failure. waybar stays installed as a
-  -- manual fallback but is deliberately not launched here.
-  hl.exec_cmd("ioexplorer-spotlight --server")
   hl.exec_cmd("blueman-applet")
   hl.exec_cmd("gnome-keyring-daemon --start --components=secrets,pkcs11,ssh")
   hl.exec_cmd("copyq")
-  hl.exec_cmd("foot --server")
-  -- hl.exec_cmd("ioexplorer-start --server")
   hl.exec_cmd("ionix-first-login")
 end)
