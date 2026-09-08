@@ -646,6 +646,175 @@ end
 
 hl.bind(mainMod .. " + J", cycle_layout)
 
+-- ══════════════════════════════════════════════════════════════
+-- ║  Grid arrange                                              ║
+-- ══════════════════════════════════════════════════════════════
+
+-- SUPER + SHIFT + J reorganises the windows on the active workspace into a
+-- grid, once. They stay tiled -- nothing floats, nothing is pinned to pixel
+-- coordinates -- so afterwards the workspace behaves like any other dwindle
+-- workspace and the next window opens wherever dwindle puts it.
+--
+-- Which means the grid cannot be handed out as geometry. Resizing tiled windows
+-- towards a grid does not work: dwindle's tree is built from the order the
+-- windows opened in, an arbitrary tree cannot express a grid whatever its split
+-- ratios are, and pushing exact sizes at it collapses windows to slivers a
+-- couple of pixels wide. So the tree itself is rebuilt -- float every window to
+-- empty it, then tile them back one at a time in the order that grows the grid.
+--
+-- Two dwindle behaviours the rebuild rides on, both verified rather than
+-- assumed:
+--
+--   * `use_active_for_splits` means a window entering the tree splits the
+--     *active* window's node. So the focus before each un-float is the whole
+--     instruction: focus the window whose slot is being divided.
+--   * `preserve_split` is off, so the direction of a split is never ours to
+--     pick -- dwindle re-derives it from the node's box on every recalculation
+--     and always cuts the longer side. That is what keeps the cells square, and
+--     it is also why the ratios below have to be set as the tree is built: a
+--     band left at half width would be taller than it is wide, and the next
+--     window would then land underneath it instead of beside it.
+ionix_grid = {
+  -- Weight of the "prefer the grid with fewer empty cells" tie-break, measured
+  -- in units of cell aspect ratio. Small on purpose -- shape decides, fullness
+  -- only settles near-ties.
+  fill_bias = 0.05,
+}
+
+-- Iterating over the *row* count rather than the column count is what keeps the
+-- result honest: columns is then ceil(count/rows), the widest a row gets once
+-- the windows are spread evenly down the rows, so a shape that would leave a
+-- whole trailing column empty (four columns for five windows) is never even
+-- considered. Gaps are left out of the ratio; they are far too small to change
+-- which shape wins.
+local function grid_rows(count, width, height)
+  local best_rows, best_score = 1, nil
+
+  for rows = 1, count do
+    local columns = math.ceil(count / rows)
+    local ratio = (width / columns) / (height / rows)
+    if ratio < 1 then ratio = 1 / ratio end
+
+    local score = ratio + (rows * columns - count) * ionix_grid.fill_bias
+    if not best_score or score < best_score then
+      best_rows, best_score = rows, score
+    end
+  end
+
+  return best_rows
+end
+
+local function arrange_grid()
+  -- splitratio is dwindle's own layoutmsg and the rebuild is a rebuild of
+  -- dwindle's tree; under any other layout the churn would buy nothing.
+  if hl.get_config("general.layout") ~= "dwindle" then return end
+
+  local workspace = hl.get_active_workspace()
+  if not workspace then return end
+
+  local monitor = workspace.monitor or hl.get_active_monitor()
+  if not monitor then return end
+
+  -- Already-floating windows are left alone: floating is something the user or
+  -- a window rule asked for, not a state to collect up into a grid. Pinned ones
+  -- follow the workspace rather than living on it.
+  local windows = {}
+  for _, window in ipairs(hl.get_workspace_windows(workspace)) do
+    if window.mapped and not window.hidden and not window.pinned and not window.floating then
+      windows[#windows + 1] = window
+    end
+  end
+
+  local count = #windows
+  if count < 2 then return end
+
+  -- The first cut of a landscape screen runs down it, so the grid is built as
+  -- bands along the long axis, each band divided into cells across the short
+  -- one. Band lengths differ by at most one window, longer bands first, and the
+  -- short band's last cell stretches over the leftover rather than leaving a
+  -- hole -- a gap in a tiling layout reads as a bug.
+  local vertical = monitor.height > monitor.width
+  local rows = grid_rows(count, monitor.width, monitor.height)
+  local bands = vertical and rows or math.ceil(count / rows)
+  local per_band, longer_bands = math.floor(count / bands), count % bands
+
+  -- Ordered along the band axis first, which is the order the rebuild fills the
+  -- grid in -- so a window already sitting in a grid keeps the cell it is in
+  -- and a second press changes nothing.
+  table.sort(windows, function(a, b)
+    local first_a, first_b, second_a, second_b = a.at.x, b.at.x, a.at.y, b.at.y
+    if vertical then
+      first_a, first_b, second_a, second_b = second_a, second_b, first_a, first_b
+    end
+    if first_a ~= first_b then return first_a < first_b end
+    if second_a ~= second_b then return second_a < second_b end
+    return a.address < b.address
+  end)
+
+  -- A fresh split opens at default_split_ratio and splitratio only takes a
+  -- delta, so the delta from that is exact. The ratio is the *node's*, and its
+  -- first child -- always the window that was there before the split -- gets
+  -- half of it, hence the doubling.
+  local default_ratio = hl.get_config("dwindle.default_split_ratio") or 1.0
+  local function divide(window, fraction)
+    local delta = 2 * fraction - default_ratio
+    if math.abs(delta) < 0.001 then return end
+    hl.dispatch(hl.dsp.focus({ window = window }))
+    hl.dispatch(hl.dsp.layout(string.format("splitratio %.4f", delta)))
+  end
+
+  local focused = hl.get_active_window()
+
+  -- Empty the tree. Floating is only ever a transit state here; every one of
+  -- these windows is tiled again by the end of the function.
+  for _, window in ipairs(windows) do
+    hl.dispatch(hl.dsp.window.float({ window = window }))
+  end
+
+  -- The bands, each one splitting off the previous band's leftover. Giving band
+  -- b its 1/(bands - b + 2) share immediately is what leaves the rest wide
+  -- enough for the next band to land beside it rather than under it.
+  local counts, band_head, index = {}, {}, 1
+
+  for band = 1, bands do
+    counts[band] = per_band + (band <= longer_bands and 1 or 0)
+    band_head[band] = windows[index]
+
+    if band == 1 then
+      hl.dispatch(hl.dsp.window.float({ window = band_head[band] }))
+    else
+      hl.dispatch(hl.dsp.focus({ window = band_head[band - 1] }))
+      hl.dispatch(hl.dsp.window.float({ window = band_head[band] }))
+      divide(band_head[band - 1], 1 / (bands - band + 2))
+    end
+
+    index = index + counts[band]
+  end
+
+  -- Then the cells, dividing each band the same way down its short axis.
+  index = 1
+
+  for band = 1, bands do
+    for cell = 2, counts[band] do
+      local previous = windows[index + cell - 2]
+      local window = windows[index + cell - 1]
+
+      hl.dispatch(hl.dsp.focus({ window = previous }))
+      hl.dispatch(hl.dsp.window.float({ window = window }))
+      divide(previous, 1 / (counts[band] - cell + 2))
+    end
+
+    index = index + counts[band]
+  end
+
+  -- All that focusing was addressing, not intent.
+  if focused then
+    hl.dispatch(hl.dsp.focus({ window = focused }))
+  end
+end
+
+hl.bind(mainMod .. " + SHIFT + J", arrange_grid)
+
 
 -- ══════════════════════════════════════════════════════════════
 -- ║  Autostart                                                 ║
