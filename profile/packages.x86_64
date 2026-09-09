@@ -244,6 +244,7 @@ wine-gecko
 libportal
 libportal-gtk4
 # libsoup (2.x) was dropped from the Arch repos; libsoup3 above is the replacement
+libnotify
 libsecret
 
 # --- AUR packages (from ionix local repo) ---

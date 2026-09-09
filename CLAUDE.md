@@ -120,6 +120,25 @@ The two auth surfaces are configured by different mechanisms, on purpose:
   resolves to an empty string until a scan actually starts, so a machine without a sensor shows
   exactly what it showed before.
 
+**The calendar is a daemon plus two files, never HTTP in QML.** `submodules/ionix-quickshell/bin/ionix-calendar`
+(stdlib-only Python, no msal) is spawned by `services/Calendar.qml` as a child of the shell whenever
+`calendar.provider` is not `none` (default `local`), takes commands on stdin (`sync`, `reload`,
+`login`, `cancel`, `logout`, and `create`/`update`/`delete` with a JSON payload) and dies on stdin
+EOF. The local calendar (`$XDG_DATA_HOME/ionix/calendar/local.json`, simple daily/weekly/monthly/
+yearly repeats expanded on wall-clock time) is always present; a remote provider such as Outlook is
+layered on top of it, never instead of it, and `phase` in `state.json` describes only the remote.
+Events carry `source` and `editable`; the popout's editor opens only on the latter. It writes `state.json` (phase, account, device-code
+sign-in, errors) and `events.json` (one provider-neutral event schema) under
+`$XDG_STATE_HOME/ionix/quickshell/calendar/`, announcing each write on stdout so the shell re-reads
+without trusting inotify on a directory that may not exist yet. The popout, the clock pill's
+"next meeting" and the reminders all read those files; a new provider is a `Provider` subclass in
+the daemon plus one entry in the settings picker. Outlook goes through Microsoft Graph with the
+device-code flow (the tenant's app registration must allow public client flows, and `Calendars.Read`
+is not user-consentable in most tenants — an admin grants it once). Tokens go to the keyring via
+`secret-tool`, else a 0600 file. Reminders are sent from the shell with `notify-send --action`
+(hence `libnotify` in `packages.x86_64`): the shell is the notification server, so the toast lands
+in its own centre and the blocked `notify-send` printing `join` is the cue to open the link.
+
 **First-login setup:** `ionix-first-login` is a marker-file-based one-time script that runs on first Hyprland session (e.g., clones NvChad config for neovim).
 
 **SVG asset pipeline:** Branding is stored as SVG in `assets/` and converted to PNG at build time. Generated PNGs are gitignored and cleaned by `clean.sh`.
