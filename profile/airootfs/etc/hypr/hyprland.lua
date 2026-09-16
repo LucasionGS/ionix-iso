@@ -344,6 +344,7 @@ bind_exec("Print", "ioexplorer-shot region && paplay /usr/share/sounds/freedeskt
 bind_exec("CTRL + Print", "ioexplorer-shot window && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
 bind_exec(mainMod .. " + Print", "ioexplorer-shot screen && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
 bind_exec("CTRL + " .. mainMod .. " + Print", "ioexplorer-shot all && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
+bind_exec("CTRL + SHIFT + " .. mainMod .. " + Print", "ioexplorer-shot stop &>2 || ioexplorer-shot record --mic &>2 &")
 
 
 -- ══════════════════════════════════════════════════════════════
