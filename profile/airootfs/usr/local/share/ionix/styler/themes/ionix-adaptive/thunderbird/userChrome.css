@@ -14,11 +14,15 @@
      border       dividers, field borders
      muted        tertiary text, passive icons
      text         default UI text
-     textBright   headings, unread, text on the accent
+     textBright   headings, unread
      accent       selection, primary buttons, spaces-bar active
      accentBright focus ring, tab line, "new" markers
      accentLight  links, attention icons
      accentDeep   pressed primary buttons
+
+   Text on the accent (selection, primary buttons, badges) is textBright or
+   bgDeep, whichever reads better on that theme's accent: light accents such
+   as gold or aqua need dark text.
 
    Links use accentLight, not the palette's link role: link and accentDeep
    sit near 3:1 against bgDeep, too faint for running text.
