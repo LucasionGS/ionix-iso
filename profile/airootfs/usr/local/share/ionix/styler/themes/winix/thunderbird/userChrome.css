@@ -188,8 +188,11 @@
   --tree-card-border-hover: color-mix(in srgb, #0078d4 70%, transparent) !important;
   --tree-card-border-focus: #4cc2ff !important;
   --tree-card-background-current: #2b2b2b !important;
-  --tree-card-background-selected: color-mix(in srgb, #0078d4 30%, #202020) !important;
-  --tree-card-background-selected-current: #0078d4 !important;
+  /* Tints, not the solid accent: Thunderbird never recolours a card's text
+     when it is selected, so the fill has to stay dark enough for the normal
+     text colour — 45% holds >=5.7:1 on every theme, gold and aqua included. */
+  --tree-card-background-selected: color-mix(in srgb, #0078d4 25%, #202020) !important;
+  --tree-card-background-selected-current: color-mix(in srgb, #0078d4 45%, #202020) !important;
   --tree-card-border-selected: color-mix(in srgb, #0078d4 45%, transparent) !important;
   --tree-card-background-current-unfocused: #2b2b2b !important;
   --tree-card-background-selected-unfocused: #383838 !important;
