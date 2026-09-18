@@ -1,0 +1,256 @@
+/* ============================================================
+   Thunderbird — ionix-adaptive — Template (colours follow the wallpaper)
+
+   Rendered by ionix-adaptive-colors into
+   ~/.config/ionix/adaptive-colors/thunderbird/userChrome.css. The static
+   counterpart at ../../thunderbird/userChrome.css is this file rendered
+   with the base Ionix palette — edit both together.
+
+   Roles, as everywhere else in the styler:
+     bgDeep       message list, reading pane, deepest layer
+     bgWindow     toolbars, folder pane, menus
+     bgCard       buttons, fields, cards, count badges
+     hover        hover fills
+     border       dividers, field borders
+     muted        tertiary text, passive icons
+     text         default UI text
+     textBright   headings, unread, text on the accent
+     accent       selection, primary buttons, spaces-bar active
+     accentBright focus ring, tab line, "new" markers
+     accentLight  links, attention icons
+     accentDeep   pressed primary buttons
+
+   Links use accentLight, not the palette's link role: link and accentDeep
+   sit near 3:1 against bgDeep, too faint for running text.
+
+   ionixtheme links this as <profile>/chrome/ionix-theme.css and adds one
+   @import line to the user's own userChrome.css, for every profile in
+   profiles.ini. It also sets toolkit.legacyUserProfileCustomizations.stylesheets
+   in user.js, without which Thunderbird ignores userChrome.css. Thunderbird
+   reads it only at startup, so a theme or wallpaper change lands on the next
+   launch.
+
+   userChrome.css is enough for the whole window: about:3pane (folder pane,
+   message list) and about:message (reading pane header) are chrome-privileged
+   documents and take it too — verified on 155. userContent.css does NOT
+   reach them, and would reach every email body instead.
+
+   Why it is shaped like this, all read out of Thunderbird 155's omni.ja:
+   - Nearly every surface is built from a handful of semantic variables
+     (the --layout- ladder, --selected-item-color and the --color-surface-,
+     --color-text- and --color-primary- tokens)
+     declared on `:host, :root`. Overriding those, rather than styling
+     elements, is what survives Thunderbird's frequent chrome refactors.
+   - This is a USER sheet, so each declaration needs !important to beat
+     Thunderbird's own AUTHOR sheets.
+   - The same variables are re-declared on menupopup/panel and in a few
+     per-pane blocks, which would shadow what :root inherits — those selectors
+     are repeated below rather than trusting inheritance.
+   - color-scheme is pinned to dark so every light-dark() left unoverridden
+     resolves to its dark arm whatever the GTK theme says.
+
+   Message bodies are content, not chrome, and are left exactly as the sender
+   wrote them: most HTML mail assumes a white page.
+   ============================================================ */
+
+:root,
+:host {
+  color-scheme: dark !important;
+
+  /* ── Layout ladder (layout.css) ─────────────────────────── */
+  --layout-background-0: {{bgDeep}} !important;
+  --layout-background-1: {{bgWindow}} !important;
+  --layout-background-2: {{bgWindow}} !important;
+  --layout-background-3: {{bgCard}} !important;
+  --layout-background-4: {{hover}} !important;
+
+  --layout-color-0: {{textBright}} !important;
+  --layout-color-1: {{text}} !important;
+  --layout-color-2: {{text}} !important;
+  --layout-color-3: {{muted}} !important;
+
+  --layout-border-0: {{border}} !important;
+  --layout-border-1: {{border}} !important;
+  --layout-border-2: {{border}} !important;
+
+  /* ── Design tokens (colors.css) ─────────────────────────── */
+  --color-surface-base: {{bgDeep}} !important;
+  --color-surface-lower: {{bgDeep}} !important;
+  --color-surface-subtle: {{bgWindow}} !important;
+  --color-surface-raised: {{bgCard}} !important;
+  --color-surface-deep: {{hover}} !important;
+  --color-surface-border: {{border}} !important;
+  --color-surface-border-intense: {{muted}} !important;
+
+  --color-primary-soft: color-mix(in srgb, {{accent}} 18%, {{bgWindow}}) !important;
+  --color-primary-default: {{accent}} !important;
+  --color-primary-hover: color-mix(in srgb, {{accent}} 82%, {{textBright}}) !important;
+  --color-primary-pressed: {{accentDeep}} !important;
+
+  --color-text-base: {{text}} !important;
+  --color-text-secondary: {{text}} !important;
+  --color-text-muted: {{muted}} !important;
+  --color-text-brand: {{accentLight}} !important;
+  --color-text-highlight: {{accentBright}} !important;
+  --color-text-warning: {{orange}} !important;
+  --color-text-critical: {{red}} !important;
+  --color-text-success: {{green}} !important;
+
+  /* ── Accent (variables.css) ─────────────────────────────── */
+  /* Also beats Settings -> Appearance -> accent colour, which is the point:
+     the theme owns the accent the way it does everywhere else. */
+  --selected-item-color: {{accent}} !important;
+  --selected-item-text-color: {{textBright}} !important;
+  accent-color: {{accent}} !important;
+
+  --focus-outline-color: {{accentBright}} !important;
+  --toolbar-field-focus-border-color: {{accentBright}} !important;
+  --tabline-color: {{accentBright}} !important;
+
+  --link-color: {{accentLight}} !important;
+  --link-color-hover: {{textBright}} !important;
+  --link-color-active: {{textBright}} !important;
+  --link-color-visited: {{accentLight}} !important;
+  --button-link-text-color: {{accentLight}} !important;
+  --button-link-active-text-color: {{textBright}} !important;
+  --new-folder-color: {{accentBright}} !important;
+
+  /* ── Frame: title bar, tab strip, toolbars ──────────────── */
+  --lwt-accent-color: {{bgDeep}} !important;
+  --lwt-accent-color-inactive: {{bgDeep}} !important;
+  --lwt-text-color: {{text}} !important;
+  --toolbox-background-color: {{bgDeep}} !important;
+  --toolbox-background-color-inactive: {{bgDeep}} !important;
+  --toolbox-text-color: {{text}} !important;
+  --toolbox-text-color-inactive: {{muted}} !important;
+  --tabs-toolbar-background-color: {{bgDeep}} !important;
+  --chrome-content-separator-color: {{border}} !important;
+  --toolbar-background-color: {{bgWindow}} !important;
+  --toolbar-text-color: {{text}} !important;
+
+  --toolbar-field-background-color: {{bgCard}} !important;
+  --toolbar-field-color: {{textBright}} !important;
+  --toolbar-field-border-color: {{border}} !important;
+  --search-bar-background: {{bgCard}} !important;
+  --search-bar-focus-background: {{bgCard}} !important;
+  --search-bar-border-color: {{border}} !important;
+  --search-bar-color: {{textBright}} !important;
+
+  --toolbarbutton-icon-fill-attention: {{accentLight}} !important;
+
+  /* ── Buttons ────────────────────────────────────────────── */
+  --button-background-color: {{bgCard}} !important;
+  --button-hover-background-color: {{hover}} !important;
+  --button-active-background-color: {{border}} !important;
+  --button-border-color: {{border}} !important;
+  --button-text-color: {{text}} !important;
+  --button-border-radius: 8px !important;
+
+  --button-primary-background-color: {{accent}} !important;
+  /* Toward textBright rather than to accentBright: under ionix-pro that is
+     cyan, and textBright on cyan is unreadable. */
+  --button-primary-hover-background-color: color-mix(in srgb, {{accent}} 82%, {{textBright}}) !important;
+  --button-primary-active-background-color: {{accentDeep}} !important;
+  --button-primary-border-color: {{accentDeep}} !important;
+  --button-primary-text-color: {{textBright}} !important;
+
+  --button-destructive-background-color: {{red}} !important;
+  --button-destructive-hover-background-color: color-mix(in srgb, {{red}} 85%, white) !important;
+  --button-destructive-active-background-color: color-mix(in srgb, {{red}} 80%, black) !important;
+  --button-destructive-border-color: {{red}} !important;
+
+  /* ── Sidebars and the spaces bar ────────────────────────── */
+  --sidebar-background-color: {{bgWindow}} !important;
+  --sidebar-text-color: {{text}} !important;
+  --sidebar-border-color: {{border}} !important;
+
+  --spaces-bg-color: {{bgDeep}} !important;
+  --spaces-button-active-bg-color: {{accent}} !important;
+  --spaces-button-active-text-color: {{textBright}} !important;
+  --spaces-button-badge-bg-color: {{red}} !important;
+
+  /* ── Folder pane (about3Pane.css) ───────────────────────── */
+  --treeitem-background-active: {{accent}} !important;
+  --treeitem-text-active: {{textBright}} !important;
+  --folderpane-unread-count-background: {{accent}} !important;
+  --folderpane-unread-count-text: {{textBright}} !important;
+  --folderpane-total-count-background: {{bgCard}} !important;
+  --folderpane-total-count-text: {{text}} !important;
+  --folderpane-unread-new-count-background: {{accentBright}} !important;
+
+  /* ── Message list, table and cards (tree-listbox.css) ───── */
+  --tree-view-bg: {{bgDeep}} !important;
+  --tree-view-color: {{text}} !important;
+  --tree-view-header-hover-bg: {{hover}} !important;
+  --tree-view-header-hover-active-bg: {{border}} !important;
+  --tree-pane-background: {{bgDeep}} !important;
+  --tree-card-background: {{bgWindow}} !important;
+  --tree-card-border: {{border}} !important;
+  --tree-card-border-hover: color-mix(in srgb, {{accent}} 70%, transparent) !important;
+  --tree-card-border-focus: {{accentBright}} !important;
+  --tree-card-background-current: {{bgCard}} !important;
+  --tree-card-background-selected: color-mix(in srgb, {{accent}} 30%, {{bgWindow}}) !important;
+  --tree-card-background-selected-current: {{accent}} !important;
+  --tree-card-border-selected: color-mix(in srgb, {{accent}} 45%, transparent) !important;
+  --tree-card-background-current-unfocused: {{bgCard}} !important;
+  --tree-card-background-selected-unfocused: {{hover}} !important;
+  --tree-card-background-selected-current-unfocused: {{hover}} !important;
+  --tree-card-background-selected-current-unfocused-hover: {{border}} !important;
+  --tree-card-border-selected-unfocused: {{border}} !important;
+
+  --listbox-hover: color-mix(in srgb, {{accent}} 14%, transparent) !important;
+  --listbox-selected-bg: {{hover}} !important;
+  --listbox-selected-color: {{textBright}} !important;
+  --listbox-focused-selected-bg: {{accent}} !important;
+
+  --unread-color: {{textBright}} !important;
+  --new-color: {{accentBright}} !important;
+  --new-subject-color: {{accentBright}} !important;
+  --thread-line-color: {{border}} !important;
+
+  /* ── Message header (messageHeader.css) ─────────────────── */
+  --recipient-avatar-color: {{text}} !important;
+  --recipient-avatar-background-color: {{bgCard}} !important;
+}
+
+/* variables.css declares the panel colours on the popups themselves, so they
+   would win over anything :root hands down by inheritance. */
+menupopup,
+panel {
+  --panel-background-color: {{bgWindow}} !important;
+  --panel-text-color: {{text}} !important;
+  --panel-border-color: {{border}} !important;
+  --panel-border-radius: 8px !important;
+  --panel-background-color-dimmed: color-mix(in srgb, {{accent}} 14%, transparent) !important;
+  --panel-background-color-dimmed-further: color-mix(in srgb, {{accent}} 22%, transparent) !important;
+  --panel-background-color-dimmed-even-further: color-mix(in srgb, {{accent}} 30%, transparent) !important;
+}
+
+/* Thunderbird paints the toolbox with -moz-headerbar — the GTK title bar
+   colour — unless a WebExtension theme is active, which bypasses every
+   variable above. */
+#navigation-toolbox,
+#compose-toolbox,
+#navigation-toolbox:-moz-window-inactive,
+#compose-toolbox:-moz-window-inactive {
+  background-color: {{bgDeep}} !important;
+  background-image: none !important;
+  color: {{text}} !important;
+}
+
+#tabs-toolbar {
+  background-image: none !important;
+  background-color: {{bgDeep}} !important;
+}
+
+/* The unified toolbar sits on the same deep layer as the tab strip. */
+unified-toolbar,
+#unifiedToolbarContainer {
+  background-color: {{bgDeep}} !important;
+}
+
+/* Selection inside text fields (search, quick filter, compose headers). */
+::selection {
+  background-color: color-mix(in srgb, {{accent}} 45%, transparent) !important;
+  color: {{textBright}} !important;
+}
