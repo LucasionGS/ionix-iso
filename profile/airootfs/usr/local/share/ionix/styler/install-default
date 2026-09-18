@@ -240,6 +240,116 @@ ionix_uninstall_kitty() {
   # If no backup exists, keep it to avoid deleting user configuration
 }
 
+# Thunderbird
+IONIX_TB_MARK="ionix-styler"
+
+# <user sheet>:<link we own>. The link is what the theme file is installed as,
+# and the theme's own file shares the user sheet's name.
+IONIX_TB_SHEETS=(
+  "userChrome.css:ionix-theme.css"
+)
+
+# The profile directories of every native Thunderbird install, one per line.
+# ~/.config/thunderbird is where Thunderbird 14x+ keeps new profiles (XDG);
+# ~/.thunderbird is every install older than that. Flatpak is left out on
+# purpose: its sandbox cannot see /usr/local/share, so the symlink would dangle.
+ionix_thunderbird_profiles() {
+  local root
+  for root in "${XDG_CONFIG_HOME:-$HOME/.config}/thunderbird" "$HOME/.thunderbird"; do
+    [[ -f "$root/profiles.ini" ]] || continue
+    # Path= only inside [ProfileN] sections — [Install*] sections carry a
+    # Default= that names the same directories again.
+    awk -F= -v root="$root" '
+      function flush() { if (path != "") print (rel == "0" ? path : root "/" path); path = ""; rel = 1 }
+      { sub(/\r$/, "") }
+      /^\[/       { flush(); in_profile = ($0 ~ /^\[Profile[0-9]+\]/); next }
+      !in_profile { next }
+      $1 == "IsRelative" { rel = $2 }
+      $1 == "Path"       { path = substr($0, 6) }
+      END { flush() }
+    ' "$root/profiles.ini"
+  done | while IFS= read -r dir; do
+    [[ -d "$dir" ]] && printf '%s\n' "$dir"
+  done
+}
+
+ionix_install_thunderbird() {
+  local profile chrome userjs pair sheet link import found=0
+
+  while IFS= read -r profile; do
+    found=1
+    chrome="$profile/chrome"
+    userjs="$profile/user.js"
+    mkdir -p "$chrome"
+
+    for pair in "${IONIX_TB_SHEETS[@]}"; do
+      sheet="$chrome/${pair%%:*}"
+      link="${pair#*:}"
+      import="@import url(\"$link\"); /* $IONIX_TB_MARK: managed by ionixtheme */"
+
+      ln -sf "$(ionix_theme_file thunderbird "${pair%%:*}")" "$chrome/$link"
+
+      # @import is only honoured before every other rule (bar @charset), so the
+      # line goes first — after a leading @charset if the user has one.
+      if [[ ! -e "$sheet" ]]; then
+        printf '%s\n' "$import" > "$sheet"
+      elif ! grep -qF "$IONIX_TB_MARK" "$sheet"; then
+        if head -n1 "$sheet" | grep -q '^@charset'; then
+          sed -i --follow-symlinks "1a\\$import" "$sheet"
+        else
+          sed -i --follow-symlinks "1i\\$import" "$sheet"
+        fi
+      fi
+    done
+
+    if ! grep -qF "// $IONIX_TB_MARK begin" "$userjs" 2>/dev/null; then
+      # A user.js without a final newline would glue the marker onto its last pref.
+      [[ -s "$userjs" && -n "$(tail -c1 "$userjs")" ]] && printf '\n' >> "$userjs"
+      {
+        printf '// %s begin — managed by ionixtheme, removed on theme switch.\n' "$IONIX_TB_MARK"
+        printf '// Loads chrome/userChrome.css, which imports the Ionix theme.\n'
+        printf 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);\n'
+        printf '// %s end\n' "$IONIX_TB_MARK"
+      } >> "$userjs"
+    fi
+  done < <(ionix_thunderbird_profiles)
+
+  if (( ! found )); then
+    msg "thunderbird: no profile yet — run Thunderbird once, then switch theme again"
+  elif pgrep -x 'thunderbird(-bin)?' &>/dev/null; then
+    msg "thunderbird: restart Thunderbird to apply the theme"
+  fi
+}
+
+ionix_uninstall_thunderbird() {
+  local profile chrome userjs pair sheet link
+
+  while IFS= read -r profile; do
+    chrome="$profile/chrome"
+    userjs="$profile/user.js"
+
+    for pair in "${IONIX_TB_SHEETS[@]}"; do
+      sheet="$chrome/${pair%%:*}"
+      link="$chrome/${pair#*:}"
+
+      # Only ever our own symlink; a real file of that name is somebody else's.
+      [[ -L "$link" ]] && rm -f "$link"
+
+      if [[ -f "$sheet" ]] && grep -qF "$IONIX_TB_MARK" "$sheet"; then
+        sed -i --follow-symlinks "/$IONIX_TB_MARK/d" "$sheet"
+        # Nothing but whitespace left means the file was ours to begin with.
+        grep -q '[^[:space:]]' "$sheet" || rm -f "$sheet"
+      fi
+    done
+    rmdir "$chrome" 2>/dev/null || true
+
+    if [[ -f "$userjs" ]] && grep -qF "// $IONIX_TB_MARK begin" "$userjs"; then
+      sed -i --follow-symlinks "\\|^// $IONIX_TB_MARK begin|,\\|^// $IONIX_TB_MARK end|d" "$userjs"
+      grep -q '[^[:space:]]' "$userjs" || rm -f "$userjs"
+    fi
+  done < <(ionix_thunderbird_profiles)
+}
+
 # Custom installation
 ionix_install_custom() {
   # Add any custom installation steps here

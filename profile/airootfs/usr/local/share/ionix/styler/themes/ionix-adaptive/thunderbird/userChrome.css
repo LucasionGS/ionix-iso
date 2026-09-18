@@ -1,0 +1,256 @@
+/* ============================================================
+   Thunderbird — ionix-adaptive — Static fallback (base Ionix palette)
+
+   The adaptive template rendered with the base Ionix palette. Installed
+   when there is no wallpaper, no matugen, or the template fails to render.
+   Regenerate from adaptive/thunderbird/userChrome.css rather than editing
+   this copy by hand, so the two cannot drift.
+
+   Roles, as everywhere else in the styler:
+     bgDeep       message list, reading pane, deepest layer
+     bgWindow     toolbars, folder pane, menus
+     bgCard       buttons, fields, cards, count badges
+     hover        hover fills
+     border       dividers, field borders
+     muted        tertiary text, passive icons
+     text         default UI text
+     textBright   headings, unread, text on the accent
+     accent       selection, primary buttons, spaces-bar active
+     accentBright focus ring, tab line, "new" markers
+     accentLight  links, attention icons
+     accentDeep   pressed primary buttons
+
+   Links use accentLight, not the palette's link role: link and accentDeep
+   sit near 3:1 against bgDeep, too faint for running text.
+
+   ionixtheme links this as <profile>/chrome/ionix-theme.css and adds one
+   @import line to the user's own userChrome.css, for every profile in
+   profiles.ini. It also sets toolkit.legacyUserProfileCustomizations.stylesheets
+   in user.js, without which Thunderbird ignores userChrome.css. Thunderbird
+   reads it only at startup, so a theme or wallpaper change lands on the next
+   launch.
+
+   userChrome.css is enough for the whole window: about:3pane (folder pane,
+   message list) and about:message (reading pane header) are chrome-privileged
+   documents and take it too — verified on 155. userContent.css does NOT
+   reach them, and would reach every email body instead.
+
+   Why it is shaped like this, all read out of Thunderbird 155's omni.ja:
+   - Nearly every surface is built from a handful of semantic variables
+     (the --layout- ladder, --selected-item-color and the --color-surface-,
+     --color-text- and --color-primary- tokens)
+     declared on `:host, :root`. Overriding those, rather than styling
+     elements, is what survives Thunderbird's frequent chrome refactors.
+   - This is a USER sheet, so each declaration needs !important to beat
+     Thunderbird's own AUTHOR sheets.
+   - The same variables are re-declared on menupopup/panel and in a few
+     per-pane blocks, which would shadow what :root inherits — those selectors
+     are repeated below rather than trusting inheritance.
+   - color-scheme is pinned to dark so every light-dark() left unoverridden
+     resolves to its dark arm whatever the GTK theme says.
+
+   Message bodies are content, not chrome, and are left exactly as the sender
+   wrote them: most HTML mail assumes a white page.
+   ============================================================ */
+
+:root,
+:host {
+  color-scheme: dark !important;
+
+  /* ── Layout ladder (layout.css) ─────────────────────────── */
+  --layout-background-0: #0f0a18 !important;
+  --layout-background-1: #1a1025 !important;
+  --layout-background-2: #1a1025 !important;
+  --layout-background-3: #2d2d3f !important;
+  --layout-background-4: #3a2d50 !important;
+
+  --layout-color-0: #e2d9f3 !important;
+  --layout-color-1: #c4b5fd !important;
+  --layout-color-2: #c4b5fd !important;
+  --layout-color-3: #6b5f80 !important;
+
+  --layout-border-0: #4a3d60 !important;
+  --layout-border-1: #4a3d60 !important;
+  --layout-border-2: #4a3d60 !important;
+
+  /* ── Design tokens (colors.css) ─────────────────────────── */
+  --color-surface-base: #0f0a18 !important;
+  --color-surface-lower: #0f0a18 !important;
+  --color-surface-subtle: #1a1025 !important;
+  --color-surface-raised: #2d2d3f !important;
+  --color-surface-deep: #3a2d50 !important;
+  --color-surface-border: #4a3d60 !important;
+  --color-surface-border-intense: #6b5f80 !important;
+
+  --color-primary-soft: color-mix(in srgb, #9b59b6 18%, #1a1025) !important;
+  --color-primary-default: #9b59b6 !important;
+  --color-primary-hover: color-mix(in srgb, #9b59b6 82%, #e2d9f3) !important;
+  --color-primary-pressed: #7c3aed !important;
+
+  --color-text-base: #c4b5fd !important;
+  --color-text-secondary: #c4b5fd !important;
+  --color-text-muted: #6b5f80 !important;
+  --color-text-brand: #c084fc !important;
+  --color-text-highlight: #a855f7 !important;
+  --color-text-warning: #f39c12 !important;
+  --color-text-critical: #e74c3c !important;
+  --color-text-success: #2ecc71 !important;
+
+  /* ── Accent (variables.css) ─────────────────────────────── */
+  /* Also beats Settings -> Appearance -> accent colour, which is the point:
+     the theme owns the accent the way it does everywhere else. */
+  --selected-item-color: #9b59b6 !important;
+  --selected-item-text-color: #e2d9f3 !important;
+  accent-color: #9b59b6 !important;
+
+  --focus-outline-color: #a855f7 !important;
+  --toolbar-field-focus-border-color: #a855f7 !important;
+  --tabline-color: #a855f7 !important;
+
+  --link-color: #c084fc !important;
+  --link-color-hover: #e2d9f3 !important;
+  --link-color-active: #e2d9f3 !important;
+  --link-color-visited: #c084fc !important;
+  --button-link-text-color: #c084fc !important;
+  --button-link-active-text-color: #e2d9f3 !important;
+  --new-folder-color: #a855f7 !important;
+
+  /* ── Frame: title bar, tab strip, toolbars ──────────────── */
+  --lwt-accent-color: #0f0a18 !important;
+  --lwt-accent-color-inactive: #0f0a18 !important;
+  --lwt-text-color: #c4b5fd !important;
+  --toolbox-background-color: #0f0a18 !important;
+  --toolbox-background-color-inactive: #0f0a18 !important;
+  --toolbox-text-color: #c4b5fd !important;
+  --toolbox-text-color-inactive: #6b5f80 !important;
+  --tabs-toolbar-background-color: #0f0a18 !important;
+  --chrome-content-separator-color: #4a3d60 !important;
+  --toolbar-background-color: #1a1025 !important;
+  --toolbar-text-color: #c4b5fd !important;
+
+  --toolbar-field-background-color: #2d2d3f !important;
+  --toolbar-field-color: #e2d9f3 !important;
+  --toolbar-field-border-color: #4a3d60 !important;
+  --search-bar-background: #2d2d3f !important;
+  --search-bar-focus-background: #2d2d3f !important;
+  --search-bar-border-color: #4a3d60 !important;
+  --search-bar-color: #e2d9f3 !important;
+
+  --toolbarbutton-icon-fill-attention: #c084fc !important;
+
+  /* ── Buttons ────────────────────────────────────────────── */
+  --button-background-color: #2d2d3f !important;
+  --button-hover-background-color: #3a2d50 !important;
+  --button-active-background-color: #4a3d60 !important;
+  --button-border-color: #4a3d60 !important;
+  --button-text-color: #c4b5fd !important;
+  --button-border-radius: 8px !important;
+
+  --button-primary-background-color: #9b59b6 !important;
+  /* Toward textBright rather than to accentBright: under ionix-pro that is
+     cyan, and textBright on cyan is unreadable. */
+  --button-primary-hover-background-color: color-mix(in srgb, #9b59b6 82%, #e2d9f3) !important;
+  --button-primary-active-background-color: #7c3aed !important;
+  --button-primary-border-color: #7c3aed !important;
+  --button-primary-text-color: #e2d9f3 !important;
+
+  --button-destructive-background-color: #e74c3c !important;
+  --button-destructive-hover-background-color: color-mix(in srgb, #e74c3c 85%, white) !important;
+  --button-destructive-active-background-color: color-mix(in srgb, #e74c3c 80%, black) !important;
+  --button-destructive-border-color: #e74c3c !important;
+
+  /* ── Sidebars and the spaces bar ────────────────────────── */
+  --sidebar-background-color: #1a1025 !important;
+  --sidebar-text-color: #c4b5fd !important;
+  --sidebar-border-color: #4a3d60 !important;
+
+  --spaces-bg-color: #0f0a18 !important;
+  --spaces-button-active-bg-color: #9b59b6 !important;
+  --spaces-button-active-text-color: #e2d9f3 !important;
+  --spaces-button-badge-bg-color: #e74c3c !important;
+
+  /* ── Folder pane (about3Pane.css) ───────────────────────── */
+  --treeitem-background-active: #9b59b6 !important;
+  --treeitem-text-active: #e2d9f3 !important;
+  --folderpane-unread-count-background: #9b59b6 !important;
+  --folderpane-unread-count-text: #e2d9f3 !important;
+  --folderpane-total-count-background: #2d2d3f !important;
+  --folderpane-total-count-text: #c4b5fd !important;
+  --folderpane-unread-new-count-background: #a855f7 !important;
+
+  /* ── Message list, table and cards (tree-listbox.css) ───── */
+  --tree-view-bg: #0f0a18 !important;
+  --tree-view-color: #c4b5fd !important;
+  --tree-view-header-hover-bg: #3a2d50 !important;
+  --tree-view-header-hover-active-bg: #4a3d60 !important;
+  --tree-pane-background: #0f0a18 !important;
+  --tree-card-background: #1a1025 !important;
+  --tree-card-border: #4a3d60 !important;
+  --tree-card-border-hover: color-mix(in srgb, #9b59b6 70%, transparent) !important;
+  --tree-card-border-focus: #a855f7 !important;
+  --tree-card-background-current: #2d2d3f !important;
+  --tree-card-background-selected: color-mix(in srgb, #9b59b6 30%, #1a1025) !important;
+  --tree-card-background-selected-current: #9b59b6 !important;
+  --tree-card-border-selected: color-mix(in srgb, #9b59b6 45%, transparent) !important;
+  --tree-card-background-current-unfocused: #2d2d3f !important;
+  --tree-card-background-selected-unfocused: #3a2d50 !important;
+  --tree-card-background-selected-current-unfocused: #3a2d50 !important;
+  --tree-card-background-selected-current-unfocused-hover: #4a3d60 !important;
+  --tree-card-border-selected-unfocused: #4a3d60 !important;
+
+  --listbox-hover: color-mix(in srgb, #9b59b6 14%, transparent) !important;
+  --listbox-selected-bg: #3a2d50 !important;
+  --listbox-selected-color: #e2d9f3 !important;
+  --listbox-focused-selected-bg: #9b59b6 !important;
+
+  --unread-color: #e2d9f3 !important;
+  --new-color: #a855f7 !important;
+  --new-subject-color: #a855f7 !important;
+  --thread-line-color: #4a3d60 !important;
+
+  /* ── Message header (messageHeader.css) ─────────────────── */
+  --recipient-avatar-color: #c4b5fd !important;
+  --recipient-avatar-background-color: #2d2d3f !important;
+}
+
+/* variables.css declares the panel colours on the popups themselves, so they
+   would win over anything :root hands down by inheritance. */
+menupopup,
+panel {
+  --panel-background-color: #1a1025 !important;
+  --panel-text-color: #c4b5fd !important;
+  --panel-border-color: #4a3d60 !important;
+  --panel-border-radius: 8px !important;
+  --panel-background-color-dimmed: color-mix(in srgb, #9b59b6 14%, transparent) !important;
+  --panel-background-color-dimmed-further: color-mix(in srgb, #9b59b6 22%, transparent) !important;
+  --panel-background-color-dimmed-even-further: color-mix(in srgb, #9b59b6 30%, transparent) !important;
+}
+
+/* Thunderbird paints the toolbox with -moz-headerbar — the GTK title bar
+   colour — unless a WebExtension theme is active, which bypasses every
+   variable above. */
+#navigation-toolbox,
+#compose-toolbox,
+#navigation-toolbox:-moz-window-inactive,
+#compose-toolbox:-moz-window-inactive {
+  background-color: #0f0a18 !important;
+  background-image: none !important;
+  color: #c4b5fd !important;
+}
+
+#tabs-toolbar {
+  background-image: none !important;
+  background-color: #0f0a18 !important;
+}
+
+/* The unified toolbar sits on the same deep layer as the tab strip. */
+unified-toolbar,
+#unifiedToolbarContainer {
+  background-color: #0f0a18 !important;
+}
+
+/* Selection inside text fields (search, quick filter, compose headers). */
+::selection {
+  background-color: color-mix(in srgb, #9b59b6 45%, transparent) !important;
+  color: #e2d9f3 !important;
+}

@@ -223,7 +223,7 @@ matugen, or a template that fails to render, and it is what the start menu's the
 the preview swatch. Generate it by rendering the template with the base Ionix palette so the two
 cannot drift structurally.
 
-Three token forms per slot, because the four consumers want three syntaxes — `{{accent}}` → `#9b59b6`,
+Three token forms per slot, because the five consumers want three syntaxes — `{{accent}}` → `#9b59b6`,
 `{{accent.raw}}` → `9b59b6` (hyprland's `rgb()`/`rgba()`), `{{accent.rgb}}` → `155,89,182` (GTK CSS).
 Alpha belongs in the template (`rgba({{bgDeep.rgb}},0.74)`), not the token. Slots are the eleven
 palette roles above plus `accentDeep`, `link`, `shadow`, `green`/`orange`/`red`/`cyan` and `ansi0`–`ansi15`;
@@ -238,6 +238,21 @@ for a source colour and hard-fails headless; its `colors.surface*` roles are gre
 `base16` block is a monochrome ramp, so neither is usable — the palette comes from
 `palettes.secondary`/`palettes.primary` tones under `-t scheme-content`, which are CIE L\* and so hold
 text contrast steady across hues.
+
+### Thunderbird
+
+Themed through `userChrome.css`, which reaches the whole window — `about:3pane` and `about:message`
+(folder pane, message list, reading pane) are chrome-privileged and take it. `userContent.css` does
+**not** reach them and would restyle every email body instead; don't add one. The theme only
+overrides Thunderbird's semantic variables (`--layout-*`, `--selected-item-*`, `--color-surface-*`…),
+each with `!important` because a user sheet loses to author sheets otherwise. `ionix_install_thunderbird`
+links it as `<profile>/chrome/ionix-theme.css` for every profile in `profiles.ini`, adds one tagged
+`@import` to the user's own `userChrome.css` (their rules below it survive switches and win), and sets
+`toolkit.legacyUserProfileCustomizations.stylesheets` in a `user.js` marker block. No live reload:
+Thunderbird reads it at startup only. Test headless with `xvfb-run` + `GDK_BACKEND=x11` and a scratch
+`--profile`. The five theme files are structurally identical, so edit all of them together — and never
+write a glob like `--foo-*/bar` inside a CSS comment: the `*/` ends the comment and silently drops the
+`:root` block after it.
 
 ### Theme options
 
