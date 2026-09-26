@@ -196,7 +196,6 @@ polkit
 gnome-keyring
 
 # --- Misc hardware support ---
-broadcom-wl
 b43-fwcutter
 # Fingerprint readers. Always shipped, never assumed: fprintd is D-Bus
 # activated rather than a service, so on a machine with no sensor it just sits
