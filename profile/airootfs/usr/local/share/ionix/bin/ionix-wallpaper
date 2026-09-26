@@ -6,6 +6,14 @@
 
 IONIX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix"
 AWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
+IONIX_EXTRA_AWWW_ARGS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/ionix/extra_awww_args"
+# If the extra awww args file exists, read it and append its contents to AWWW_ARGS
+if [ -f "$IONIX_EXTRA_AWWW_ARGS_FILE" ]; then
+  IONIX_EXTRA_AWWW_ARGS=$(<"$IONIX_EXTRA_AWWW_ARGS_FILE")
+  if [ -n "$IONIX_EXTRA_AWWW_ARGS" ]; then
+    AWWW_ARGS="$AWWW_ARGS $IONIX_EXTRA_AWWW_ARGS"
+  fi
+fi
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   echo "Usage: $0 [file1] [file2] ..."
@@ -49,11 +57,6 @@ if [ ${#FILE_ARRAY[@]} -gt 0 ]; then
   for file in "${FILE_ARRAY[@]}"; do
     cp "$file" "$IONIX_DIR/.wallpapers_active/"
   done
-fi
-# My fork of awww supports --ken-burns, but the original does not,
-# so we check for support before applying the argument
-if awww img --help | grep -q -- '--ken-burns'; then
-  AWWW_ARGS="$AWWW_ARGS --ken-burns"
 fi
 
 if [ -n "$FILE_PATH" ]; then
