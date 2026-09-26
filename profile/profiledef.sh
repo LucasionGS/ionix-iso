@@ -23,6 +23,7 @@ file_permissions=(
   ["/usr/local/bin/choose-mirror"]="0:0:755"
   ["/usr/local/bin/ionix-post-install"]="0:0:755"
   ["/usr/local/bin/ionix-first-login"]="0:0:755"
+  ["/usr/local/bin/ionix-extras"]="0:0:755"
   ["/usr/local/bin/ionix-install"]="0:0:755"
   ["/usr/local/bin/ionix-arrange-workspace"]="0:0:755"
   ["/usr/local/bin/ionix-fingerprint"]="0:0:755"

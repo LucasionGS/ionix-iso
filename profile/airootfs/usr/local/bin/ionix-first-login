@@ -30,6 +30,26 @@ if [[ -f /usr/local/share/ionix/gnome-defaults.dconf ]]; then
     dconf load / < /usr/local/share/ionix/gnome-defaults.dconf 2>/dev/null || true
 fi
 
+# Theme picked on the installer's Personalize page. ionix-post-install can only
+# queue it: ionixtheme wants a running session (the adaptive theme reads the
+# wallpaper), and this is the first one.
+PENDING_THEME="$HOME/.config/ionix/pending-theme"
+if [[ -s "$PENDING_THEME" ]]; then
+    /usr/local/share/ionix/styler/bin/ionixtheme "$(cat "$PENDING_THEME")" >/dev/null 2>&1 || true
+    rm -f "$PENDING_THEME"
+fi
+
+# Optional software chosen in the installer that could not be installed then
+# (offline, or a failed build). ionix-extras keeps the list; retrying is one
+# command, so say which.
+if [[ ! -d /run/archiso && -s /var/lib/ionix/extras-pending ]] \
+   && command -v notify-send >/dev/null 2>&1; then
+    notify-send --icon=system-software-install --app-name=Ionix \
+        "Some extras aren't installed yet" \
+        "$(tr '\n' ' ' < /var/lib/ionix/extras-pending)— connect to the internet and run <tt>sudo ionix-extras install</tt> to finish." \
+        2>/dev/null || true
+fi
+
 # Nudge about the fingerprint reader, if there is one. The installer has
 # already wired PAM up by this point, but enrolling is per-user and needs a
 # session, so this is the first moment it can actually be done. Skipped on the

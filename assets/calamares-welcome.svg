@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" width="1200" height="520">
+  <!-- Hero art for the Calamares welcome page (branding `productWelcome`).
+       Transparent background: the page's own gradient shows through. The mark is
+       the one from ionix-logo.svg, scaled into the centre; keep them in step. -->
+  <defs>
+    <radialGradient id="bloom" cx="600" cy="260" r="255" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0.42"/>
+      <stop offset="0.45" stop-color="#7c3aed" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c084fc" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#c084fc" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#48dbfb" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ring2" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#9b59b6" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#a855f7" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#9b59b6" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ionixGrad" gradientUnits="userSpaceOnUse" x1="150" y1="40" x2="362" y2="472">
+      <stop offset="0" stop-color="#c385ff"/>
+      <stop offset="1" stop-color="#a0e6ff"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <circle cx="600" cy="260" r="255" fill="url(#bloom)"/>
+
+  <!-- Orbits -->
+  <g fill="none" stroke-linecap="round">
+    <ellipse cx="600" cy="260" rx="340" ry="92" stroke="url(#ring)" stroke-width="2" transform="rotate(-12 600 260)"/>
+    <ellipse cx="600" cy="260" rx="270" ry="150" stroke="url(#ring2)" stroke-width="1.5" transform="rotate(18 600 260)"/>
+    <ellipse cx="600" cy="260" rx="420" ry="64" stroke="#4a3d60" stroke-opacity="0.6" stroke-width="1" stroke-dasharray="2 10" transform="rotate(-4 600 260)"/>
+  </g>
+
+  <!-- Particles riding the orbits -->
+  <g>
+    <circle cx="286" cy="319" r="5" fill="#c084fc" filter="url(#glow)"/>
+    <circle cx="905" cy="186" r="4" fill="#48dbfb" filter="url(#glow)"/>
+    <circle cx="820" cy="403" r="3.5" fill="#a855f7" filter="url(#glow)"/>
+    <circle cx="372" cy="128" r="3" fill="#e2d9f3" opacity="0.8"/>
+    <circle cx="1010" cy="258" r="2.5" fill="#c4b5fd" opacity="0.7"/>
+    <circle cx="196" cy="252" r="2" fill="#c4b5fd" opacity="0.6"/>
+    <circle cx="470" cy="452" r="2" fill="#c084fc" opacity="0.6"/>
+    <circle cx="745" cy="70" r="2" fill="#c084fc" opacity="0.6"/>
+  </g>
+
+  <!-- The mark: ionix-logo.svg (512x512, centred on 256,256) at 0.9 scale -->
+  <g transform="translate(369.6 29.6) scale(0.9)">
+    <path d="M256.0,28.0L202.7,112.4L224.0,176.7L224.0,176.7L173.9,256.0L221.5,331.4L213.7,348.6L155.2,256.0L198.5,187.4L192.6,128.3L112.0,256.0L256.0,484.0L309.3,399.6L288.0,335.3L288.0,335.3L338.1,256.0L290.5,180.6L298.3,163.4L356.8,256.0L313.5,324.6L319.4,383.7L400.0,256.0L256.0,28.0Z"
+          fill="#a855f7" opacity="0.55" filter="url(#glow)"/>
+    <path d="M256.0,192.2L296.3,256.0L256.0,319.8L215.7,256.0Z" fill="#0f0a18"/>
+    <path d="M256.0,28.0L202.7,112.4L224.0,176.7L224.0,176.7L173.9,256.0L221.5,331.4L213.7,348.6L155.2,256.0L198.5,187.4L192.6,128.3L112.0,256.0L256.0,484.0L309.3,399.6L288.0,335.3L288.0,335.3L338.1,256.0L290.5,180.6L298.3,163.4L356.8,256.0L313.5,324.6L319.4,383.7L400.0,256.0L256.0,28.0ZM256.0,192.2L296.3,256.0L256.0,319.8L215.7,256.0Z"
+          fill="url(#ionixGrad)" fill-rule="evenodd" stroke="#0f0a18" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M256.0,210L284,256L256.0,302L228,256Z" fill="#a855f7" opacity="0.35" filter="url(#soft)"/>
+  </g>
+</svg>

@@ -8,6 +8,12 @@ set -e
 
 CLASS="--class ionix --class gnu-linux --class gnu --class os"
 
+# GNOME is an optional bundle (the installer's Software page, or
+# `ionix-extras install gnome` later), so only offer it when it is there.
+if [ ! -x /usr/bin/gnome-session ]; then
+    exit 0
+fi
+
 # Find the latest kernel
 LINUX=$(ls -1 /boot/vmlinuz-linux 2>/dev/null | head -1)
 INITRD=$(ls -1 /boot/initramfs-linux.img 2>/dev/null | head -1)

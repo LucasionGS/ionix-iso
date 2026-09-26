@@ -104,6 +104,8 @@ systemd-boot auto-selects `01-ionix-linux.conf` → autologin as `liveuser` on t
 | keyboard | **Danish** layout |
 | partition | **Erase disk** on the single virtio disk (`/dev/vda`) |
 | users | Full name **Lucasion**, username **ion**, hostname **ionix**, password **ionix1234** (twice) |
+| personalize | leave the defaults (Ionix theme, bar at the theme default) unless testing that path |
+| software | leave everything off for a baseline run; each bundle adds a full `pacman -Syu` plus its download to the install time |
 | summary | confirm; `prompt-install: true` means an extra confirmation dialog appears |
 
 **Leave the welcome page's language dropdown on American English.** It sets the *installer UI* language, and switching it renames every button you are about to click. The Danish system locale is set on the Location page instead, which leaves the UI drivable while still exercising the locale path.

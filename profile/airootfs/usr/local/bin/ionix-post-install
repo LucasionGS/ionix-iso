@@ -5,6 +5,13 @@
 
 set -euo pipefail
 
+# Choices from the installer's Personalize page and the users page, passed in by
+# shellprocess.conf from Calamares' GlobalStorage. Defaults keep a run without
+# them (say, by hand) behaving as before.
+IONIX_THEME="${IONIX_THEME:-ionix}"          # ionixtheme name
+IONIX_BAR="${IONIX_BAR:-default}"            # default | top | bottom | left | right
+IONIX_AUTOLOGIN="${IONIX_AUTOLOGIN:-no}"     # yes: skip the lock screen at session start
+
 # Find the first non-root user with UID >= 1000
 NEWUSER=$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "liveuser" {print $1; exit}' /etc/passwd)
 
@@ -21,7 +28,16 @@ fi
 # Set fish as root shell too
 chsh -s /usr/bin/fish root 2>/dev/null || true
 
-# Configure autologin for the installed user
+# Configure autologin for the installed user. This happens either way: the
+# session then opens behind ionix-lock (etc/hypr/scripts/init.sh), which is what
+# asks for the password. "Log in automatically" on the users page only removes
+# that lock, via the marker below.
+mkdir -p /etc/ionix
+if [[ "$IONIX_AUTOLOGIN" == "yes" ]]; then
+    touch /etc/ionix/skip-session-lock
+else
+    rm -f /etc/ionix/skip-session-lock
+fi
 if [[ -n "$NEWUSER" ]]; then
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << AUTOLOGIN
@@ -29,6 +45,34 @@ if [[ -n "$NEWUSER" ]]; then
 ExecStart=
 ExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $NEWUSER - \$TERM
 AUTOLOGIN
+fi
+
+# Desktop theme and bar position from the Personalize page. ionixtheme needs a
+# running session (the adaptive theme reads the wallpaper), so the theme is only
+# queued here and ionix-first-login applies it; the bar position is a plain key
+# in the shell's settings file and can be written now. "ionix" and "default" are
+# what a fresh account already gets, so they write nothing.
+if [[ -n "$NEWUSER" && -d "/home/$NEWUSER" ]]; then
+    if [[ "$IONIX_THEME" != "ionix" && -d "/usr/local/share/ionix/styler/themes/$IONIX_THEME" ]]; then
+        install -d -o "$NEWUSER" -g "$NEWUSER" "/home/$NEWUSER/.config/ionix"
+        printf '%s\n' "$IONIX_THEME" > "/home/$NEWUSER/.config/ionix/pending-theme"
+        chown "$NEWUSER:$NEWUSER" "/home/$NEWUSER/.config/ionix/pending-theme"
+    fi
+    case "$IONIX_BAR" in
+        top|bottom|left|right)
+            qs_dir="/home/$NEWUSER/.config/quickshell/ionix"
+            install -d -o "$NEWUSER" -g "$NEWUSER" "/home/$NEWUSER/.config/quickshell" "$qs_dir"
+            printf '{\n  "bar": {\n    "position": "%s"\n  }\n}\n' "$IONIX_BAR" > "$qs_dir/settings.json"
+            chown "$NEWUSER:$NEWUSER" "$qs_dir/settings.json"
+            ;;
+    esac
+fi
+
+# Enable [multilib]. The ISO ships lib32 graphics and audio libraries (for Steam
+# and Wine), but the stock pacman.conf leaves multilib commented out, so without
+# this those packages could never be updated alongside their 64-bit halves.
+if ! grep -q '^\[multilib\]' /etc/pacman.conf; then
+    sed -i '/^#\[multilib\]/,/^#Include/ s/^#//' /etc/pacman.conf
 fi
 
 # Enable systemd services for the installed system

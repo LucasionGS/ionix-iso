@@ -28,7 +28,6 @@ AUR_PACKAGES=(
     "yay"
     "oh-my-posh-bin"
     "calamares"
-    "tabby-bin"
     "grim-hyprland-git"                # Replaces grim
     "google-chrome"
     # ionix tooling (openconnect-sso before ionix-openconnect-tools)
@@ -39,11 +38,10 @@ AUR_PACKAGES=(
     "ionix-openconnect-tools"
     "ionix-file-manager-git"
     "ioexplorer-git"
-    # Gaming
-    "python-inputs"
-    "python-steam"
-    "protonup-qt"
 )
+# tabby-bin and the gaming stack (protonup-qt, with its python-inputs and
+# python-steam dependencies) are optional bundles, built on the installed system
+# by ionix-extras only when chosen, so they are not built for the ISO.
 
 # Packages built from sources in this repository rather than cloned from the AUR.
 # Paths are relative to the repo root and must contain a PKGBUILD.
@@ -113,8 +111,10 @@ FAILED_PACKAGES=()
 # the sentinel marker. Shared by the AUR and local-package loops.
 #   $1 = package name (marker name)
 #   $2 = directory containing the PKGBUILD, already owned by $BUILD_USER
+#   $3 = "install" to install the result into this container afterwards, so a
+#        later package can build against it; anything else skips that step
 build_pkgdir() {
-    local pkg="$1" pkg_dir="$2"
+    local pkg="$1" pkg_dir="$2" install="${3:-install}"
     local marker="$LOCAL_REPO/.built-${pkg}"
     local pkg_files=() f
 
@@ -156,7 +156,9 @@ build_pkgdir() {
     fi
 
     # Install the package locally so dependent packages can find it
-    pacman -U --noconfirm --overwrite "*" --ask 4 "${pkg_files[@]}"
+    if [[ "$install" == install ]]; then
+        pacman -U --noconfirm --overwrite "*" --ask 4 "${pkg_files[@]}"
+    fi
 
     # Write sentinel marker with the list of installed package files
     printf '%s\n' "${pkg_files[@]}" > "$marker"
@@ -164,7 +166,22 @@ build_pkgdir() {
     echo "==> Successfully built: $pkg"
 }
 
-for pkg in "${AUR_PACKAGES[@]}"; do
+# Index of the last AUR package that still has to be built. Installing a package
+# into this throwaway container only matters when something after it is going to
+# be built against it, and that install drags in all of its dependencies (Qt for
+# calamares, WebEngine for openconnect-sso, ...). With every package already
+# built, the whole loop below then costs nothing — the common case when only
+# profile/ or a local package changed.
+LAST_PENDING=-1
+for i in "${!AUR_PACKAGES[@]}"; do
+    [[ -f "$LOCAL_REPO/.built-${AUR_PACKAGES[$i]}" ]] || LAST_PENDING=$i
+done
+
+for i in "${!AUR_PACKAGES[@]}"; do
+    pkg="${AUR_PACKAGES[$i]}"
+    install=skip
+    (( i < LAST_PENDING )) && install=install
+
     echo ""
     echo "══════════════════════════════════════════════════"
     echo "  Building: $pkg"
@@ -177,8 +194,10 @@ for pkg in "${AUR_PACKAGES[@]}"; do
     if [[ -f "$MARKER" ]]; then
         echo "==> Already built, skipping: $pkg"
         # Re-install from the file list stored in the marker so dependents resolve
-        mapfile -t pkg_files < "$MARKER"
-        pacman -U --noconfirm --overwrite "*" --ask 4 "${pkg_files[@]}" || true
+        if [[ "$install" == install ]]; then
+            mapfile -t pkg_files < "$MARKER"
+            pacman -U --noconfirm --overwrite "*" --ask 4 "${pkg_files[@]}" || true
+        fi
         continue
     fi
 
@@ -206,7 +225,7 @@ STUBEOF
         chown "$BUILD_USER:$BUILD_USER" "$PKG_DIR/PKGBUILD"
     fi
 
-    build_pkgdir "$pkg" "$PKG_DIR" || FAILED_PACKAGES+=("$pkg")
+    build_pkgdir "$pkg" "$PKG_DIR" "$install" || FAILED_PACKAGES+=("$pkg")
 done
 
 # ── Local packages (built from this repository) ──────────────────────────────
@@ -287,7 +306,10 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
     # package's own r<count>.<hash> files.
     rm -f "$LOCAL_REPO/${pkg}"-[0-9]*.pkg.tar.*
 
-    build_pkgdir "$pkg" "$PKG_DIR" || FAILED_PACKAGES+=("$pkg")
+    # Nothing is built after the local packages, so there is nothing to install
+    # them for. (They depend only on official packages; if one ever depends on
+    # an AUR package, LAST_PENDING above must count it.)
+    build_pkgdir "$pkg" "$PKG_DIR" skip || FAILED_PACKAGES+=("$pkg")
 done
 
 # Clean up sudoers entry

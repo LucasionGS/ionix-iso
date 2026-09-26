@@ -124,18 +124,11 @@ waybar
 wlr-protocols
 swaync
 
-# --- GNOME (alternative session) ---
-gnome-shell
-gnome-session
-gnome-settings-daemon
-gnome-control-center
-gnome-tweaks
-gnome-shell-extensions
-# Do i only need this..?
-gnome
-xdg-desktop-portal-gnome
-gnome-backgrounds
-dconf-editor
+# --- Optional bundles ---
+# GNOME, the gaming stack, OBS Studio and Tabby are not on the medium. The
+# installer's Software page offers them and /usr/local/bin/ionix-extras downloads
+# them at the end of the install (or any time later: `sudo ionix-extras install
+# <bundle>`). The package lists live in that script.
 
 # --- Terminal and Shell ---
 kitty
@@ -226,22 +219,9 @@ lib32-nvidia-utils
 egl-wayland
 libva-nvidia-driver
 
-# --- Gaming ---
-steam
-gamemode
-lib32-gamemode
-mangohud
-lib32-mangohud
-gamescope
-lutris
-obs-studio
+# --- Performance ---
+# Not gaming-specific: ionix-post-install enables its service on every install.
 ananicy-cpp
-antimicrox
-lib32-libpulse
-wine-staging
-winetricks
-wine-mono
-wine-gecko
 
 # --- Other libraries ---
 libportal
@@ -253,7 +233,6 @@ libsecret
 # --- AUR packages (from ionix local repo) ---
 yay
 google-chrome
-tabby-bin
 oh-my-posh-bin
 calamares
 python-gevent-eventemitter
@@ -263,5 +242,4 @@ ionix-openconnect-tools
 ionix-file-manager-git
 ioexplorer-git
 ionix-quickshell-git
-protonup-qt
 grim-hyprland-git

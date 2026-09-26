@@ -53,8 +53,15 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 1. **Step 1/4** — Builds ~35 AUR packages via `aur/build-aur.sh` into `localrepo/`, then the local
    packages listed in that script's `LOCAL_PACKAGES` array (currently `submodules/ionix-quickshell`)
 2. **Step 2/4** — Copies the local repo to `/tmp/ionix-localrepo` for archiso access
-3. **Step 3/4** — Converts SVG branding assets (wallpaper, logo) to PNG using `rsvg-convert` or ImageMagick
-4. **Step 4/4** — Runs `mkarchiso` against `profile/` to produce the final ISO in `out/`
+3. **Step 3/4** — Converts SVG branding assets (wallpaper, logo, Calamares welcome hero) to PNG using `rsvg-convert` or ImageMagick
+4. **Step 4/4** — Deletes `work/`, then runs `mkarchiso` against `profile/` to produce the final ISO in `out/`
+
+Rebuilding after a change is cheap as long as you **don't run `clean.sh`**: the AUR packages keep
+their `.built-*` sentinels in `localrepo/`, and an already-built package is only reinstalled into
+the build container when a package after it in `AUR_PACKAGES` still has to be built. `work/` is
+the opposite — it must *not* survive, because mkarchiso skips every stage it finds a marker for
+there and would ship the previous airootfs. `docker-build.sh` keeps pacman's download cache in the
+`ionix-pacman-cache` volume, so the ~1300 ISO packages are downloaded once, not per build.
 
 ## Architecture
 
@@ -84,7 +91,52 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 
 **Layered Hyprland config:** System defaults live in `profile/airootfs/etc/hypr/hyprland.lua`, user config in `profile/airootfs/etc/skel/.config/hypr/hyprland.lua` which loads the system config with `dofile`, then allows user overrides.
 
-**Installer flow:** Calamares runs its module sequence, ending with `ionix-post-install` (via shellprocess), which configures the installed system: sets fish as default shell, enables systemd services, handles NVIDIA and fingerprint-reader detection, installs GRUB.
+**Installer flow:** Calamares runs its module sequence, ending with `ionix-post-install` (via shellprocess), which configures the installed system: sets fish as default shell, enables systemd services, handles NVIDIA and fingerprint-reader detection, enables `[multilib]`, installs GRUB. Then `ionix-extras` installs whatever the Software page selected.
+
+**The installer's look lives in `etc/calamares/branding/ionix/`.** `stylesheet.qss` styles every
+page Calamares draws in C++; the sidebar and the button bar are QML (`calamares-sidebar.qml`,
+`calamares-navigation.qml`, selected by `sidebar: qml`/`navigation: qml` in `branding.desc`); the
+install slideshow is `show.qml` (slideshow API 2 — it must `import calamares.slideshow`, without
+which the whole file fails and the page is blank). The welcome hero `welcome.png` is rendered from
+`assets/calamares-welcome.svg` at build time. Things verified in a live VM:
+
+- **Two pages are Ionix's own**: *Personalize* (theme, bar position) and *Software* (optional
+  bundles). Both are instances of the stock `notesqml` module (`instances:` in `settings.conf`,
+  configs `modules/ionix-*.conf`) loading `ionix-personalize.qml`/`ionix-software.qml` from the
+  branding dir. They hand their choices on through GlobalStorage (`import io.calamares.core` →
+  `Global.insert`) as `ionixTheme`, `ionixBar`, `ionixAutologin` and `ionixExtras`, which
+  `shellprocess.conf` expands as `${gs[key]}`. A `${gs[key]}` whose key is missing fails the
+  command, so each page writes all its keys as soon as it is created.
+- **`GlobalStorage` emits `changed()` while holding its own lock.** Touching `Global` from a
+  handler on that signal deadlocks the whole installer at startup — defer with `Qt.callLater`.
+- **A QML page cannot be transparent**: Calamares clears it to white. The pages paint `#150d20`,
+  the same flat colour as `#mainApp` in the stylesheet; a gradient on either shows the page's inset
+  rectangle as a box.
+- `users.conf` needs `displayAutologin: true`, or the "log in automatically" box is never shown.
+  Ionix autologins on tty1 regardless and opens the session behind `ionix-lock`, so that lock *is*
+  the password prompt; ticking the box makes `ionix-post-install` drop
+  `/etc/ionix/skip-session-lock`, which `init.sh` checks. The users page only sets `autoLoginUser`
+  when ticked, so the Personalize page mirrors it into the always-present `ionixAutologin`.
+- The chosen theme is only queued (`~/.config/ionix/pending-theme`): `ionixtheme` needs a session,
+  so `ionix-first-login` applies it. The bar position is written straight into the shell's
+  `settings.json`.
+- Hyprland floats the window (`io.calamares.calamares` rule in `hyprland.lua`) at `windowSize`.
+- A `modules/welcome.conf` must exist: without one Calamares falls back to its bundled *example*,
+  with joke requirement checks (`snark`, `slow-true`) and a KDE donate button.
+
+To iterate on these files without rebuilding, copy them into a running live ISO's `/etc/calamares`
+and restart `ionix-install` — but anything under `/usr/local/bin` only reaches an *installed*
+system through a rebuilt ISO, because `unpackfs` copies the squashfs, not the running root.
+
+**Optional software is not on the ISO.** GNOME, the gaming stack (Steam, Lutris, Wine,
+ProtonUp-Qt…), OBS Studio and Tabby are bundles in `/usr/local/bin/ionix-extras`, which owns their
+package lists. Repo packages go through `pacman -Syu` (never `-Sy`: the disk is as old as the ISO);
+AUR ones through `yay` as the new user with a temporary pacman-only sudoers rule. It never fails
+the install: anything it could not do (offline, a failed build) goes to
+`/var/lib/ionix/extras-pending`, `ionix-first-login` says so, and `sudo ionix-extras install` retries.
+The bundle ids in `ionix-software.qml` must match the script. GNOME's GRUB entry
+(`/etc/grub.d/11_ionix_gnome`) only appears once `gnome-session` exists, so installing GNOME later
+re-runs `grub-mkconfig`.
 
 **Fingerprint support is per-machine, decided at install time.** `fprintd` ships on every ISO but is
 inert until something asks for it — it is `Type=dbus` with no `[Install]` section, so it is activated
@@ -200,6 +252,7 @@ in its own centre and the blocked `notify-send` printing `join` is the cue to op
   from inside the Calamares chroot does not fail trying to write EFI NVRAM
 - `ionix-session-selector` / `ionix-arrange-workspace` — session and workspace helpers
 - `ionix-fingerprint` — fingerprint reader support; survives onto the installed system
+- `ionix-extras` — installs the optional bundles; survives onto the installed system
 
 ## Visual Theme
 
