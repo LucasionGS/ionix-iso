@@ -10,11 +10,12 @@ WALLPAPER_DIR="$IONIX_DIR/.wallpapers_active"
 AWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
 IONIX_EXTRA_AWWW_ARGS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/ionix/extra_awww_args"
 # If the extra awww args file exists, read it and append its contents to AWWW_ARGS
-if [ -f "$IONIX_EXTRA_AWWW_ARGS_FILE" ]; then
+# Only if IONIX_EXTRA_AWWW_ARGS aren't already set
+if [ -z "$IONIX_EXTRA_AWWW_ARGS" ] && [ -f "$IONIX_EXTRA_AWWW_ARGS_FILE" ]; then
   IONIX_EXTRA_AWWW_ARGS=$(<"$IONIX_EXTRA_AWWW_ARGS_FILE")
-  if [ -n "$IONIX_EXTRA_AWWW_ARGS" ]; then
-    AWWW_ARGS="$AWWW_ARGS $IONIX_EXTRA_AWWW_ARGS"
-  fi
+fi
+if [ -n "$IONIX_EXTRA_AWWW_ARGS" ]; then
+  AWWW_ARGS="$AWWW_ARGS $IONIX_EXTRA_AWWW_ARGS"
 fi
 
 mapfile -d '' ALL_WALLPAPERS < <(find "$WALLPAPER_DIR" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" \) -print0)
