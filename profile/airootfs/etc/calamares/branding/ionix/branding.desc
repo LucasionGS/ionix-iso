@@ -1,24 +1,53 @@
 ---
 componentName: ionix
 
+
+# "Welcome to the Ionix installer." rather than naming Calamares.
+welcomeStyleCalamares: false
+welcomeExpandingLogo:  true
+
+# Big enough that the partition page's bars and the QML pages breathe; Hyprland
+# floats the window (see the calamares rule in hyprland.lua) so it stays this size.
+windowExpanding: normal
+windowSize:      1180px,760px
+windowPlacement: center
+
+# Both panels are QML (calamares-sidebar.qml, calamares-navigation.qml) so they can
+# carry the same glass-and-gradient look as the Quickshell bar. The widget pages in
+# between are styled by stylesheet.qss.
+sidebar:    qml
+navigation: qml
+
 strings:
     productName:         "Ionix"
     shortProductName:    "Ionix"
-    version:             "2026.08"
-    shortVersion:        "2026.08"
-    versionedName:       "Ionix 2026.08"
-    shortVersionedName:  "Ionix 2026.08"
+    version:             "2026.09"
+    shortVersion:        "2026.09"
+    versionedName:       "Ionix 2026.09"
+    shortVersionedName:  "Ionix 2026.09"
     bootloaderEntryName: "Ionix"
+    productUrl:          "https://github.com/lucasionGS/ionix-iso"
+    supportUrl:          "https://github.com/lucasionGS/ionix-iso/issues"
+    knownIssuesUrl:      "https://github.com/lucasionGS/ionix-iso/issues"
 
 images:
-    productLogo:         "ionix-logo.png"
-    productIcon:         "ionix-logo.png"
-    productWelcome:      "ionix-logo.png"
+    productLogo:    "ionix-logo.png"
+    productIcon:    "ionix-logo.png"
+    productWelcome: "welcome.png"
 
-slideshow:               "show.qml"
-
+# The QML panels read these through Branding.styleString(), and the widget sidebar
+# (the fallback if QML fails to load) reads them directly, so they are the single
+# source for the panel palette. Values are the Ionix core palette from CLAUDE.md.
 style:
-    sidebarBackground:    "#1a1025"
-    sidebarText:          "#e2d9f3"
-    sidebarTextSelect:    "#ffffff"
-    sidebarTextHighlight: "#9b59b6"
+    SidebarBackground:        "#140c1f"
+    SidebarText:              "#c4b5fd"
+    SidebarTextCurrent:       "#ffffff"
+    SidebarBackgroundCurrent: "#9b59b6"
+
+stylesheet: "stylesheet.qss"
+
+slideshow:    "show.qml"
+slideshowAPI: 2
+
+uploadServer:
+    type: none

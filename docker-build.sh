@@ -49,10 +49,17 @@ echo ""
 # Refresh the keyring first (an old keyring cannot verify newly signed packages),
 # and always pair -Sy with -Su: a bare -Sy leaves the container in a
 # partial-upgrade state, which breaks builds in far less obvious ways.
+# Keep pacman's package cache in a named volume. The container is thrown away
+# after every run, and without this each build re-downloads every package the
+# ISO contains (several GB) plus the build dependencies of the AUR packages.
+# Reclaim the space with: docker volume rm ionix-pacman-cache
+CACHE_VOLUME="ionix-pacman-cache"
+
 docker run --rm \
     --privileged \
     --platform linux/amd64 \
     -v "$SCRIPT_DIR:$SCRIPT_DIR" \
+    -v "$CACHE_VOLUME:/var/cache/pacman/pkg" \
     -w "$SCRIPT_DIR" \
     "$IMAGE_NAME" \
     bash -c 'set -e

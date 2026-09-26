@@ -21,5 +21,9 @@ sudo rm -f "${SCRIPT_DIR}"/submodules/*/*.pkg.tar.*
 rm -f "${SCRIPT_DIR}/profile/airootfs/usr/local/share/ionix/wallpaper.png"
 rm -f "${SCRIPT_DIR}/profile/airootfs/usr/local/share/ionix/ionix-logo.svg"
 rm -f "${SCRIPT_DIR}/profile/airootfs/etc/calamares/branding/ionix/ionix-logo.png"
+rm -f "${SCRIPT_DIR}/profile/airootfs/etc/calamares/branding/ionix/welcome.png"
+
+# Clean up Docker volumes used for caching
+docker volume rm ionix-pacman-cache
 
 echo "Done. Run ./build.sh to rebuild."

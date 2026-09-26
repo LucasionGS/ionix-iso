@@ -371,6 +371,11 @@ hl.window_rule({ match = { class = "kitty", focus = true }, opacity = "0.9" })
 hl.window_rule({ match = { class = "kitty:float" }, float = true, size = { 1280, 768 }, center = true })
 
 -- System dialogs
+-- Calamares (the installer): a centred window at its branded size rather than
+-- tiled across the screen. Keep the size in step with windowSize in
+-- /etc/calamares/branding/ionix/branding.desc.
+hl.window_rule({ match = { class = "io.calamares.calamares" }, float = true, size = { 1180, 760 }, center = true })
+
 hl.window_rule({ match = { class = "blueman-manager" }, float = true })
 hl.window_rule({ match = { class = "blueman-manager" }, center = true })
 hl.window_rule({ match = { class = "blueman-manager" }, size = { 800, 500 } })

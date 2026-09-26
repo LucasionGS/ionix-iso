@@ -1,0 +1,472 @@
+/*
+ * Ionix installer stylesheet — styles every widget page Calamares draws in C++
+ * (welcome, location, keyboard, partitioning, users, summary, install, finished).
+ * The sidebar and the button bar are QML (calamares-*.qml) and do not read this.
+ *
+ * Palette: the Ionix core palette from CLAUDE.md. Qt stylesheets have no
+ * variables, so the hex values are repeated; keep them in step with the QML.
+ *
+ * Image urls are absolute: Qt resolves relative ones against the working
+ * directory, not against this file.
+ */
+
+/* ── Base ──────────────────────────────────────────────────────────────── */
+
+* {
+    font-family: "Noto Sans";
+    outline: 0;
+}
+
+/* Flat, not a gradient: the QML pages (ionix-*.qml) paint this same colour, and
+   a gradient here would show their inset rectangle as a visible box. */
+#mainApp {
+    background-color: #150d20;
+    color: #e2d9f3;
+}
+
+QDialog, QMessageBox {
+    background-color: #1a1025;
+    color: #e2d9f3;
+}
+
+QWidget {
+    color: #e2d9f3;
+    selection-background-color: #9b59b6;
+    selection-color: #ffffff;
+}
+
+QLabel {
+    background: transparent;
+    color: #c4b5fd;
+}
+
+QLabel:disabled {
+    color: #6b5f80;
+}
+
+/* Scroll areas paint their viewport by default; let the page gradient through. */
+QScrollArea, QScrollArea > QWidget > QWidget, QStackedWidget, QSplitter {
+    background: transparent;
+    border: none;
+}
+
+QFrame[frameShape="4"], QFrame[frameShape="5"] {   /* HLine, VLine */
+    color: #4a3d60;
+    background-color: #4a3d60;
+    max-height: 1px;
+    border: none;
+}
+
+QToolTip {
+    background-color: #1a1025;
+    color: #e2d9f3;
+    border: 1px solid #4a3d60;
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+
+QPushButton, QToolButton {
+    background-color: #2d2d3f;
+    color: #e2d9f3;
+    border: 1px solid #4a3d60;
+    border-radius: 9px;
+    padding: 8px 18px;
+    min-height: 18px;
+}
+
+QPushButton:hover, QToolButton:hover {
+    background-color: #3a2d50;
+    border-color: #9b59b6;
+}
+
+QPushButton:pressed, QToolButton:pressed, QToolButton:checked {
+    background-color: #4a3d60;
+    border-color: #a855f7;
+}
+
+QPushButton:focus {
+    border-color: #a855f7;
+}
+
+QPushButton:disabled, QToolButton:disabled {
+    background-color: #1f1830;
+    color: #6b5f80;
+    border-color: #2d2d3f;
+}
+
+QPushButton:default {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #9b59b6, stop: 1 #a855f7);
+    border-color: #c084fc;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* Welcome page link buttons (support, known issues, release notes) read as
+   quiet pills rather than full buttons. */
+#supportButton, #knownIssuesButton, #releaseNotesButton, #donateButton, #aboutButton {
+    background-color: rgba(45, 45, 63, 0.55);
+    border: 1px solid rgba(74, 61, 96, 0.8);
+    border-radius: 15px;
+    padding: 5px 14px;
+    color: #c4b5fd;
+}
+
+#supportButton:hover, #knownIssuesButton:hover, #releaseNotesButton:hover,
+#donateButton:hover, #aboutButton:hover {
+    background-color: #3a2d50;
+    color: #e2d9f3;
+    border-color: #9b59b6;
+}
+
+#supportButton     { qproperty-icon: url(/etc/calamares/branding/ionix/icons/support.svg); }
+#knownIssuesButton { qproperty-icon: url(/etc/calamares/branding/ionix/icons/issues.svg); }
+
+/* ── Text inputs ───────────────────────────────────────────────────────── */
+
+QLineEdit, QSpinBox, QDoubleSpinBox, QPlainTextEdit, QTextEdit {
+    background-color: rgba(15, 10, 24, 0.85);
+    color: #e2d9f3;
+    border: 1px solid #4a3d60;
+    border-radius: 9px;
+    padding: 8px 11px;
+    selection-background-color: #9b59b6;
+}
+
+QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover {
+    border-color: #6b5f80;
+}
+
+QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QPlainTextEdit:focus, QTextEdit:focus {
+    border: 1px solid #a855f7;
+    background-color: #0f0a18;
+}
+
+QLineEdit:disabled, QSpinBox:disabled {
+    color: #6b5f80;
+    background-color: rgba(15, 10, 24, 0.4);
+    border-color: #2d2d3f;
+}
+
+QSpinBox::up-button, QSpinBox::down-button,
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button {
+    width: 18px;
+    border: none;
+    background: transparent;
+}
+
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+    image: url(/etc/calamares/branding/ionix/icons/chevron-up.svg);
+    width: 10px; height: 10px;
+}
+
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+    image: url(/etc/calamares/branding/ionix/icons/chevron-down.svg);
+    width: 10px; height: 10px;
+}
+
+/* ── Combo boxes ───────────────────────────────────────────────────────── */
+
+QComboBox {
+    background-color: rgba(45, 45, 63, 0.7);
+    color: #e2d9f3;
+    border: 1px solid #4a3d60;
+    border-radius: 9px;
+    padding: 7px 34px 7px 12px;
+    min-height: 20px;
+}
+
+QComboBox:hover {
+    background-color: #3a2d50;
+    border-color: #9b59b6;
+}
+
+QComboBox:on, QComboBox:focus {
+    border-color: #a855f7;
+}
+
+QComboBox:disabled {
+    color: #6b5f80;
+    background-color: #1f1830;
+    border-color: #2d2d3f;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 30px;
+    border: none;
+}
+
+QComboBox::down-arrow {
+    image: url(/etc/calamares/branding/ionix/icons/chevron-down.svg);
+    width: 12px;
+    height: 12px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #1a1025;
+    color: #e2d9f3;
+    border: 1px solid #4a3d60;
+    border-radius: 8px;
+    padding: 4px;
+    selection-background-color: #9b59b6;
+    selection-color: #ffffff;
+}
+
+/* ── Lists, trees, tables ──────────────────────────────────────────────── */
+
+QListView, QListWidget, QTreeView, QTreeWidget, QTableView, QTableWidget, QTextBrowser {
+    background-color: rgba(15, 10, 24, 0.6);
+    alternate-background-color: rgba(45, 45, 63, 0.25);
+    color: #e2d9f3;
+    border: 1px solid #4a3d60;
+    border-radius: 10px;
+    padding: 4px;
+}
+
+QListView::item, QListWidget::item, QTreeView::item, QTreeWidget::item {
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: #e2d9f3;
+}
+
+QTableView::item, QTableWidget::item {
+    padding: 4px 6px;
+}
+
+QListView::item:hover, QListWidget::item:hover, QTreeView::item:hover,
+QTreeWidget::item:hover, QTableView::item:hover {
+    background-color: #3a2d50;
+}
+
+QListView::item:selected, QListWidget::item:selected, QTreeView::item:selected,
+QTreeWidget::item:selected, QTableView::item:selected, QTableWidget::item:selected {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #9b59b6, stop: 1 #a855f7);
+    color: #ffffff;
+}
+
+QHeaderView {
+    background: transparent;
+    border: none;
+}
+
+QHeaderView::section {
+    background-color: rgba(45, 45, 63, 0.6);
+    color: #c084fc;
+    border: none;
+    border-bottom: 1px solid #4a3d60;
+    padding: 6px 8px;
+    font-weight: bold;
+}
+
+QTableCornerButton::section {
+    background: transparent;
+    border: none;
+}
+
+QTreeView::branch {
+    background: transparent;
+}
+
+/* ── Check boxes and radio buttons ─────────────────────────────────────── */
+
+QCheckBox, QRadioButton {
+    background: transparent;
+    color: #e2d9f3;
+    spacing: 10px;
+    padding: 3px 0;
+}
+
+QCheckBox:disabled, QRadioButton:disabled {
+    color: #6b5f80;
+}
+
+QCheckBox::indicator, QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #6b5f80;
+    background-color: #0f0a18;
+}
+
+QCheckBox::indicator {
+    border-radius: 5px;
+}
+
+QRadioButton::indicator {
+    border-radius: 10px;
+}
+
+QCheckBox::indicator:hover, QRadioButton::indicator:hover {
+    border-color: #c084fc;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #9b59b6;
+    border-color: #a855f7;
+    image: url(/etc/calamares/branding/ionix/icons/check.svg);
+}
+
+QRadioButton::indicator:checked {
+    border-color: #a855f7;
+    background-color: qradialgradient(cx: 0.5, cy: 0.5, radius: 0.5, fx: 0.5, fy: 0.5,
+        stop: 0 #ffffff, stop: 0.38 #ffffff, stop: 0.48 #a855f7, stop: 1 #a855f7);
+}
+
+QCheckBox::indicator:disabled, QRadioButton::indicator:disabled {
+    border-color: #2d2d3f;
+    background-color: #1f1830;
+}
+
+/* ── Group boxes and tabs ──────────────────────────────────────────────── */
+
+QGroupBox {
+    background-color: rgba(26, 16, 37, 0.55);
+    border: 1px solid #4a3d60;
+    border-radius: 12px;
+    margin-top: 16px;
+    padding: 14px 10px 10px 10px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 14px;
+    padding: 0 6px;
+    color: #c084fc;
+}
+
+QTabWidget::pane {
+    border: 1px solid #4a3d60;
+    border-radius: 10px;
+    background-color: rgba(26, 16, 37, 0.55);
+    top: -1px;
+}
+
+QTabBar::tab {
+    background: transparent;
+    color: #6b5f80;
+    padding: 8px 16px;
+    border: none;
+    border-bottom: 2px solid transparent;
+}
+
+QTabBar::tab:hover {
+    color: #c4b5fd;
+}
+
+QTabBar::tab:selected {
+    color: #e2d9f3;
+    border-bottom: 2px solid #a855f7;
+}
+
+/* ── Progress (the install page) ───────────────────────────────────────── */
+
+QProgressBar {
+    background-color: rgba(45, 45, 63, 0.8);
+    border: none;
+    border-radius: 5px;
+    max-height: 10px;
+    min-height: 10px;
+    text-align: center;
+    color: transparent;
+}
+
+QProgressBar::chunk {
+    border-radius: 5px;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #7c3aed, stop: 0.5 #a855f7, stop: 1 #c084fc);
+}
+
+/* ── Scroll bars ───────────────────────────────────────────────────────── */
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 2px;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 10px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background-color: #4a3d60;
+    border-radius: 3px;
+    min-height: 28px;
+    min-width: 28px;
+}
+
+QScrollBar::handle:hover {
+    background-color: #9b59b6;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line,
+QScrollBar::add-page, QScrollBar::sub-page {
+    background: none;
+    border: none;
+    width: 0;
+    height: 0;
+}
+
+/* ── Menus (right-click, combo popups on some styles) ──────────────────── */
+
+QMenu {
+    background-color: #1a1025;
+    border: 1px solid #4a3d60;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 6px 18px;
+    border-radius: 5px;
+    color: #e2d9f3;
+}
+
+QMenu::item:selected {
+    background-color: #3a2d50;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #4a3d60;
+    margin: 4px 8px;
+}
+
+/* ── Partitioning ──────────────────────────────────────────────────────── */
+
+/* The partition legend and bar are Calamares' own item views; they paint a white
+   base unless told otherwise, and take their text colour from here. */
+PartitionLabelsView, PartitionBarsView {
+    background: transparent;
+    border: none;
+    color: #e2d9f3;
+}
+
+/* ── Sliders (partition resize) ────────────────────────────────────────── */
+
+QSlider::groove:horizontal {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #2d2d3f;
+}
+
+QSlider::sub-page:horizontal {
+    border-radius: 3px;
+    background-color: #9b59b6;
+}
+
+QSlider::handle:horizontal {
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    border-radius: 8px;
+    background-color: #e2d9f3;
+    border: 2px solid #a855f7;
+}

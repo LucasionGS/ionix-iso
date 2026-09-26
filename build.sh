@@ -101,6 +101,17 @@ else
     echo "    WARNING: Cannot convert logo SVG to PNG for Calamares branding."
 fi
 
+# Calamares welcome-page hero (branding.desc `productWelcome`, also the first
+# install slide). Rendered at its native 1200x520; Calamares scales it down.
+CALA_WELCOME="${PROFILE_DIR}/airootfs/etc/calamares/branding/ionix/welcome.png"
+if command -v rsvg-convert &>/dev/null && [[ -f "${ASSETS_DIR}/calamares-welcome.svg" ]]; then
+    rsvg-convert -w 1200 -h 520 "${ASSETS_DIR}/calamares-welcome.svg" -o "$CALA_WELCOME"
+elif command -v magick &>/dev/null && [[ -f "${ASSETS_DIR}/calamares-welcome.svg" ]]; then
+    magick -background none "${ASSETS_DIR}/calamares-welcome.svg" -resize 1200x520 "$CALA_WELCOME"
+else
+    echo "    WARNING: Cannot render the Calamares welcome image; the branding will fail to load."
+fi
+
 # Generate GRUB theme assets (fonts + logo)
 GRUB_THEME_DIR="${PROFILE_DIR}/airootfs/boot/grub/themes/ionix"
 echo "    Generating GRUB theme assets..."
@@ -138,6 +149,13 @@ echo "    Output: $OUT_DIR"
 echo ""
 
 mkdir -p "$OUT_DIR"
+
+# mkarchiso records every finished stage as a marker file in the work dir and
+# skips that stage on the next run, so a leftover work/ silently produces an ISO
+# without the current airootfs or package list. Always start from scratch; the
+# packages themselves come from pacman's cache (a persistent volume under
+# docker-build.sh), so this costs extraction time, not downloads.
+rm -rf "$WORK_DIR"
 
 mkarchiso -v -w "$WORK_DIR" -o "$OUT_DIR" "$PROFILE_DIR"
 
