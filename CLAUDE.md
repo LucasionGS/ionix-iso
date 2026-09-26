@@ -118,7 +118,41 @@ The two auth surfaces are configured by different mechanisms, on purpose:
   The `ready_message`/`present_message` reach the screen only through `$FPRINTPROMPT`, which
   `placeholder_text` **appends** to the password prompt rather than replacing it — the variable
   resolves to an empty string until a scan actually starts, so a machine without a sensor shows
-  exactly what it showed before.
+  exactly what it showed before. hyprlock is now only the **fallback** locker (see below).
+- **ionix-lock** gets the same race a third way: two `PamContext`s run side by side, one on
+  `lock/pam/password`, one on `lock/pam/fingerprint` (`pam_fprintd`). With no reader or no enrolled
+  finger the fingerprint one fails with `PAM_AUTHINFO_UNAVAIL` *without prompting*, and never having
+  prompted is how the lock decides there is no reader and stops retrying — so the hint never shows.
+
+**The lock screen is a second Quickshell entry point, run as its own process.**
+`submodules/ionix-quickshell/ionix/lock.qml` sits next to `shell.qml`, so `qs.config` resolves to
+the shell's own Config/Theme and the lock wears the live theme, but `bin/ionix-lock` starts it with
+`qs -p <path>/lock.qml` so a bar crash or hot-reload can never unlock the session. Everything it uses
+lives in `ionix/lock/` (`qs.lock`); `lock.qml` must never touch `Notifications` — there is one
+notification server per session and it is the bar's. `Player` and `SystemInfo` are safe to run twice.
+Things verified the hard way (in a nested Hyprland, `Hyprland -c <conf>` from inside a session):
+
+- `ionix-lock` treats *"the compositor confirmed the lock"* as the only success signal: `lock.qml`
+  writes `locked` to `$XDG_RUNTIME_DIR/ionix-lock.state` on `WlSessionLock.secure`. No `locked`
+  within 8 s, or the process dying while locked, and it `exec`s **hyprlock** — which can only take
+  over a dead lock because `misc.allow_session_lock_restore = true` in `hyprland.lua`. A QML load
+  error makes `qs` exit 255, which is caught the same way. `flock` on `ionix-lock.lock` makes a second
+  invocation a no-op.
+- `Qt.quit()`/`Qt.exit()` have no receiver under Quickshell. `lock.qml` releases the lock and then
+  SIGTERMs its own `Quickshell.processId`; the script reads `unlocked` from the state file for the
+  exit status.
+- The PAM stacks are read in place via `PamContext.configDirectory`, never installed to
+  `/etc/pam.d`. The password stack is `pam_unix` alone, not `include login` — that pulls in
+  `pam_faillock`, and three typos at a lock screen would lock you out of your own desktop. A PAM
+  *error* (as opposed to a failed match) fires `error()` **and then** `completed()`; count it once.
+- `ShapePath` in Qt 6.11 has no `strokeGradient`; the avatar ring is an odd-even-filled annulus with
+  a `ConicalGradient` fill. A property named `playing` on a `Video` subclass collides with Video's
+  own member.
+- The background comes from `awww query` per output name (re-read every `interval` so the wallpaper
+  cron carries through a long lock). awww's socket is per `WAYLAND_DISPLAY`, so in a nested test
+  session it answers nothing and every output borrows the first known picture.
+- The video is behind a `Loader` on its own file, so a missing QtMultimedia costs only the video.
+  The ISO ships `qt6-multimedia-ffmpeg`; without a backend nothing decodes.
 
 **The calendar is a daemon plus two files, never HTTP in QML.** `submodules/ionix-quickshell/bin/ionix-calendar`
 (stdlib-only Python, no msal) is spawned by `services/Calendar.qml` as a child of the shell whenever
@@ -160,6 +194,8 @@ in its own centre and the blocked `notify-send` printing `join` is the cue to op
 - `ionix-install` — Launches the Calamares installer
 - `ionix-post-install` — Post-installation system configuration (runs inside chroot)
 - `ionix-first-login` — One-time user environment setup
+- `ionix-lock` — (from ionix-quickshell, `/usr/bin`) the lock screen; `Super+L`, the power menu and
+  the session-start lock in `init.sh` all go through it
 - `grub-install` — PATH-priority wrapper adding `--no-nvram`, so a plain `grub-install` call
   from inside the Calamares chroot does not fail trying to write EFI NVRAM
 - `ionix-session-selector` / `ionix-arrange-workspace` — session and workspace helpers
