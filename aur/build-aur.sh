@@ -33,7 +33,8 @@ AUR_PACKAGES=(
     "google-chrome"
     # ionix tooling (openconnect-sso before ionix-openconnect-tools)
     "python-gevent-eventemitter"
-    "python-vcrpy"
+    # python-vcrpy lives in [extra] now; its AUR repo is empty, and the stub
+    # generated below for it shadowed the real one and broke python-steam's check()
     "openconnect-sso-git"
     "ionix-openconnect-tools"
     "ionix-file-manager-git"
