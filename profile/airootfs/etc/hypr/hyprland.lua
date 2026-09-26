@@ -108,6 +108,10 @@ hl.config({
     disable_splash_rendering = true,
     force_default_wallpaper = 0,
     vrr = 1,
+    -- Lets a fresh locker take over a session whose lock screen died, instead
+    -- of leaving it on Hyprland's "lockscreen crashed" page. ionix-lock
+    -- relies on this to hand a dead lock over to hyprlock.
+    allow_session_lock_restore = true,
   },
 })
 
@@ -163,7 +167,7 @@ bind_exec(mainMod .. " + R", "ioexplorer-spotlight")
 -- bind_exec(mainMod .. " + V", "copyq toggle")
 bind_exec(mainMod .. " + V", "ioexplorer-quick -t clipboard")
 bind_exec(mainMod .. " + period", "ioexplorer-quick")
-bind_exec(mainMod .. " + L", "hyprlock -c /etc/hypr/hyprlock.conf --grace 2")
+bind_exec(mainMod .. " + L", "ionix-lock")
 bind_exec("CTRL + " .. mainMod .. " + R", "hyprctl reload")
 
 -- ── Shell ─────────────────────────────────────────────────────

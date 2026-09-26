@@ -109,6 +109,10 @@ xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
 qt5-wayland
 qt6-wayland
+# Video backgrounds on the Quickshell lock screen (ionix-lock); without the
+# FFmpeg backend QtMultimedia has nothing to decode with.
+qt6-multimedia
+qt6-multimedia-ffmpeg
 uwsm
 nwg-displays
 
