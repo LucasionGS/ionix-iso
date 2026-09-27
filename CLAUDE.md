@@ -123,6 +123,28 @@ which the whole file fails and the page is blank). The welcome hero `welcome.png
 - Hyprland floats the window (`io.calamares.calamares` rule in `hyprland.lua`) at `windowSize`.
 - A `modules/welcome.conf` must exist: without one Calamares falls back to its bundled *example*,
   with joke requirement checks (`snark`, `slow-true`) and a KDE donate button.
+  The same goes for every module in `settings.conf`: `initcpiocfg`'s example adds a hook named
+  `bogus`. Give each module its own file under `modules/`.
+- **Full-disk encryption** ("Encrypt system" on the partition page) puts `/boot` inside the LUKS
+  root — only the ESP is separate — so GRUB itself unlocks the disk. That takes four stock modules
+  in the exec sequence: `luksbootkeyfile` (adds `/crypto_keyfile.bin` so the passphrase is asked
+  once, by GRUB, not again by the initramfs), `luksopenswaphookcfg`, `initcpiocfg` (busybox
+  `encrypt` hook — `useSystemdHook: false`, because `grubcfg` writes `cryptdevice=`, which
+  `sd-encrypt` ignores) and `grubcfg`, which must run **before** `shellprocess` so
+  `GRUB_ENABLE_CRYPTODISK=y` is set when `grub-install` runs, and whose `kernel_params` must repeat
+  Ionix's own (`ionix.desktop=hyprland`, …). `partition.conf` pins `luksGeneration: luks1`: GRUB
+  cannot open LUKS2's default argon2. `ionix-post-install` builds the images with `mkinitcpio -P`
+  only after deleting archiso's `mkinitcpio.conf.d` override, which is what lets these hooks apply.
+- `mount.conf`'s `options` must be YAML lists (`[ bind ]`). A bare `bind` is split into
+  `-o b,i,n,d`, the bind mount of `/dev` fails silently, and anything that needs a device inside
+  the target — `luksbootkeyfile` did — fails with it.
+- `umount` must stay the last exec module. Without it the target is left mounted after "All
+  done" with its final writes still cached; powering off there (rather than pressing Restart)
+  leaves ext4 files such as `/boot/grub/grub.cfg` zero-length, and the machine boots to a bare
+  `grub>` prompt. Found by force-quitting the test VM right after an install.
+- If Calamares is killed after an install, its target stays mounted and the LUKS volume open; the
+  partition page then offers only manual partitioning. `umount -R /tmp/calamares-root-*` and
+  `cryptsetup close` it before retrying.
 
 To iterate on these files without rebuilding, copy them into a running live ISO's `/etc/calamares`
 and restart `ionix-install` — but anything under `/usr/local/bin` only reaches an *installed*

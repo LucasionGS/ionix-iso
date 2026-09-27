@@ -237,9 +237,12 @@ def do_start(args):
             "-display", f"egl-headless,rendernode={args.rendernode}",
         ]
     else:
+        # --headed opens a GTK window on the host so a person can watch (or take
+        # over); screendump and QMP input keep working exactly as headless.
+        # A display cannot be attached to a running QEMU, so decide at start.
         cmd += [
             "-device", f"virtio-vga,xres={args.width},yres={args.height}",
-            "-display", "none",
+            "-display", "gtk,zoom-to-fit=on" if args.headed else "none",
         ]
     cmd += [
         "-device", "virtio-tablet-pci",   # absolute pointer: clicks land where told
@@ -437,6 +440,8 @@ def main():
     s.add_argument("--width", default="1920")
     s.add_argument("--height", default="1080")
     s.add_argument("--rendernode", default="/dev/dri/renderD128")
+    s.add_argument("--headed", action="store_true",
+                   help="show the VM in a window on the host desktop (2D only)")
     s.add_argument("--gl", action="store_true",
                    help="use virtio-vga-gl/egl-headless (faster guest GL, but "
                         "screendump stops working once the guest takes over)")

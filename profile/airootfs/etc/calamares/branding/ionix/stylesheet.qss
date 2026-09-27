@@ -441,12 +441,18 @@ QMenu::separator {
 
 /* ── Partitioning ──────────────────────────────────────────────────────── */
 
-/* The partition legend and bar are Calamares' own item views; they paint a white
-   base unless told otherwise, and take their text colour from here. */
-PartitionLabelsView, PartitionBarsView {
+/* The partition bar and legend are Calamares' own painted views. The legend draws
+   partition names in hardcoded black and sizes in Qt::gray, whatever the
+   stylesheet says, so it gets a light lavender strip both read well on. */
+PartitionBarsView {
     background: transparent;
     border: none;
-    color: #e2d9f3;
+}
+
+PartitionLabelsView {
+    background-color: #ddd3f0;
+    border: none;
+    border-radius: 8px;
 }
 
 /* ── Sliders (partition resize) ────────────────────────────────────────── */

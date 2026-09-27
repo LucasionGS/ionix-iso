@@ -29,6 +29,9 @@ Rectangle {
     // a Repeater's count follows the model.
     readonly property int stepCount: stepCounter.count
     readonly property int stepIndex: ViewManager.currentStepIndex
+    // On the finish page the only thing left to do is the quit action ("Done"),
+    // so it becomes the primary button and Back/Next (both disabled) go away.
+    readonly property bool lastStep: stepCount > 0 && stepIndex === stepCount - 1
 
     Repeater { id: stepCounter; model: ViewManager; delegate: Item {} }
 
@@ -143,7 +146,8 @@ Rectangle {
         Item { Layout.fillWidth: true }
 
         NavButton {
-            ghost: true
+            ghost: !navigationBar.lastStep
+            primary: navigationBar.lastStep
             label: ViewManager.quitLabel
             visible: ViewManager.quitVisible
             enabled: ViewManager.quitEnabled
@@ -152,7 +156,7 @@ Rectangle {
 
         NavButton {
             label: ViewManager.backLabel
-            visible: ViewManager.backAndNextVisible
+            visible: ViewManager.backAndNextVisible && !navigationBar.lastStep
             enabled: ViewManager.backEnabled
             onActivated: ViewManager.back()
         }
@@ -160,7 +164,7 @@ Rectangle {
         NavButton {
             primary: true
             label: ViewManager.nextLabel
-            visible: ViewManager.backAndNextVisible
+            visible: ViewManager.backAndNextVisible && !navigationBar.lastStep
             enabled: ViewManager.nextEnabled
             onActivated: ViewManager.next()
         }
