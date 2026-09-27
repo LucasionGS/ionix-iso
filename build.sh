@@ -162,7 +162,7 @@ mkarchiso -v -w "$WORK_DIR" -o "$OUT_DIR" "$PROFILE_DIR"
 # ── Done ──────────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║  Build complete!                                        ║"
+echo "║  Build complete!                                         ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 echo "ISO file:"
