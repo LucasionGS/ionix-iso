@@ -14,6 +14,8 @@ TARGET_ROOT=""
 # installed system.
 SKIP_EXACT=(
     "etc/default/grub"
+    # The live ISO keeps its journal in RAM; an installed system must not.
+    "etc/systemd/journald.conf.d/volatile-storage.conf"
     "etc/mkinitcpio.d/linux.preset"
     "etc/sudoers.d/10-ionix"
     "home/liveuser/.gitkeep"
