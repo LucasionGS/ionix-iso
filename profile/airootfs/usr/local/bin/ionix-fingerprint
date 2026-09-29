@@ -34,7 +34,7 @@ HYPRLOCK_CONF=/etc/hypr/hyprlock.conf
 # hyprlock is absent on purpose: it talks to fprintd over D-Bus itself
 # (auth:fingerprint in hyprlock.conf) rather than through PAM, which is why
 # its password field stays usable while a finger is being scanned.
-PAM_SERVICES=(sudo polkit-1)
+PAM_SERVICES=(sudo polkit-1 greetd)
 PAM_ETC_DIR=/etc/pam.d
 PAM_VENDOR_DIR=/usr/lib/pam.d
 

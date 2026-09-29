@@ -132,9 +132,14 @@ which the whole file fails and the page is blank). The welcome hero `welcome.png
   `encrypt` hook — `useSystemdHook: false`, because `grubcfg` writes `cryptdevice=`, which
   `sd-encrypt` ignores) and `grubcfg`, which must run **before** `shellprocess` so
   `GRUB_ENABLE_CRYPTODISK=y` is set when `grub-install` runs, and whose `kernel_params` must repeat
-  Ionix's own (`ionix.desktop=hyprland`, …). `partition.conf` pins `luksGeneration: luks1`: GRUB
+  Ionix's own (`quiet loglevel=3`). `partition.conf` pins `luksGeneration: luks1`: GRUB
   cannot open LUKS2's default argon2. `ionix-post-install` builds the images with `mkinitcpio -P`
   only after deleting archiso's `mkinitcpio.conf.d` override, which is what lets these hooks apply.
+- archiso's `journald.conf.d/volatile-storage.conf` rides along into the target with the rest of
+  the squashfs; `ionix-post-install` deletes it, or an installed system loses every log on reboot.
+- `etc/locale.gen` must stay glibc's **full** commented list: `localecfg` enables the chosen
+  locales by uncommenting their lines, so archiso's one-line file meant nothing but `en_US` was
+  ever generated and every program on the installed system logged "Locale not supported by C library".
 - `mount.conf`'s `options` must be YAML lists (`[ bind ]`). A bare `bind` is split into
   `-o b,i,n,d`, the bind mount of `/dev` fails silently, and anything that needs a device inside
   the target — `luksbootkeyfile` did — fails with it.
@@ -150,15 +155,16 @@ To iterate on these files without rebuilding, copy them into a running live ISO'
 and restart `ionix-install` — but anything under `/usr/local/bin` only reaches an *installed*
 system through a rebuilt ISO, because `unpackfs` copies the squashfs, not the running root.
 
-**Optional software is not on the ISO.** GNOME, the gaming stack (Steam, Lutris, Wine,
+**Optional software is not on the ISO.** The gaming stack (Steam, Lutris, Wine,
 ProtonUp-Qt…), OBS Studio and Tabby are bundles in `/usr/local/bin/ionix-extras`, which owns their
 package lists. Repo packages go through `pacman -Syu` (never `-Sy`: the disk is as old as the ISO);
 AUR ones through `yay` as the new user with a temporary pacman-only sudoers rule. It never fails
 the install: anything it could not do (offline, a failed build) goes to
 `/var/lib/ionix/extras-pending`, `ionix-first-login` says so, and `sudo ionix-extras install` retries.
-The bundle ids in `ionix-software.qml` must match the script. GNOME's GRUB entry
-(`/etc/grub.d/11_ionix_gnome`) only appears once `gnome-session` exists, so installing GNOME later
-re-runs `grub-mkconfig`.
+The bundle ids in `ionix-software.qml` must match the script. GNOME support was dropped (2026.09): no
+bundle, no boot entry, no session branch in fish. What stays is what GTK apps under Hyprland read —
+`gnome-keyring`, `gnome-themes-extra` (Adwaita-dark) and the `org.gnome.desktop.interface` keys that
+`ionix-first-login` loads from `usr/local/share/ionix/gtk-defaults.dconf`.
 
 **Fingerprint support is per-machine, decided at install time.** `fprintd` ships on every ISO but is
 inert until something asks for it — it is `Type=dbus` with no `[Install]` section, so it is activated
@@ -228,6 +234,53 @@ Things verified the hard way (in a nested Hyprland, `Hyprland -c <conf>` from in
 - The video is behind a `Loader` on its own file, so a missing QtMultimedia costs only the video.
   The ISO ships `qt6-multimedia-ffmpeg`; without a backend nothing decodes.
 
+**The login greeter is the lock screen with a username field, run under cage by greetd.**
+`ionix-login-mode greeter|autologin|locked` picks how an *installed* machine starts (the live ISO
+always autologins as `liveuser`): `greeter` enables `greetd` (`/etc/greetd/config.toml` runs
+`cage -s -- ionix-greeter`), `autologin` and `locked` are the tty1 autologin flows, without and with
+the session-start `ionix-lock`. `ionix-post-install` picks `autologin` when the users page box is
+ticked and `greeter` otherwise. Modes are recorded in `/etc/ionix/login-mode`; `skip-session-lock` stays
+what `init.sh` reads. GRUB has a single "Ionix" entry and the kernel
+command line no longer carries `ionix.desktop=`; choosing a session is meant to move into the greeter.
+
+- `greeter.qml` (third entry point, next to `shell.qml`/`lock.qml`) hosts `lock/LockView.qml` — the
+  body of the old `LockSurface`, now a plain Item — in one ordinary `FloatingWindow`: cage has no
+  ext-session-lock and shows one window. `LockSurface` is now a thin `WlSessionLockSurface` around it.
+- Greeter behaviour is `LockState.greeter` (`IONIX_GREETER=1`, set by `bin/ionix-greeter`). Password
+  checking moves to greetd in `lock/GreeterBackend.qml`, **loaded through a `Loader` only there** so
+  the lock still works on a Quickshell built without `Quickshell.Services.Greetd`. It opens a greetd
+  session as soon as a username exists (not at Enter), so `pam_fprintd` in `/etc/pam.d/greetd`
+  (`ionix-fingerprint enable` wires it) listens immediately; the password prompt is answered once Enter
+  has been pressed. Cost: with a sensor and an enrolled finger, a password typed during the 10 s
+  fingerprint window waits for it to time out. Editing the username cancels the session and opens
+  another (debounced).
+- **Quickshell's `Greetd` (0.3.1) pairs greetd's replies by its current state, not by request.** Every
+  `cancel_session` — including the one it sends itself after a wrong password — gets a `success`
+  reply, and if a new session is already `Authenticating` when it lands, that is read as "password
+  accepted": `readyToLaunch` fires, and the next stray `success` even reads as "session launched",
+  so the greeter quits with nobody logged in. A wrong password logged "in" this way until
+  `GreeterBackend` learned to open sessions only after a `settle` delay, to believe `readyToLaunch`
+  only if the session answered its prompt or saw a fingerprint message, and never to call `Greetd`
+  from inside its own signals (it emits `authFailure` before resetting itself).
+- Under greetd the greeter's stdout is discarded, so `ionix-greeter` sends it to the journal with
+  greetd debug on: `journalctl -t ionix-greeter` (add `-b -1` for a previous boot).
+- Keys go to the password buffer by default; the username `TextInput` takes them only while
+  `LockState.usernameEditing` (click it, or Tab/Up; Enter/Tab/Down hands back). No screensaver in the greeter.
+- `IONIX_GREETER_DRY=1` skips greetd: PAM (`lock/pam/password`, with `PamContext.user`) checks the
+  typed user's password and nothing launches. Try it from a session with
+  `IONIX_GREETER_DRY=1 IONIX_GREETER_ENTRY=<checkout>/ionix/greeter.qml cage -s -- <checkout>/bin/ionix-greeter`
+  (opens as a nested window). `greetd` itself is not needed for that.
+- **Last user's look.** The `greeter` account cannot read `/home`, so `bin/ionix-greeter-sync` (run by
+  `init.sh`, `ionix-wallpaper`, `ionix-cycle-wallpaper` and `ionixtheme`; a no-op without the greeter)
+  copies the user's shell config/theme/settings JSON, `current-theme`, avatar, the `awww query`
+  wallpapers and any `lock.background` image/video/slideshow into
+  `/var/lib/ionix-greeter/users/<name>/home` — world-readable, paths rewritten. `users/` is sticky
+  1777 (`etc/tmpfiles.d/ionix-greeter.conf`) so each user writes only their own directory. On success
+  the greeter writes `/var/lib/ionix-greeter/last-user`; `ionix-greeter` points `HOME` at that copy, so
+  Config, Theme and `LockMedia` (which reads `wallpapers.json` instead of asking awww) need no changes.
+- `greetd.service` `Conflicts=` getty@tty1; enabling it with `--force` is deliberate (another display manager may hold
+  `display-manager.service`).
+
 **The calendar is a daemon plus two files, never HTTP in QML.** `submodules/ionix-quickshell/bin/ionix-calendar`
 (stdlib-only Python, no msal) is spawned by `services/Calendar.qml` as a child of the shell whenever
 `calendar.provider` is not `none` (default `local`), takes commands on stdin (`sync`, `reload`,
@@ -255,10 +308,29 @@ in its own centre and the blocked `notify-send` printing `join` is the cue to op
 
 - **Compositor:** Hyprland (Wayland) managed by UWSM
 - **Panel:** ionix-quickshell (QML/Quickshell) — bar, popouts and OSD. Started by the
-  `ionix-quickshell` systemd **user unit** (pre-enabled via the `/etc/skel` symlink), not by
+  `ionix-quickshell` systemd **user unit** (pre-enabled via the `/etc/skel` symlink, under
+  `graphical-session.target`), not by
   `exec-once`, so a QML runtime error self-heals via `Restart=on-failure`
 - **Panel (fallback):** Waybar is still installed and its themes still ship, but nothing starts it
   automatically. `Ctrl+Super+Shift+B` launches it if the Quickshell bar misbehaves
+- **Session services** are user units enabled for every new account by symlinks in
+  `etc/skel/.config/systemd/user/graphical-session.target.wants/`: `ionix-quickshell`,
+  `ioexplorer-desktop`/`-quick`/`-spotlight` and `hyprpolkitagent`. `ionix-quickshell` used to sit in
+  `default.target.wants`: it then started before Hyprland, crashed with no display, and only showed
+  because its restart happened to land after the compositor — and a relogin within ~10 s of logout
+  (the user manager still alive, `default.target` already reached) never started it at all.
+  Graphical ones belong under `graphical-session.target` even when their own `[Install]` says
+  `default.target`: under greetd the user manager (and so `default.target`) starts at PAM login,
+  before Hyprland exists, and they would crash-loop with no display. `ioexplorer-portal` has no
+  `[Install]` — it is D-Bus activated, and only ever asked for because
+  `etc/xdg/xdg-desktop-portal/hyprland-portals.conf` names it the FileChooser (its `.portal` file
+  still uses `UseIn=`, which xdg-desktop-portal no longer reads).
+- **Keyring:** unlocked with the login password by `pam_gnome_keyring` in `/etc/pam.d/greetd`
+  (auth + `session … auto_start`) and kept in step by `/etc/pam.d/passwd`; `ionix-post-install` adds
+  those lines, because both files belong to packages. The greeter's own session uses
+  `etc/pam.d/greetd-greeter` (greetd prefers it over `greetd`), keyring-free — without it the
+  `greeter` account tried to start a keyring with no home. Only a *password* login unlocks it:
+  autologin and a fingerprint at the greeter leave it locked until first use.
 - **Terminal:** kitty (primary), foot, tabby
 - **Shell:** fish + oh-my-posh
 - **Login flow:** TTY autologin → fish → auto-starts Hyprland via UWSM
@@ -272,7 +344,8 @@ in its own centre and the blocked `notify-send` printing `join` is the cue to op
   the session-start lock in `init.sh` all go through it
 - `grub-install` — PATH-priority wrapper adding `--no-nvram`, so a plain `grub-install` call
   from inside the Calamares chroot does not fail trying to write EFI NVRAM
-- `ionix-session-selector` / `ionix-arrange-workspace` — session and workspace helpers
+- `ionix-arrange-workspace` — workspace helper
+- `ionix-login-mode` — greeter / autologin / locked; survives onto the installed system
 - `ionix-fingerprint` — fingerprint reader support; survives onto the installed system
 - `ionix-extras` — installs the optional bundles; survives onto the installed system
 

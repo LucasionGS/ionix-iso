@@ -24,24 +24,21 @@ LOG=/var/log/ionix-extras.log
 SUDOERS_DROPIN=/etc/sudoers.d/99-ionix-extras
 PACMAN_CONF=/etc/pacman.conf
 
-BUNDLES=(gaming gnome obs tabby)
+BUNDLES=(gaming obs tabby)
 
 declare -A TITLE=(
     [gaming]="Gaming"
-    [gnome]="GNOME desktop"
     [obs]="OBS Studio"
     [tabby]="Tabby terminal"
 )
 # lib32-* need [multilib]; enable_multilib below makes sure it is on.
 declare -A REPO_PKGS=(
     [gaming]="steam gamemode lib32-gamemode mangohud lib32-mangohud gamescope lutris antimicrox lib32-libpulse wine-staging winetricks wine-mono wine-gecko"
-    [gnome]="gnome gnome-tweaks gnome-shell-extensions xdg-desktop-portal-gnome dconf-editor"
     [obs]="obs-studio"
     [tabby]=""
 )
 declare -A AUR_PKGS=(
     [gaming]="protonup-qt"
-    [gnome]=""
     [obs]=""
     [tabby]="tabby-bin"
 )
@@ -50,7 +47,6 @@ declare -A AUR_PKGS=(
 # bundle pending even though the repo half went in.
 declare -A MARKER_PKGS=(
     [gaming]="steam protonup-qt"
-    [gnome]="gnome-session"
     [obs]="obs-studio"
     [tabby]="tabby-bin"
 )
@@ -200,15 +196,11 @@ cmd_install() {
     done
     local -a keep=()
     while read -r b; do
-        [[ -n "$b" ]] && ! printf '%s\n' "${todo[@]}" | grep -qx "$b" && keep+=("$b")
+        # is_bundle: a bundle this version no longer offers (GNOME, dropped in
+        # 2026.09) would otherwise stay "pending" forever.
+        [[ -n "$b" ]] && is_bundle "$b" && ! printf '%s\n' "${todo[@]}" | grep -qx "$b" && keep+=("$b")
     done < <(read_pending)
     write_pending "${keep[@]}" "${still[@]}"
-
-    # The GNOME boot entry is generated only when gnome-session exists (see
-    # /etc/grub.d/11_ionix_gnome), so a new GNOME needs a fresh grub.cfg.
-    if printf '%s\n' "${todo[@]}" | grep -qx gnome && is_installed gnome && [[ -f /boot/grub/grub.cfg ]]; then
-        grub-mkconfig -o /boot/grub/grub.cfg || warn "grub-mkconfig failed; run it yourself to get the GNOME boot entry."
-    fi
 
     if [[ ${#still[@]} -eq 0 ]]; then
         msg "Done: ${todo[*]}"

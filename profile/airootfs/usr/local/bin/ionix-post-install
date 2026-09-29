@@ -28,16 +28,14 @@ fi
 # Set fish as root shell too
 chsh -s /usr/bin/fish root 2>/dev/null || true
 
-# Configure autologin for the installed user. This happens either way: the
-# session then opens behind ionix-lock (etc/hypr/scripts/init.sh), which is what
-# asks for the password. "Log in automatically" on the users page only removes
-# that lock, via the marker below.
+# How the installed system starts. The tty1 autologin drop-in is written either
+# way: it is what the two non-greeter modes run.
+#
+# "Log in automatically" on the users page picks `autologin` (straight to the
+# desktop). Otherwise the default is the greeter: greetd → cage → ionix-greeter
+# asks for username and password. `ionix-login-mode locked` is the old
+# behaviour, a session that opens behind ionix-lock.
 mkdir -p /etc/ionix
-if [[ "$IONIX_AUTOLOGIN" == "yes" ]]; then
-    touch /etc/ionix/skip-session-lock
-else
-    rm -f /etc/ionix/skip-session-lock
-fi
 if [[ -n "$NEWUSER" ]]; then
     mkdir -p /etc/systemd/system/getty@tty1.service.d
     cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << AUTOLOGIN
@@ -46,6 +44,39 @@ ExecStart=
 ExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $NEWUSER - \$TERM
 AUTOLOGIN
 fi
+if [[ "$IONIX_AUTOLOGIN" == "yes" ]]; then
+    ionix-login-mode autologin
+else
+    # A machine that somehow lacks greetd/cage keeps the old locked session.
+    ionix-login-mode greeter || ionix-login-mode locked
+fi
+
+# Unlock the GNOME keyring with the login password, so apps using libsecret
+# (browsers, the calendar token, ssh keys) never ask for it again after boot.
+# The greeter's password goes through greetd's PAM stack: the auth line keeps
+# it, the session line starts gnome-keyring-daemon and unlocks the `login`
+# keyring with it, creating that keyring on an account that has none yet.
+# Hyprland's own `gnome-keyring-daemon --start` then attaches to that daemon.
+# passwd gets the password line so a password change re-encrypts the keyring
+# too; otherwise the two drift apart and the prompt comes back.
+#
+# Only a password login can do this. Autologin and a fingerprint at the
+# greeter hand PAM no password, so the keyring stays locked until first use.
+# Edited here rather than shipped in the ISO overlay: both files belong to
+# packages (greetd, pambase), and pacman would refuse to install over them.
+pam_add_after() {  # <file> <line to add> <awk regex of the line to add it after>
+    local f=$1 line=$2 after=$3
+    [[ -f "$f" ]] || return 0
+    grep -qF -- "$line" "$f" && return 0
+    awk -v line="$line" -v after="$after" '
+        { print }
+        !done && $0 ~ after { print line; done = 1 }
+        END { if (!done) print line }
+    ' "$f" > "$f.ionix" && cat "$f.ionix" > "$f" && rm -f "$f.ionix"
+}
+pam_add_after /etc/pam.d/greetd "auth       optional     pam_gnome_keyring.so" '^auth[[:space:]]+include'
+pam_add_after /etc/pam.d/greetd "session    optional     pam_gnome_keyring.so auto_start" '^session[[:space:]]+include'
+pam_add_after /etc/pam.d/passwd "password   optional     pam_gnome_keyring.so" '^password[[:space:]]'
 
 # Desktop theme and bar position from the Personalize page. ionixtheme needs a
 # running session (the adaptive theme reads the wallpaper), so the theme is only
@@ -111,6 +142,12 @@ if [[ ! -f /boot/vmlinuz-linux && -f "/usr/lib/modules/$KVER/vmlinuz" ]]; then
     install -Dm644 "/usr/lib/modules/$KVER/vmlinuz" /boot/vmlinuz-linux
 fi
 
+# The live ISO keeps its journal in RAM (archiso's volatile-storage.conf), and
+# unpackfs copied that onto the target too, so an installed system lost every
+# log on reboot. Without it journald's default Storage=auto persists to
+# /var/log/journal, which the systemd package ships.
+rm -f /etc/systemd/journald.conf.d/volatile-storage.conf
+
 # Remove archiso mkinitcpio config and replace the archiso-only preset
 # with a standard one before regenerating. Without this, mkinitcpio -P
 # would have no presets to build and leave the archiso initramfs (with
@@ -171,7 +208,5 @@ rm -f /usr/local/bin/ionix-install
 rm -f /usr/local/bin/grub-install
 rm -f /usr/local/bin/ionix-post-install
 
-# Compile dconf database for system-wide GNOME defaults
-dconf update 2>/dev/null || true
 
 echo "Ionix post-install completed."

@@ -1,32 +1,10 @@
 # Ionix Fish Configuration
 
 set -gx SSH_AUTH_SOCK "$XDG_RUNTIME_DIR/keyring/ssh"
-# Auto-start desktop session via UWSM on TTY1
+# Auto-start the desktop session via UWSM on TTY1: the autologin and locked
+# login modes land here (ionix-login-mode); the greeter starts it through greetd.
 if status is-login; and test (tty) = /dev/tty1
-    # Read session from kernel cmdline (set by GRUB: ionix.desktop=hyprland|gnome)
-    set session (string match -r 'ionix\.desktop=(\S+)' < /proc/cmdline | tail -1)
-
-    if test -z "$session"
-        set session hyprland
-    end
-
-    switch $session
-        case gnome
-            set -gx XDG_SESSION_TYPE wayland
-            set -gx XDG_CURRENT_DESKTOP GNOME
-            set -gx XDG_SESSION_DESKTOP gnome
-            set -gx GNOME_SHELL_SESSION_MODE gnome
-            set -gx MOZ_ENABLE_WAYLAND 1
-
-            set -gx LIBVA_DRIVER_NAME nvidia
-            set -gx GBM_BACKEND nvidia-drm
-            set -gx __GLX_VENDOR_LIBRARY_NAME nvidia
-            set -gx WLR_NO_HARDWARE_CURSORS 1
-            
-            sudo /usr/bin/systemctl start gdm.service
-        case '*'
-            uwsm start hyprland-uwsm.desktop
-    end
+    uwsm start hyprland-uwsm.desktop
 end
 
 # Initialize oh-my-posh with the Ionix theme

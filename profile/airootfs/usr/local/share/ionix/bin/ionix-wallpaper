@@ -68,3 +68,8 @@ if [ -n "$FILE_PATH" ]; then
   # out of `awww query`, which would race the 2s transition above.
   /usr/local/share/ionix/bin/ionix-adaptive-colors --wallpaper "$FILE_PATH" --quiet || true
 fi
+
+# Leave the login greeter a copy of this look (theme, wallpaper, avatar) for the
+# next boot. After the 2s wallpaper transition, so `awww query` has settled;
+# backgrounded, and a no-op where the greeter is not installed.
+( sleep 3; ionix-greeter-sync --quiet ) >/dev/null 2>&1 &

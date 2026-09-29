@@ -104,6 +104,9 @@ xorg-xwayland
 hyprland
 hypridle
 hyprlock
+# Login greeter: greetd runs cage, and cage runs ionix-greeter.
+cage
+greetd
 hyprpolkitagent
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
@@ -125,7 +128,7 @@ wlr-protocols
 swaync
 
 # --- Optional bundles ---
-# GNOME, the gaming stack, OBS Studio and Tabby are not on the medium. The
+# The gaming stack, OBS Studio and Tabby are not on the medium. The
 # installer's Software page offers them and /usr/local/bin/ionix-extras downloads
 # them at the end of the install (or any time later: `sudo ionix-extras install
 # <bundle>`). The package lists live in that script.

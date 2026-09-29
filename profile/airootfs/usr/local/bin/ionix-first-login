@@ -24,10 +24,11 @@ gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null
 gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
 gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true
 
-# Load Ionix GNOME defaults (keybindings, theme, shell settings)
-# These are user-level dconf settings applied on first login.
-if [[ -f /usr/local/share/ionix/gnome-defaults.dconf ]]; then
-    dconf load / < /usr/local/share/ionix/gnome-defaults.dconf 2>/dev/null || true
+# Fonts, cursor and dark mode for GTK apps. They read these from the
+# org.gnome.desktop.interface schema whatever the desktop is (as do the GTK
+# settings portal and Chrome), so this is not GNOME-only despite the name.
+if [[ -f /usr/local/share/ionix/gtk-defaults.dconf ]]; then
+    dconf load / < /usr/local/share/ionix/gtk-defaults.dconf 2>/dev/null || true
 fi
 
 # Theme picked on the installer's Personalize page. ionix-post-install can only

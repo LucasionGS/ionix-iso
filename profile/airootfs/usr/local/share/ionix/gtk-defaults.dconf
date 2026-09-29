@@ -1,0 +1,10 @@
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Adwaita-dark'
+icon-theme='Papirus-Dark'
+cursor-theme='Adwaita'
+cursor-size=24
+font-name='Noto Sans 11'
+monospace-font-name='JetBrainsMono Nerd Font 11'
+document-font-name='Noto Sans 11'
+enable-animations=true
