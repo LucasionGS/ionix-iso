@@ -1,7 +1,7 @@
 GRUB_DEFAULT=0
 GRUB_TIMEOUT=5
 GRUB_DISTRIBUTOR="Ionix"
-GRUB_CMDLINE_LINUX_DEFAULT="quiet loglevel=3 ionix.desktop=hyprland"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet loglevel=3"
 GRUB_CMDLINE_LINUX=""
 
 # Disable os-prober: it requires an X display and is not needed for single-boot installs.

@@ -209,6 +209,9 @@ main() {
     save_current_theme "$theme"
 
     ok "Theme switched to '$theme'"
+
+    # The login greeter wears the last user's theme; hand it this one.
+    ( sleep 1; ionix-greeter-sync --quiet ) >/dev/null 2>&1 &
 }
 
 main "$@"

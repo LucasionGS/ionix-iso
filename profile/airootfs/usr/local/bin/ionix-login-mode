@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# ionix-login-mode — how this machine gets from power-on to a desktop.
+#
+#   greeter     greetd → cage → ionix-greeter: type username and password, then
+#               the session starts as that user. The default on an installed
+#               system.
+#   autologin   tty1 autologin straight into the session, no lock, no password.
+#               What ticking "log in automatically" in the installer selects.
+#   locked      tty1 autologin, and the session opens behind ionix-lock, whose
+#               password prompt is the login. How Ionix used to behave.
+#   status      print the current mode.
+#
+# The live ISO never runs this: it always autologins as liveuser.
+set -euo pipefail
+
+MARKER=/etc/ionix/login-mode
+SKIP_LOCK=/etc/ionix/skip-session-lock   # read by etc/hypr/scripts/init.sh
+
+current() {
+    if systemctl is-enabled --quiet greetd.service 2>/dev/null; then
+        echo greeter
+    elif [[ -e $SKIP_LOCK ]]; then
+        echo autologin
+    else
+        echo locked
+    fi
+}
+
+mode="${1:-status}"
+case "$mode" in
+status)
+    current
+    exit 0
+    ;;
+greeter | autologin | locked) ;;
+*)
+    echo "usage: ionix-login-mode greeter|autologin|locked|status" >&2
+    exit 2
+    ;;
+esac
+
+[[ $EUID -eq 0 ]] || { echo "ionix-login-mode: run as root (sudo)" >&2; exit 1; }
+
+mkdir -p /etc/ionix
+case "$mode" in
+greeter)
+    if [[ ! -x /usr/bin/greetd || ! -x /usr/bin/cage ]]; then
+        echo "ionix-login-mode: greetd and cage must be installed" >&2
+        exit 1
+    fi
+    # The session is reached by logging in, so there is nothing to lock again.
+    touch "$SKIP_LOCK"
+    systemd-tmpfiles --create /etc/tmpfiles.d/ionix-greeter.conf 2>/dev/null || true
+    # --force: greetd claims display-manager.service, which a display manager
+    # installed by hand may already hold.
+    systemctl enable --force greetd.service
+    ;;
+autologin)
+    systemctl disable greetd.service 2>/dev/null || true
+    touch "$SKIP_LOCK"
+    ;;
+locked)
+    systemctl disable greetd.service 2>/dev/null || true
+    rm -f "$SKIP_LOCK"
+    ;;
+esac
+echo "$mode" > "$MARKER"
+echo "login mode: $mode (takes effect at next boot)"

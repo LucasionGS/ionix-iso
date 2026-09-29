@@ -12,3 +12,7 @@ sleep 1 && ! find ~/.cache/awww -type f -print -quit 2>/dev/null | grep -q . && 
 # another session, and nothing persists the generated files across a reinstall.
 # Backgrounded because a session start should never wait on it.
 /usr/local/share/ionix/bin/ionix-adaptive-colors --quiet &
+
+# Leave the login greeter a copy of this user's theme and wallpaper (once awww is
+# up). A no-op where the greeter is not installed.
+( sleep 4; ionix-greeter-sync --quiet ) >/dev/null 2>&1 &

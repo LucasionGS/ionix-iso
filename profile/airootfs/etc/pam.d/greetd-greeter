@@ -1,0 +1,15 @@
+#%PAM-1.0
+# The PAM stack greetd uses for the greeter's *own* session (the `greeter`
+# account running cage + ionix-greeter). greetd looks for this service first and
+# only falls back to `greetd` when it is missing.
+#
+# It exists so the greeter does not share the user login stack: ionix-post-install
+# adds pam_gnome_keyring to /etc/pam.d/greetd to unlock the keyring with the
+# login password, and without this file the greeter account went through it too,
+# starting a keyring daemon with no home (`unable to create keyring dir:
+# /.local/share/keyrings`). This is greetd's stock stack, keyring-free.
+auth       required     pam_securetty.so
+auth       requisite    pam_nologin.so
+auth       include      system-local-login
+account    include      system-local-login
+session    include      system-local-login

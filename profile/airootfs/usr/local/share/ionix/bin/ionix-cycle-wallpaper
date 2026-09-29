@@ -77,3 +77,8 @@ done
 # Calling this inside the loop would regenerate N times and leave whichever
 # display happened to be iterated last. A no-op unless the theme opted in.
 /usr/local/share/ionix/bin/ionix-adaptive-colors --quiet || true
+
+# Leave the login greeter a copy of this look (theme, wallpaper, avatar) for the
+# next boot. After the 2s wallpaper transition, so `awww query` has settled;
+# backgrounded, and a no-op where the greeter is not installed.
+( sleep 3; ionix-greeter-sync --quiet ) >/dev/null 2>&1 &
