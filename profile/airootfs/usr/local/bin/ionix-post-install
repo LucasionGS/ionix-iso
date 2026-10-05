@@ -61,7 +61,9 @@ fi
 # too; otherwise the two drift apart and the prompt comes back.
 #
 # Only a password login can do this. Autologin and a fingerprint at the
-# greeter hand PAM no password, so the keyring stays locked until first use.
+# greeter hand PAM no password, so the keyring stays locked until first use —
+# except that ionix-lock's own password stack (lock/pam/password in
+# ionix-quickshell) unlocks it too, which covers the `locked` login mode.
 # Edited here rather than shipped in the ISO overlay: both files belong to
 # packages (greetd, pambase), and pacman would refuse to install over them.
 pam_add_after() {  # <file> <line to add> <awk regex of the line to add it after>
