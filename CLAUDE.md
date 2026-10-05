@@ -330,7 +330,11 @@ in its own centre and the blocked `notify-send` printing `join` is the cue to op
   those lines, because both files belong to packages. The greeter's own session uses
   `etc/pam.d/greetd-greeter` (greetd prefers it over `greetd`), keyring-free — without it the
   `greeter` account tried to start a keyring with no home. Only a *password* login unlocks it:
-  autologin and a fingerprint at the greeter leave it locked until first use.
+  autologin and a fingerprint at the greeter leave it locked until first use. The exception is
+  `ionix-lock`: its `lock/pam/password` stack runs `pam_gnome_keyring` after `pam_unix`, and the
+  module reaches the session's daemon via `$XDG_RUNTIME_DIR/keyring/control`, so a password typed
+  at any lock (the `locked` mode's session-start one included) unlocks it. All of these unlock the
+  keyring named **`login`** only; a default keyring under any other name keeps prompting.
 - **Terminal:** kitty (primary), foot, tabby
 - **Shell:** fish + oh-my-posh
 - **Login flow:** TTY autologin → fish → auto-starts Hyprland via UWSM
