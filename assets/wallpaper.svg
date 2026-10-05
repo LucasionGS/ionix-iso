@@ -1,8 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="3840" height="2160">
-  <!-- Ionix default wallpaper. The mark is the one from ionix-logo.svg and the
-       wordmark is JetBrains Mono Bold converted to outlines, so the render does not
-       depend on which fonts the build container has. Palette: CLAUDE.md core roles
-       plus the logo's own #c385ff -> #a0e6ff gradient. -->
+  <!-- Ionix default wallpaper. The mark is the one from ionix-logo.svg. Palette:
+       CLAUDE.md core roles plus the logo's own #c385ff -> #a0e6ff gradient. -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b0714"/>
@@ -40,10 +38,6 @@
     <linearGradient id="gem" gradientUnits="userSpaceOnUse" x1="150" y1="40" x2="362" y2="472">
       <stop offset="0" stop-color="#c385ff"/>
       <stop offset="1" stop-color="#a0e6ff"/>
-    </linearGradient>
-    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#e2d9f3"/>
-      <stop offset="1" stop-color="#c4b5fd"/>
     </linearGradient>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="22" result="b"/>
@@ -222,11 +216,6 @@
     <path d="M256.0,192.2L296.3,256.0L256.0,319.8L215.7,256.0Z" fill="#0f0a18"/>
     <path d="M256.0,28.0L202.7,112.4L224.0,176.7L224.0,176.7L173.9,256.0L221.5,331.4L213.7,348.6L155.2,256.0L198.5,187.4L192.6,128.3L112.0,256.0L256.0,484.0L309.3,399.6L288.0,335.3L288.0,335.3L338.1,256.0L290.5,180.6L298.3,163.4L356.8,256.0L313.5,324.6L319.4,383.7L400.0,256.0L256.0,28.0ZM256.0,192.2L296.3,256.0L256.0,319.8L215.7,256.0Z" fill="url(#gem)" fill-rule="evenodd" stroke="#0f0a18" stroke-width="4" stroke-linejoin="round" filter="url(#glow)"/>
     <path d="M256.0,208L286,256L256.0,304L226,256Z" fill="#a855f7" opacity="0.14" filter="url(#glow)"/>
-  </g>
-
-  <!-- Wordmark -->
-  <g transform="translate(1530.0 1485)" opacity="0.92">
-    <path d="M13.5 0.0V-16.95H35.55V-92.55H13.5V-109.5H76.5V-92.55H54.449999999999996V-16.95H76.5V0.0Z M217.5 1.5Q201.75 1.5 192.525 -7.5Q183.3 -16.5 183.3 -32.4V-77.1Q183.3 -93.0 192.525 -102.0Q201.75 -111.0 217.5 -111.0Q233.25 -111.0 242.475 -102.0Q251.7 -93.0 251.7 -77.25V-32.4Q251.7 -16.5 242.475 -7.5Q233.25 1.5 217.5 1.5ZM217.5 -15.0Q225.15 -15.0 229.05 -19.125Q232.95 -23.25 232.95 -30.9V-78.6Q232.95 -86.25 229.05 -90.375Q225.15 -94.5 217.5 -94.5Q209.85 -94.5 205.95 -90.375Q202.05 -86.25 202.05 -78.6V-30.9Q202.05 -23.25 205.95 -19.125Q209.85 -15.0 217.5 -15.0Z M355.8 0.0V-109.5H378.75L409.2 -21.0Q408.75 -25.8 408.3 -32.325Q407.85 -38.85 407.475 -45.6Q407.1 -52.35 407.1 -57.599999999999994V-109.5H424.2V0.0H401.25L371.1 -88.5Q371.4 -84.14999999999999 371.85 -78.0Q372.3 -71.85 372.6 -65.39999999999999Q372.9 -58.949999999999996 372.9 -53.55V0.0Z M531.0 0.0V-16.95H553.05V-92.55H531.0V-109.5H594.0V-92.55H571.95V-16.95H594.0V0.0Z M694.2 0.0 724.5 -56.1 696.0 -109.5H717.0L730.8 -82.05Q732.3 -79.05 733.5 -76.275Q734.7 -73.5 735.3 -72.0Q735.75 -73.5 736.95 -76.275Q738.15 -79.05 739.65 -82.05L753.6 -109.5H774.0L745.5 -56.55L775.8 0.0H754.8L739.35 -30.299999999999997Q737.85 -33.15 736.575 -36.075Q735.3 -39.0 734.7 -40.65Q734.1 -39.0 732.9000000000001 -36.15Q731.7 -33.3 730.2 -30.299999999999997L714.6 0.0Z" fill="url(#word)"/>
   </g>
 
   <rect width="3840" height="2160" fill="url(#vignette)"/>
