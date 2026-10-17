@@ -134,6 +134,7 @@ swaync
 # <bundle>`). The package lists live in that script.
 
 # --- Terminal and Shell ---
+# ionterm (the default) is ionterm-git, in the AUR block below
 kitty
 foot
 fish
@@ -244,5 +245,6 @@ openconnect-sso-git
 ionix-openconnect-tools
 ionix-file-manager-git
 ioexplorer-git
+ionterm-git
 ionix-quickshell-git
 grim-hyprland-git

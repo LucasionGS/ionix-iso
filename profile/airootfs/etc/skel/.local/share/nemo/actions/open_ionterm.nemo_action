@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Open in ionterm
+Comment=Launch the current directory in ionterm
+Exec=ionterm -e fish -C "cd %F && exec fish"
+Selection=None
+Extensions=dir;
+Icon-Name=utilities-terminal-symbolic
+Dependencies=ionterm

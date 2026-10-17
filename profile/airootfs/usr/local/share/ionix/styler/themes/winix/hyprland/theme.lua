@@ -77,10 +77,10 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 5, bezier = "winixFl
 hl.layer_rule({ match = { namespace = "ionix-bar" }, animation = "slide bottom" })
 
 -- Near-opaque terminal — Windows Terminal ships opaque, and the base config's 0.8/0.9
--- kitty rules would otherwise stay in force. These multiply with kitty's own
+-- terminal rules would otherwise stay in force. These multiply with the terminal's own
 -- background_opacity (0.94), landing around 0.90 unfocused and 0.94 focused.
-hl.window_rule({ match = { class = "kitty" }, opacity = "0.96" })
-hl.window_rule({ match = { class = "kitty", focus = true }, opacity = "1.0" })
+hl.window_rule({ match = { class = "kitty|ionterm" }, opacity = "0.96" })
+hl.window_rule({ match = { class = "kitty|ionterm", focus = true }, opacity = "1.0" })
 
 -- ── hyprbars ──────────────────────────────────────────────────
 -- Geometry, glyphs and actions stay with /etc/hypr/hyprland.lua; this only

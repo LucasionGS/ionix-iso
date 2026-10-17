@@ -335,7 +335,8 @@ in its own centre and the blocked `notify-send` printing `join` is the cue to op
   module reaches the session's daemon via `$XDG_RUNTIME_DIR/keyring/control`, so a password typed
   at any lock (the `locked` mode's session-start one included) unlocks it. All of these unlock the
   keyring named **`login`** only; a default keyring under any other name keeps prompting.
-- **Terminal:** kitty (primary), foot, tabby
+- **Terminal:** ionterm (primary, AUR `ionterm-git`; window class `ionterm`, themed by the styler's
+  `ionterm/theme.toml` section, which it hot-reloads), kitty, foot, tabby
 - **Shell:** fish + oh-my-posh
 - **Login flow:** TTY autologin → fish → auto-starts Hyprland via UWSM
 

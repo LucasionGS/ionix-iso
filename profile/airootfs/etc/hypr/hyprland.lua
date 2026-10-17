@@ -156,11 +156,11 @@ local function bind_resize_active(keys, x_delta, y_delta)
 end
 
 -- ── Applications ──────────────────────────────────────────────
-bind_exec(mainMod .. " + T", "kitty")
+bind_exec(mainMod .. " + T", "ionterm")
 bind_exec("CTRL + ALT + T", "tabby")
 bind_exec(mainMod .. " + W", "google-chrome-stable")
 bind_exec(mainMod .. " + E", "ioexplorer")
-bind_exec(mainMod .. " + B", "kitty btop")
+bind_exec(mainMod .. " + B", "ionterm -e btop")
 bind_exec(mainMod .. " + SUPER_L", "qs -c ionix ipc call start toggle || ioexplorer-spotlight")
 bind_exec("ALT + Space", "ioexplorer-spotlight")
 bind_exec(mainMod .. " + R", "ioexplorer-spotlight")
@@ -363,9 +363,9 @@ hl.window_rule({ match = { float = true }, center = true })
 hl.window_rule({ match = { title = "(Picture in picture)" }, float = true })
 hl.window_rule({ match = { title = "(Picture in picture)" }, pin = true })
 
--- Kitty transparency
-hl.window_rule({ match = { class = "kitty" }, opacity = "0.8" })
-hl.window_rule({ match = { class = "kitty", focus = true }, opacity = "0.9" })
+-- Terminal transparency
+hl.window_rule({ match = { class = "kitty|ionterm" }, opacity = "0.8" })
+hl.window_rule({ match = { class = "kitty|ionterm", focus = true }, opacity = "0.9" })
 
 -- Kitty:float floats at 80% of the monitor it opens on
 hl.window_rule({ match = { class = "kitty:float" }, float = true, size = { 1280, 768 }, center = true })

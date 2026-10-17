@@ -35,5 +35,5 @@ set -gx PATH "$HOME/.local/bin:$PATH"
 # Environment
 set -gx EDITOR nvim
 set -gx VISUAL nvim
-set -gx TERMINAL kitty
+set -gx TERMINAL ionterm
 set -gx BROWSER google-chrome-stable
