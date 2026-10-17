@@ -71,9 +71,9 @@ hl.animation({ leaf = "windows", enabled = true, speed = 4, bezier = "ionixProNe
 hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "ionixProNeon", style = "slidefade 20%" })
 
 -- Glassier terminal to match the bar. These re-declare rules the base config
--- already sets for kitty; later window_rules win, so these are the ones that apply.
-hl.window_rule({ match = { class = "kitty" }, opacity = "0.72" })
-hl.window_rule({ match = { class = "kitty", focus = true }, opacity = "0.86" })
+-- already sets for the terminals; later window_rules win, so these are the ones that apply.
+hl.window_rule({ match = { class = "kitty|ionterm" }, opacity = "0.72" })
+hl.window_rule({ match = { class = "kitty|ionterm", focus = true }, opacity = "0.86" })
 
 hl.window_rule({
   match = { float = true },

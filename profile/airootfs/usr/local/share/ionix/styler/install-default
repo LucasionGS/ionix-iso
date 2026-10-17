@@ -240,6 +240,42 @@ ionix_uninstall_kitty() {
   # If no backup exists, keep it to avoid deleting user configuration
 }
 
+# ionterm (the default terminal)
+#
+# Only the colours are ours: theme.toml sits next to the user's ionterm.toml,
+# which ionterm reads separately, so unlike kitty nothing they wrote is replaced.
+ionix_install_ionterm() {
+  local dest="$HOME/.config/ionterm"
+  local theme="$dest/theme.toml"
+  mkdir -p "$dest"
+
+  # A real file here is the user's own palette; keep it, numbered, rather than
+  # overwrite it (same reasoning as ioexplorer's theme.css).
+  if [[ -f "$theme" && ! -L "$theme" ]]; then
+    local backup="$theme.bak"
+    local n=1
+    while [[ -e "$backup" ]]; do
+      backup="$theme.bak.$((n++))"
+    done
+
+    msg "ionterm: existing theme.toml found, backing up to $(basename "$backup")"
+    mv "$theme" "$backup"
+  fi
+
+  # No reload nudge: ionterm watches ~/.config/ionterm and picks up the new
+  # symlink within about 250 ms.
+  ln -sf "$(ionix_theme_file ionterm theme.toml)" "$theme"
+}
+
+ionix_uninstall_ionterm() {
+  local theme="$HOME/.config/ionterm/theme.toml"
+  if [[ -L "$theme" ]]; then
+    rm -f "$theme"
+  elif [[ -e "$theme" ]]; then
+    msg "ionterm: theme.toml is not our symlink, keeping it"
+  fi
+}
+
 # Thunderbird
 IONIX_TB_MARK="ionix-styler"
 

@@ -38,6 +38,7 @@ AUR_PACKAGES=(
     "ionix-openconnect-tools"
     "ionix-file-manager-git"
     "ioexplorer-git"
+    "ionterm-git"                      # Default terminal
 )
 # tabby-bin and the gaming stack (protonup-qt, with its python-inputs and
 # python-steam dependencies) are optional bundles, built on the installed system
