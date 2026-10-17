@@ -5,8 +5,12 @@
 # ionix-post-install drops skip-session-lock when "Log in automatically" was
 # ticked in the installer.
 [[ ! -d /run/archiso && ! -e /etc/ionix/skip-session-lock ]] && ionix-lock &
-# Start awww-daemon, and set wallpaper on first login
-sleep 1 && ! find ~/.cache/awww -type f -print -quit 2>/dev/null | grep -q . && awww img /usr/local/share/ionix/wallpaper.png
+# Set the wallpaper on first login. hyprland.lua starts awww-daemon alongside
+# this script, so wait until it answers rather than for a fixed time: under
+# software rendering (a VM, no GPU driver yet) it takes longer than a second,
+# and an `awww img` sent before then fails silently and leaves a black screen.
+for _ in {1..40}; do awww query &>/dev/null && break; sleep 0.25; done
+! find ~/.cache/awww -type f -print -quit 2>/dev/null | grep -q . && awww img /usr/local/share/ionix/wallpaper.png
 # Re-derive wallpaper colours if the active theme uses them. Unconditional, not
 # gated on the first-login test above: the wallpaper may have changed from
 # another session, and nothing persists the generated files across a reinstall.
