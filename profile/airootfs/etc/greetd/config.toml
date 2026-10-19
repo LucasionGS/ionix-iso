@@ -1,10 +1,12 @@
 # greetd, for `ionix-login-mode greeter`. The greeter is ionix-greeter (the lock
 # screen with a username field) in cage, a compositor that shows one fullscreen
 # app and nothing else. `-s` lets it switch VTs, which greetd needs to hand the
-# screen to the session.
+# screen to the session. ionix-drm-devices points cage (wlroots) at the real
+# GPU rather than the firmware framebuffer, the same choice uwsm makes for
+# Hyprland through /etc/xdg/uwsm/env-hyprland.d.
 [terminal]
 vt = 1
 
 [default_session]
-command = "cage -s -- ionix-greeter"
+command = "/usr/local/bin/ionix-drm-devices --exec WLR_DRM_DEVICES cage -s -- ionix-greeter"
 user = "greeter"

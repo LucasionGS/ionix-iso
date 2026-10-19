@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+# ionix-drm-devices — which GPUs the compositor should open, primary first.
+#
+#   ionix-drm-devices                     print e.g. /dev/dri/card1:/dev/dri/card2
+#   ionix-drm-devices --exec VAR CMD...   export VAR=<that list> and exec CMD
+#
+# Prints a list for AQ_DRM_DEVICES (Hyprland) / WLR_DRM_DEVICES (cage), or
+# nothing and exits 1 when there is no real GPU, so the caller leaves the
+# variable unset and the compositor picks on its own.
+#
+# Why: until a GPU driver takes over, the only DRM device is the firmware
+# framebuffer (simpledrm — /dev/dri/card0 with no PCI parent). On an NVIDIA
+# machine the live ISO loads nvidia from the root filesystem, seconds after
+# tty1 has autologged in, so Hyprland opened that framebuffer and then lost it
+# when nvidia_drm (fbdev=1) evicted it. So:
+#
+#   - firmware framebuffers (simpledrm, efidrm, vesadrm, ofdrm) are never listed
+#   - while the boot GPU (the PCI display device with boot_vga=1, the one the
+#     firmware drew the boot screen on) has no DRM card yet, wait for its driver,
+#     up to IONIX_DRM_WAIT seconds (default 10)
+#   - the primary is the boot GPU if it drives a connected display, else the
+#     first card that does, else the boot GPU; every other real card follows as
+#     a secondary so displays plugged into it still light up
+#
+# Paths are /dev/dri/cardN, never /dev/dri/by-path: those names contain colons,
+# and both variables are colon-separated.
+set -uo pipefail
+
+DRM_CLASS=/sys/class/drm
+PCI_DEVICES=/sys/bus/pci/devices
+WAIT="${IONIX_DRM_WAIT:-10}"
+
+# True when card $1 is a firmware framebuffer rather than a GPU driver.
+is_firmware_fb() {
+    local dev="$DRM_CLASS/$1/device"
+    local subsystem driver
+    subsystem="$(basename "$(readlink -f "$dev/subsystem")")"
+    [[ $subsystem == platform ]] || return 1
+    driver="$(basename "$(readlink -f "$dev/driver")")"
+    # simpledrm binds "simple-framebuffer", efidrm "efi-framebuffer", vesadrm
+    # "vesa-framebuffer", ofdrm "of-display"
+    case "$driver $(basename "$(readlink -f "$dev")")" in
+    *framebuffer* | *of-display*) return 0 ;;
+    esac
+    return 1
+}
+
+# The real DRM cards, by name (card1 card2…).
+real_cards() {
+    local path name
+    for path in "$DRM_CLASS"/card*; do
+        name="$(basename "$path")"
+        [[ $name =~ ^card[0-9]+$ ]] || continue   # skip connectors (card1-DP-1)
+        [[ -e /dev/dri/$name ]] || continue
+        is_firmware_fb "$name" && continue
+        echo "$name"
+    done
+}
+
+# True when card $1 has at least one connector with a display attached.
+has_connected_output() {
+    local status
+    for status in "$DRM_CLASS/$1"-*/status; do
+        [[ -r $status && $(<"$status") == connected ]] && return 0
+    done
+    return 1
+}
+
+is_boot_vga() {
+    [[ $(cat "$DRM_CLASS/$1/device/boot_vga" 2>/dev/null) == 1 ]]
+}
+
+# True while the boot GPU is still waiting for its driver: a PCI display device
+# with boot_vga=1 that has no DRM card under it yet.
+boot_gpu_pending() {
+    local dev
+    for dev in "$PCI_DEVICES"/*; do
+        [[ $(cat "$dev/boot_vga" 2>/dev/null) == 1 ]] || continue
+        compgen -G "$dev/drm/card*" >/dev/null && return 1
+        return 0
+    done
+    return 1
+}
+
+wait_for_gpu() {
+    local deadline=$((SECONDS + WAIT)) announced=0
+    while ((SECONDS < deadline)); do
+        if ! boot_gpu_pending && [[ -n $(real_cards) ]]; then
+            return 0
+        fi
+        if ((!announced)); then
+            echo "Waiting up to ${WAIT}s for the GPU driver to load..." >&2
+            announced=1
+        fi
+        sleep 0.25
+    done
+    echo "GPU driver did not come up within ${WAIT}s, using what is there." >&2
+}
+
+pick_devices() {
+    local cards primary="" card
+    wait_for_gpu
+    mapfile -t cards < <(real_cards)
+    ((${#cards[@]})) || return 1
+
+    for card in "${cards[@]}"; do
+        if is_boot_vga "$card" && has_connected_output "$card"; then
+            primary="$card"
+            break
+        fi
+    done
+    if [[ -z $primary ]]; then
+        for card in "${cards[@]}"; do
+            if has_connected_output "$card"; then
+                primary="$card"
+                break
+            fi
+        done
+    fi
+    if [[ -z $primary ]]; then
+        for card in "${cards[@]}"; do
+            if is_boot_vga "$card"; then
+                primary="$card"
+                break
+            fi
+        done
+    fi
+    primary="${primary:-${cards[0]}}"
+
+    local list="/dev/dri/$primary"
+    for card in "${cards[@]}"; do
+        [[ $card == "$primary" ]] || list+=":/dev/dri/$card"
+    done
+    echo "$list"
+}
+
+case "${1:-}" in
+--exec)
+    if (($# < 3)); then
+        echo "usage: ionix-drm-devices --exec VAR COMMAND [ARGS...]" >&2
+        exit 2
+    fi
+    var="$2"
+    shift 2
+    # A value already in the environment is the user's override.
+    if [[ -z ${!var:-} ]] && devices="$(pick_devices)"; then
+        export "$var=$devices"
+    fi
+    exec "$@"
+    ;;
+"")
+    pick_devices
+    ;;
+*)
+    echo "usage: ionix-drm-devices [--exec VAR COMMAND [ARGS...]]" >&2
+    exit 2
+    ;;
+esac

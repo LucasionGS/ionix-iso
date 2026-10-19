@@ -353,6 +353,13 @@ in its own centre and the blocked `notify-send` printing `join` is the cue to op
 - `ionix-login-mode` — greeter / autologin / locked; survives onto the installed system
 - `ionix-fingerprint` — fingerprint reader support; survives onto the installed system
 - `ionix-extras` — installs the optional bundles; survives onto the installed system
+- `ionix-drm-devices` — picks the GPU(s) for the compositor; survives onto the installed system.
+  Sourced by uwsm from `etc/xdg/uwsm/env-hyprland.d/` into `AQ_DRM_DEVICES`, and wraps cage in
+  `greetd/config.toml` for `WLR_DRM_DEVICES`. It never lists a firmware framebuffer (simpledrm's
+  `card0`, which Hyprland otherwise grabs while nvidia is still loading on the live ISO and then
+  loses when `nvidia_drm` evicts it), waits up to `IONIX_DRM_WAIT` (10 s) for the `boot_vga=1` PCI
+  device to get its DRM card, and puts the boot GPU first if it drives a connected display. Uses
+  `/dev/dri/cardN`: `by-path` names contain colons, the list separator.
 
 ## Visual Theme
 
