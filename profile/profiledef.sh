@@ -28,6 +28,7 @@ file_permissions=(
   ["/usr/local/bin/ionix-arrange-workspace"]="0:0:755"
   ["/usr/local/bin/ionix-fingerprint"]="0:0:755"
   ["/usr/local/bin/ionix-login-mode"]="0:0:755"
+  ["/usr/local/bin/ionix-drm-devices"]="0:0:755"
   ["/usr/local/bin/grub-install"]="0:0:755"
   ["/home/liveuser"]="1000:1000:750"
   ["/usr/local/share/ionix/bin/ionix-wallpaper"]="0:0:755"
