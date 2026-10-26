@@ -350,7 +350,12 @@ is what the loader then waits for, so a command that opens something else needs 
 - **Panel:** ionix-quickshell (QML/Quickshell) — bar, popouts and OSD. Started by the
   `ionix-quickshell` systemd **user unit** (pre-enabled via the `/etc/skel` symlink, under
   `graphical-session.target`), not by
-  `exec-once`, so a QML runtime error self-heals via `Restart=on-failure`
+  `exec-once`, so a QML runtime error self-heals via `Restart=on-failure`. Anything the shell
+  starts for the user (apps, desktop actions, settings tools, `xdg-open`, the power commands) goes
+  through `services/Launch.qml`, which wraps it in `systemd-run --user --scope` under the unit:
+  systemd stops a unit by killing its whole cgroup, so a plain `execDetached` child — detached or
+  not — died with every shell crash or restart. Short-lived helpers the shell waits on stay plain
+  `Process`/`execDetached`
 - **Panel (fallback):** Waybar is still installed and its themes still ship, but nothing starts it
   automatically. `Ctrl+Super+Shift+B` launches it if the Quickshell bar misbehaves
 - **Session services** are user units enabled for every new account by symlinks in
