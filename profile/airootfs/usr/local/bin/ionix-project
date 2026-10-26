@@ -6,6 +6,8 @@
 #   ionix-project list [--json]
 #   ionix-project show <name>
 #   ionix-project rename <old> <new>
+#   ionix-project apps <name> [--json]              the apps a project starts, numbered
+#   ionix-project app <name> <n> [--exec CMD] [--cwd DIR] [--class CLASS] [--remove]
 #   ionix-project delete <name>
 #   ionix-project label <name> [--workspace N]      label a workspace without saving it
 #   ionix-project label --clear [--workspace N]
@@ -14,6 +16,13 @@
 # A project is one workspace: which apps were open on it, and where. Saving
 # writes one hand-editable JSON file per project to $PROJECTS_DIR; loading
 # launches every app again on the next free workspace and puts the windows back.
+#
+# What gets captured is a best guess — a desktop entry's Exec, or the process's
+# command line — and it cannot know what an app had open (VS Code's folder, a
+# browser profile). `app` fine-tunes one entry: "exec" is a shell command that
+# replaces the captured one and survives saving the workspace over the project
+# again, "cwd" is where it runs, and "class" is the window class the loader
+# waits for, which has to change along with a command that starts something else.
 #
 # The label is Hyprland's own workspace name (hl.dsp.workspace.rename), so it
 # needs no state of its own: the id stays the same, every bind keeps working,
@@ -409,16 +418,16 @@ def launch_info(client, children):
 
 
 def launch_command(entry):
-    """The shell string exec_cmd runs. A hand-written "exec" wins."""
+    """The shell string exec_cmd runs. A hand-written "exec" wins, as typed:
+    it may be several commands, so it cannot be prefixed with `exec`."""
     if entry.get("exec"):
         cmd = entry["exec"]
     elif entry.get("command"):
-        cmd = shlex.join(entry["command"])
-    else:
-        return None
         # exec: the app replaces the wrapping shell, so its pid is the one
         # exec_cmd's window rule is keyed to.
-        cmd = "exec " + cmd
+        cmd = "exec " + shlex.join(entry["command"])
+    else:
+        return None
     cwd = os.path.expanduser(entry.get("cwd") or "")
     if cwd and os.path.isdir(cwd):
         cmd = f"cd {shlex.quote(cwd)} && {cmd}"
@@ -648,16 +657,40 @@ def cmd_save(args):
         "tree": tree,
     }
     path = project_path(name)
+    carried = carry_custom(path, windows)
     write_project(path, data)
     if ws.get("name") != name:
         rename_workspace(ws["id"], unique_label(name, workspaces, except_id=ws["id"]))
     refresh_shell()
     print(f"Saved {name!r}: {len(windows)} window(s) → {path}")
+    if carried:
+        print(f"Kept the custom command of: {', '.join(carried)}")
     if skipped:
         print(f"Not saved (no way to relaunch): {', '.join(skipped)}", file=sys.stderr)
     if not interactive():
         body = f"{len(windows)} window(s)" + (f"; left out: {', '.join(skipped)}" if skipped else "")
         notify(f"Saved {name}", body, expire=3000)
+
+
+def carry_custom(path, windows):
+    """Saving over a project keeps the commands set with `app --exec`: each
+    one goes to the first newly captured window of the same class. Returns the
+    classes that kept one."""
+    try:
+        old = read_project(path)["windows"]
+    except (OSError, ValueError, ProjectError):
+        return []
+    custom = [w for w in old if isinstance(w, dict) and w.get("exec")]
+    carried = []
+    for w in windows:
+        cls = (w.get("class") or "").lower()
+        match = next((o for o in custom if (o.get("class") or "").lower() == cls), None)
+        if match is None:
+            continue
+        custom.remove(match)
+        w["exec"] = match["exec"]
+        carried.append(w.get("class") or "?")
+    return carried
 
 
 def target_workspace(args, workspaces, active):
@@ -875,6 +908,103 @@ def cmd_rename(args):
     print(f"Renamed {old!r} → {new!r}")
 
 
+def app_row(n, w):
+    command = shlex.join(w["command"]) if w.get("command") else ""
+    return {
+        "n": n,
+        "class": w.get("class", ""),
+        "title": w.get("title", ""),
+        "desktop": w.get("desktop", ""),
+        "command": command,
+        "exec": w.get("exec", ""),
+        "launch": w.get("exec") or command,
+        "cwd": w.get("cwd", ""),
+        "floating": bool(w.get("floating")),
+    }
+
+
+def cmd_apps(args):
+    path, data = find_project(args.name)
+    rows = [app_row(n, w) for n, w in enumerate(data["windows"], 1)]
+    if args.json:
+        json.dump({"name": data["name"], "file": path, "apps": rows}, sys.stdout, ensure_ascii=False)
+        print()
+        return
+    width = max([len(r["class"]) for r in rows] + [5])
+    for r in rows:
+        mark = "*" if r["exec"] else " "
+        where = f"   (in {r['cwd']})" if r["cwd"] else ""
+        print(f"{r['n']:>2}{mark} {r['class']:<{width}}  {r['launch'] or '-'}{where}")
+    if any(r["exec"] for r in rows):
+        print("\n* custom command (ionix-project app <name> <n> --exec \"\" goes back to the captured one)")
+
+
+def renumber(node, removed):
+    """The tree with window `removed` gone (its sibling takes its parent's
+    place) and every later index shifted down to match the window list."""
+    node = prune(node, set(leaves(node)) - {removed})
+    if node is None:
+        return None
+    if "window" in node:
+        i = node["window"]
+        return {**node, "window": i - 1 if i > removed else i}
+    return {**node, "a": renumber(node["a"], removed), "b": renumber(node["b"], removed)}
+
+
+def cmd_app(args):
+    path, data = find_project(args.name)
+    windows = data["windows"]
+    if not 1 <= args.n <= len(windows):
+        raise ProjectError(f"{data['name']!r} has {len(windows)} app(s); pick 1 to {len(windows)} (see: ionix-project apps {shlex.quote(data['name'])})")
+    i = args.n - 1
+    entry = windows[i]
+    label = entry.get("class") or f"app {args.n}"
+
+    if args.remove:
+        if args.exec is not None or args.cwd is not None or args.cls is not None:
+            raise ProjectError("--remove cannot be combined with other changes")
+        if len(windows) == 1:
+            raise ProjectError(f"{label} is the only app in {data['name']!r}; delete the project instead")
+        del windows[i]
+        tree = data.get("tree")
+        if tree is not None:
+            data["tree"] = renumber(tree, i) if valid_tree(tree, len(windows) + 1) else None
+        write_project(path, data)
+        refresh_shell()
+        print(f"Removed {label} from {data['name']!r}")
+        return
+
+    if args.exec is None and args.cwd is None and args.cls is None:
+        raise ProjectError("nothing to change: give --exec, --cwd, --class or --remove")
+
+    if args.cls is not None:
+        cls = args.cls.strip()
+        if not cls:
+            raise ProjectError("the window class cannot be empty: it is how a project finds the window it started")
+        entry["class"] = cls
+    if args.exec is not None:
+        cmd = args.exec.strip()
+        captured = shlex.join(entry["command"]) if entry.get("command") else ""
+        # Typing the captured command back is going back to it, not a custom one.
+        if cmd == "" or cmd == captured:
+            entry.pop("exec", None)
+        else:
+            entry["exec"] = cmd
+        if not launch_command(entry):
+            raise ProjectError(f"{label} has no captured command, so it needs one: give --exec")
+    if args.cwd is not None:
+        cwd = args.cwd.strip()
+        if cwd == "":
+            entry.pop("cwd", None)
+        else:
+            if not os.path.isdir(os.path.expanduser(cwd)):
+                raise ProjectError(f"no such folder: {cwd}")
+            entry["cwd"] = tilde(os.path.abspath(os.path.expanduser(cwd)))
+    write_project(path, data)
+    refresh_shell()
+    print(f"Updated {label} in {data['name']!r}: {launch_command(entry)}")
+
+
 def cmd_delete(args):
     path, data = find_project(args.name)
     if not DRY_RUN:
@@ -936,6 +1066,20 @@ def main():
     s.add_argument("old")
     s.add_argument("new")
     s.set_defaults(fn=cmd_rename)
+
+    s = sub.add_parser("apps", help="list the apps a project starts")
+    s.add_argument("name")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_apps)
+
+    s = sub.add_parser("app", help="change how one of a project's apps is started, or remove it")
+    s.add_argument("name")
+    s.add_argument("n", type=int, help="the app's number in `apps`")
+    s.add_argument("--exec", help="shell command that starts it; \"\" goes back to the captured one")
+    s.add_argument("--cwd", help="folder the command runs in; \"\" for none")
+    s.add_argument("--class", dest="cls", help="window class to wait for after starting it")
+    s.add_argument("--remove", action="store_true", help="leave this app out of the project")
+    s.set_defaults(fn=cmd_app)
 
     s = sub.add_parser("delete", help="delete a saved project")
     s.add_argument("name")
