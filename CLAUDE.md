@@ -322,12 +322,23 @@ an already-running instance opened elsewhere), then calls `ionix_project_apply(s
 
 The label is the workspace's Hyprland name (`hl.dsp.workspace.rename`), not state of our own:
 `Projects.labelFor(ws)` in the shell is just "`ws.name` unless it is the id", Quickshell updates
-the name from the `renameworkspace` event, and the label goes when the workspace does. The shell
+the name from the `renameworkspace` event, and the label goes when the workspace does — or, because
+Hyprland keeps the workspace you are on alive while empty, when its last window closes or moves away:
+`Projects.qml` renames it back to its id on that drop to zero (not on a workspace that was always
+empty, since a load labels its workspace before any app has a window). The shell
 (`services/Projects.qml`) hides the whole feature unless `ionix-project` is on PATH, since the AUR
 package also runs off Ionix. It re-reads `ionix-project list --json` when the start menu opens and
 on `qs ipc call projects refresh`, which the CLI sends after every change. Run without a terminal
 (from the shell or a bind) the CLI reports through `notify-send`. To try it without Hyprland:
 `HYPRCTL=<fake script> PROJECTS_DIR=<dir> ionix-project --dry-run load <name>` prints every dispatch.
+
+A capture only knows a command line, not what the app had open (VS Code's folder, a browser
+profile), so each window entry can be tuned: `ionix-project app <name> <n> --exec/--cwd/--class/--remove`,
+which the start menu's *Edit apps* page (right-click a project) drives, re-reading
+`ionix-project apps <name> --json` on every refresh. `"exec"` is a shell string run as typed —
+never prefixed with `exec`, it may be several commands — and saving the workspace over the project
+again carries each `exec` over to the first new window of the same class. A changed `--class`
+is what the loader then waits for, so a command that opens something else needs both.
 
 **First-login setup:** `ionix-first-login` is a marker-file-based one-time script that runs on first Hyprland session (e.g., clones NvChad config for neovim).
 
