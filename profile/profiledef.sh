@@ -26,6 +26,7 @@ file_permissions=(
   ["/usr/local/bin/ionix-extras"]="0:0:755"
   ["/usr/local/bin/ionix-install"]="0:0:755"
   ["/usr/local/bin/ionix-arrange-workspace"]="0:0:755"
+  ["/usr/local/bin/ionix-project"]="0:0:755"
   ["/usr/local/bin/ionix-fingerprint"]="0:0:755"
   ["/usr/local/bin/ionix-login-mode"]="0:0:755"
   ["/usr/local/bin/grub-install"]="0:0:755"

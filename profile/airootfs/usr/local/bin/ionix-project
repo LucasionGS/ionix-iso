@@ -1,0 +1,967 @@
+#!/usr/bin/env python3
+# ionix-project — save and load labeled "project" workspaces.
+#
+#   ionix-project save <name> [--workspace N]       snapshot a workspace (default: the active one)
+#   ionix-project load <name> [--workspace N|--here] [--timeout S]
+#   ionix-project list [--json]
+#   ionix-project show <name>
+#   ionix-project rename <old> <new>
+#   ionix-project delete <name>
+#   ionix-project label <name> [--workspace N]      label a workspace without saving it
+#   ionix-project label --clear [--workspace N]
+#   ionix-project current                           label of the active workspace, if any
+#
+# A project is one workspace: which apps were open on it, and where. Saving
+# writes one hand-editable JSON file per project to $PROJECTS_DIR; loading
+# launches every app again on the next free workspace and puts the windows back.
+#
+# The label is Hyprland's own workspace name (hl.dsp.workspace.rename), so it
+# needs no state of its own: the id stays the same, every bind keeps working,
+# the shell reads it as HyprlandWorkspace.name, and it disappears with the
+# workspace.
+#
+# Placement is split in two on purpose. This script captures, launches and
+# matches windows; ionix_project_apply() in /etc/hypr/hyprland.lua puts them in
+# place, in-process, in one pass. Tiled windows cannot be placed by pixel — the
+# saved layout is turned into the split tree that produces it (see
+# layout_tree()) and dwindle's tree is rebuilt from that.
+#
+# Everything this touches can be overridden from the environment, so it can be
+# exercised against a fake hyprctl and fixture JSON:
+#   HYPRCTL        hyprctl command (default: hyprctl)
+#   PROJECTS_DIR   where projects live (default: $XDG_CONFIG_HOME/ionix/projects)
+
+import argparse
+import configparser
+import datetime
+import glob
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+
+HYPRCTL = shlex.split(os.environ.get("HYPRCTL", "hyprctl"))
+HOME = os.path.expanduser("~")
+PROJECTS_DIR = os.environ.get("PROJECTS_DIR") or os.path.join(
+    os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config"), "ionix", "projects")
+
+VERSION = 1
+
+# Children with one of these names make a window a terminal: its shell's cwd is
+# the folder worth reopening in, not the terminal's own.
+SHELLS = {"bash", "zsh", "fish", "sh", "dash", "ksh", "mksh", "tcsh", "csh", "nu", "xonsh", "elvish", "oil", "osh"}
+
+# Desktop-entry field codes; none of them has anything to expand to here.
+FIELD_CODES = {"%f", "%F", "%u", "%U", "%d", "%D", "%n", "%N", "%i", "%c", "%k", "%v", "%m"}
+
+# Slack when deciding which side of a cut a tiled window is on. Gaps keep real
+# neighbours apart; this only absorbs rounding.
+CUT_TOLERANCE = 4
+
+DRY_RUN = False
+
+
+class ProjectError(Exception):
+    pass
+
+
+# ── Hyprland ─────────────────────────────────────────────────────────────────
+
+def hypr_json(what):
+    try:
+        out = subprocess.run(HYPRCTL + ["-j", what], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        raise ProjectError(f"hyprctl {what} failed: {e}")
+    if out.returncode != 0:
+        raise ProjectError(f"hyprctl {what} failed: {out.stderr.strip() or out.stdout.strip()}")
+    try:
+        return json.loads(out.stdout)
+    except json.JSONDecodeError:
+        raise ProjectError(f"hyprctl {what} did not return JSON (is Hyprland running?)")
+
+
+def hypr_call(verb, arg):
+    # Under the Lua config `dispatch` takes a dispatcher *expression* and
+    # `eval` runs a chunk in the config's Lua state; both are one argument.
+    if DRY_RUN:
+        print(f"hyprctl {verb} {arg}")
+        return True
+    try:
+        out = subprocess.run(HYPRCTL + [verb, arg], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        print(f"ionix-project: hyprctl {verb} failed: {e}", file=sys.stderr)
+        return False
+    text = (out.stdout + out.stderr).strip()
+    if out.returncode != 0 or (text and text.lower() != "ok"):
+        print(f"ionix-project: hyprctl {verb} {arg!r}: {text}", file=sys.stderr)
+        return False
+    return True
+
+
+def dispatch(expr):
+    return hypr_call("dispatch", expr)
+
+
+def lua(value):
+    """Python value → Lua literal. Strings are escaped, so window titles and
+    commands can carry anything."""
+    if value is None:
+        return "nil"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        return repr(round(value, 6))
+    if isinstance(value, str):
+        out = []
+        for ch in value:
+            if ch == "\\":
+                out.append("\\\\")
+            elif ch == '"':
+                out.append('\\"')
+            elif ch == "\n":
+                out.append("\\n")
+            elif ord(ch) < 32 or ord(ch) == 127:
+                out.append(f"\\{ord(ch):03d}")
+            else:
+                out.append(ch)
+        return '"' + "".join(out) + '"'
+    if isinstance(value, (list, tuple)):
+        return "{ " + ", ".join(lua(v) for v in value) + " }"
+    if isinstance(value, dict):
+        parts = []
+        for k, v in value.items():
+            key = k if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", k) else f"[{lua(k)}]"
+            parts.append(f"{key} = {lua(v)}")
+        return "{ " + ", ".join(parts) + " }"
+    raise TypeError(f"cannot express {type(value).__name__} in Lua")
+
+
+def selector(address):
+    return f"address:{address}"
+
+
+def monitor_area(mon):
+    """A monitor's usable area in logical coordinates: (x, y, w, h) of the
+    whole output, plus the reserved edges (bar) as [left, top, right, bottom]."""
+    scale = mon.get("scale") or 1
+    w, h = mon.get("width", 0), mon.get("height", 0)
+    if mon.get("transform", 0) % 2 == 1:
+        w, h = h, w
+    w, h = round(w / scale), round(h / scale)
+    reserved = list(mon.get("reserved") or [0, 0, 0, 0])[:4]
+    reserved += [0] * (4 - len(reserved))
+    return {"x": mon.get("x", 0), "y": mon.get("y", 0), "width": w, "height": h, "reserved": reserved}
+
+
+def usable(area):
+    l, t, r, b = area["reserved"]
+    return l, t, area["width"] - l - r, area["height"] - t - b
+
+
+def monitor_for(monitors, workspace):
+    for m in monitors:
+        if m.get("name") == workspace.get("monitor"):
+            return m
+    for m in monitors:
+        if m.get("focused"):
+            return m
+    if not monitors:
+        raise ProjectError("no monitors reported by hyprctl")
+    return monitors[0]
+
+
+def is_label(ws):
+    name = ws.get("name") or ""
+    return name != "" and name != str(ws.get("id")) and not name.startswith("special")
+
+
+# ── Projects on disk ─────────────────────────────────────────────────────────
+
+def slug(name):
+    s = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    return s or "project"
+
+
+def project_path(name):
+    return os.path.join(PROJECTS_DIR, slug(name) + ".json")
+
+
+def read_project(path):
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict) or not isinstance(data.get("windows"), list):
+        raise ProjectError(f"{path}: not a project file")
+    data.setdefault("name", os.path.splitext(os.path.basename(path))[0])
+    return data
+
+
+def all_projects():
+    out = []
+    for path in sorted(glob.glob(os.path.join(PROJECTS_DIR, "*.json"))):
+        try:
+            out.append((path, read_project(path)))
+        except (OSError, ValueError, ProjectError) as e:
+            print(f"ionix-project: skipping {path}: {e}", file=sys.stderr)
+    return out
+
+
+def find_project(name):
+    """By file name first, then by the name stored inside, ignoring case — a
+    hand-renamed file or a label typed differently still resolves."""
+    path = project_path(name)
+    if os.path.isfile(path):
+        return path, read_project(path)
+    for path, data in all_projects():
+        if data["name"].lower() == name.lower():
+            return path, data
+    raise ProjectError(f"no project named {name!r} (see: ionix-project list)")
+
+
+def write_project(path, data):
+    text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+    if DRY_RUN:
+        print(f"# would write {path}")
+        print(text, end="")
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".tmp-", suffix=".json")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+# ── How to relaunch a window ─────────────────────────────────────────────────
+
+def desktop_dirs():
+    data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(HOME, ".local", "share")
+    data_dirs = os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share"
+    seen, out = set(), []
+    for d in [data_home] + data_dirs.split(":"):
+        app = os.path.join(d, "applications")
+        if d and app not in seen and os.path.isdir(app):
+            seen.add(app)
+            out.append(app)
+    return out
+
+
+_desktop_index = None
+
+
+def desktop_index():
+    """Every visible application entry, earlier XDG dirs winning, as
+    (id, StartupWMClass, Exec) tuples."""
+    global _desktop_index
+    if _desktop_index is not None:
+        return _desktop_index
+    entries, seen = [], set()
+    for app_dir in desktop_dirs():
+        for path in sorted(glob.glob(os.path.join(app_dir, "**", "*.desktop"), recursive=True)):
+            # Desktop ids use '-' for subdirectories.
+            did = os.path.relpath(path, app_dir).replace(os.sep, "-")
+            if did in seen:
+                continue
+            seen.add(did)
+            cp = configparser.ConfigParser(interpolation=None, strict=False)
+            cp.optionxform = str
+            try:
+                cp.read(path, encoding="utf-8")
+                sec = cp["Desktop Entry"]
+            except (configparser.Error, KeyError, UnicodeDecodeError):
+                continue
+            if sec.get("Type", "Application") != "Application" or sec.get("Hidden", "false") == "true":
+                continue
+            if not sec.get("Exec"):
+                continue
+            entries.append((did, sec.get("StartupWMClass", ""), sec.get("Exec")))
+    _desktop_index = entries
+    return entries
+
+
+def desktop_for(wm_class):
+    if not wm_class:
+        return None
+    c = wm_class.lower()
+    entries = desktop_index()
+    for did, wmc, exe in entries:
+        if wmc and wmc.lower() == c:
+            return did, exe
+    for did, _, exe in entries:
+        stem = did[:-len(".desktop")].lower()
+        # Exact id, or the last component of a reverse-DNS id (org.gnome.Nautilus ↔ nautilus).
+        if stem == c or stem.rsplit(".", 1)[-1] == c:
+            return did, exe
+    return None
+
+
+def exec_argv(exec_line):
+    try:
+        tokens = shlex.split(exec_line)
+    except ValueError:
+        return None
+    out = []
+    for t in tokens:
+        if t in FIELD_CODES:
+            continue
+        out.append(t.replace("%%", "%"))
+    return out or None
+
+
+def proc_children():
+    kids = {}
+    for stat in glob.glob("/proc/[0-9]*/stat"):
+        try:
+            with open(stat) as f:
+                data = f.read()
+        except OSError:
+            continue
+        # comm is parenthesised and may itself contain spaces or parentheses.
+        rparen = data.rfind(")")
+        comm = data[data.find("(") + 1:rparen]
+        fields = data[rparen + 2:].split()
+        if len(fields) < 2:
+            continue
+        pid = int(stat.split("/")[2])
+        kids.setdefault(int(fields[1]), []).append((pid, comm))
+    return kids
+
+
+def cwd_of(pid):
+    try:
+        return os.readlink(f"/proc/{pid}/cwd")
+    except OSError:
+        return None
+
+
+def window_cwd(pid, children):
+    for child, comm in sorted(children.get(pid, [])):
+        if comm in SHELLS:
+            return cwd_of(child)
+    return cwd_of(pid)
+
+
+def cmdline_of(pid):
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            raw = f.read()
+    except OSError:
+        return None
+    argv = [a.decode("utf-8", "replace") for a in raw.split(b"\0") if a]
+    return argv or None
+
+
+def flatpak_app(pid):
+    try:
+        cp = configparser.ConfigParser(interpolation=None, strict=False)
+        cp.read(f"/proc/{pid}/root/.flatpak-info", encoding="utf-8")
+        return cp.get("Application", "name", fallback=None)
+    except (OSError, configparser.Error):
+        return None
+
+
+def tilde(path):
+    if path == HOME:
+        return "~"
+    if path.startswith(HOME + "/"):
+        return "~" + path[len(HOME):]
+    return path
+
+
+def launch_info(client, children):
+    """How to start this window's app again: a desktop entry when one claims
+    the class (canonical, survives package updates moving binaries), else the
+    process's own command line. The cwd is kept for terminals' sake."""
+    pid = client.get("pid") or 0
+    wm_class = client.get("initialClass") or client.get("class") or ""
+    info = {}
+    found = desktop_for(wm_class) or desktop_for(client.get("class") or "")
+    if found:
+        info["desktop"] = found[0]
+        argv = exec_argv(found[1])
+        if argv:
+            info["command"] = argv
+    if "command" not in info and pid > 0:
+        app = flatpak_app(pid)
+        if app:
+            info["command"] = ["flatpak", "run", app]
+        else:
+            argv = cmdline_of(pid)
+            if argv:
+                info["command"] = argv
+    if pid > 0:
+        cwd = window_cwd(pid, children)
+        if cwd and cwd not in (HOME, "/") and os.path.isdir(cwd):
+            info["cwd"] = tilde(cwd)
+    return info
+
+
+def launch_command(entry):
+    """The shell string exec_cmd runs. A hand-written "exec" wins."""
+    if entry.get("exec"):
+        cmd = entry["exec"]
+    elif entry.get("command"):
+        cmd = shlex.join(entry["command"])
+    else:
+        return None
+        # exec: the app replaces the wrapping shell, so its pid is the one
+        # exec_cmd's window rule is keyed to.
+        cmd = "exec " + cmd
+    cwd = os.path.expanduser(entry.get("cwd") or "")
+    if cwd and os.path.isdir(cwd):
+        cmd = f"cd {shlex.quote(cwd)} && {cmd}"
+    return cmd
+
+
+# ── Layout ───────────────────────────────────────────────────────────────────
+
+def layout_tree(rects):
+    """Turn tiled rectangles into the binary split tree that produces them.
+
+    `rects` is [(index, x, y, w, h)]. A dwindle layout is always a guillotine
+    partition: some straight cut runs through the whole area without crossing a
+    window, on both sides again, down to single windows. Returns
+    {"window": i} leaves and {"split": "x"|"y", "ratio": share of the first
+    child, "a": …, "b": …} nodes, or None when there is no such cut (a master or
+    scrolling layout) — the caller then just tiles in order.
+
+    Of the possible cuts the one across the longer side wins, because that is
+    the cut dwindle itself would have made there, so the rebuilt tree matches
+    the original rather than merely its outline."""
+    if not rects:
+        return None
+    if len(rects) == 1:
+        return {"window": rects[0][0]}
+
+    x0 = min(r[1] for r in rects)
+    y0 = min(r[2] for r in rects)
+    x1 = max(r[1] + r[3] for r in rects)
+    y1 = max(r[2] + r[4] for r in rects)
+
+    axes = ["x", "y"] if (x1 - x0) >= (y1 - y0) else ["y", "x"]
+    for axis in axes:
+        lo, size = (1, 3) if axis == "x" else (2, 4)
+        start, end = (x0, x1) if axis == "x" else (y0, y1)
+        for edge in sorted({r[lo] + r[size] for r in rects}):
+            a = [r for r in rects if r[lo] + r[size] <= edge + CUT_TOLERANCE]
+            b = [r for r in rects if r[lo] + r[size] > edge + CUT_TOLERANCE]
+            if not a or not b or any(r[lo] < edge - CUT_TOLERANCE for r in b):
+                continue
+            ta, tb = layout_tree(a), layout_tree(b)
+            if ta is None or tb is None:
+                continue
+            # The cut sits in the middle of the gap between the two sides.
+            cut = (edge + min(r[lo] for r in b)) / 2
+            ratio = (cut - start) / (end - start) if end > start else 0.5
+            return {"split": axis, "ratio": round(min(max(ratio, 0.05), 0.95), 4), "a": ta, "b": tb}
+    return None
+
+
+def first_leaf(node):
+    while "window" not in node:
+        node = node["a"]
+    return node["window"]
+
+
+def leaves(node, out=None):
+    out = [] if out is None else out
+    if node is None:
+        return out
+    if "window" in node:
+        out.append(node["window"])
+    else:
+        leaves(node["a"], out)
+        leaves(node["b"], out)
+    return out
+
+
+def build_steps(node, out=None):
+    """Splits in the order they have to happen: each one divides the window
+    that currently holds the whole node, and its ratio is set right then,
+    before deeper splits re-parent that window."""
+    out = [] if out is None else out
+    if node is None or "window" in node:
+        return out
+    out.append({"window": first_leaf(node["b"]), "from": first_leaf(node["a"]),
+                "dir": "r" if node["split"] == "x" else "d", "ratio": node["ratio"]})
+    build_steps(node["a"], out)
+    build_steps(node["b"], out)
+    return out
+
+
+def valid_tree(node, count):
+    """A hand-edited file can carry a tree that no longer fits its window list."""
+    try:
+        got = leaves(node)
+    except (KeyError, TypeError):
+        return False
+    return len(set(got)) == len(got) and all(isinstance(i, int) and 0 <= i < count for i in got)
+
+
+def prune(node, keep):
+    """The tree without the windows that never opened: a split that lost one
+    side collapses into the other, so the rest still lands where it was."""
+    if node is None:
+        return None
+    if "window" in node:
+        return node if node["window"] in keep else None
+    a, b = prune(node["a"], keep), prune(node["b"], keep)
+    if a is not None and b is not None:
+        return {**node, "a": a, "b": b}
+    return a if a is not None else b
+
+
+# ── Commands ─────────────────────────────────────────────────────────────────
+
+def refresh_shell():
+    if DRY_RUN or not shutil.which("qs"):
+        return
+    try:
+        subprocess.run(["qs", "-c", "ionix", "ipc", "call", "projects", "refresh"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3)
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+
+def interactive():
+    """Run from a terminal, rather than by the shell or a keybind — where
+    nobody reads stdout, so outcomes go to a toast instead."""
+    return sys.stdout.isatty() or sys.stderr.isatty()
+
+
+def notify(summary, body="", replace=None, expire=None):
+    """Toast through whatever notification server runs (the shell's own, on
+    Ionix). Returns the id so the next call can replace this toast."""
+    if DRY_RUN or not shutil.which("notify-send"):
+        return None
+    cmd = ["notify-send", "-p", "-a", "Projects", "-i", "folder"]
+    if replace:
+        cmd += ["-r", str(replace)]
+    if expire is not None:
+        cmd += ["-t", str(expire)]
+    cmd += [summary] + ([body] if body else [])
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
+        return out.stdout.strip() or replace
+    except (OSError, subprocess.TimeoutExpired):
+        return replace
+
+
+def rename_workspace(ws_id, name):
+    return dispatch(f"hl.dsp.workspace.rename({lua({'workspace': ws_id, 'name': name})})")
+
+
+def resolve_workspace(arg, workspaces, active):
+    if arg is None:
+        return active
+    for w in workspaces:
+        if w.get("id") == arg:
+            return w
+    raise ProjectError(f"workspace {arg} does not exist")
+
+
+def unique_label(name, workspaces, except_id=None):
+    taken = {w.get("name") for w in workspaces if w.get("id") != except_id}
+    if name not in taken:
+        return name
+    n = 2
+    while f"{name} {n}" in taken:
+        n += 1
+    return f"{name} {n}"
+
+
+def cmd_save(args):
+    name = args.name.strip()
+    if not name:
+        raise ProjectError("a project needs a name")
+    workspaces = hypr_json("workspaces")
+    ws = resolve_workspace(args.workspace, workspaces, hypr_json("activeworkspace"))
+    if ws.get("id", 0) < 1:
+        raise ProjectError("special workspaces cannot be saved as projects")
+    monitors = hypr_json("monitors")
+    area = monitor_area(monitor_for(monitors, ws))
+    clients = [c for c in hypr_json("clients")
+               if c.get("workspace", {}).get("id") == ws["id"]
+               and c.get("mapped", True) and not c.get("hidden", False) and not c.get("pinned", False)]
+    if not clients:
+        raise ProjectError(f"workspace {ws['id']} has no windows to save")
+
+    # Reading order (top-left first) keeps the file readable and the launch
+    # order stable; the tree decides the real layout anyway.
+    clients.sort(key=lambda c: (c["at"][1], c["at"][0]))
+    children = proc_children()
+    windows, skipped = [], []
+    for c in clients:
+        info = launch_info(c, children)
+        if "command" not in info:
+            skipped.append(c.get("class") or c.get("title") or c.get("address"))
+            continue
+        fs = c.get("fullscreen", 0)
+        if isinstance(fs, bool):
+            fs = 2 if fs else 0
+        entry = {
+            "class": c.get("initialClass") or c.get("class") or "",
+            "title": c.get("title") or "",
+            **info,
+            "floating": bool(c.get("floating")),
+            "fullscreen": int(fs or 0),
+            "at": [c["at"][0] - area["x"], c["at"][1] - area["y"]],
+            "size": list(c["size"]),
+        }
+        windows.append(entry)
+    if not windows:
+        raise ProjectError("none of the windows on this workspace can be relaunched")
+
+    # Fullscreen windows report their fullscreen box, not their slot in the
+    # tree, so they are left out of it and tiled last.
+    tiled = [(i, w["at"][0], w["at"][1], w["size"][0], w["size"][1])
+             for i, w in enumerate(windows) if not w["floating"] and not w["fullscreen"]]
+    tree = layout_tree(tiled)
+
+    layout = ""
+    try:
+        out = subprocess.run(HYPRCTL + ["-j", "getoption", "general:layout"], capture_output=True, text=True, timeout=5)
+        layout = json.loads(out.stdout).get("str", "")
+    except (OSError, subprocess.TimeoutExpired, ValueError, AttributeError):
+        pass
+
+    data = {
+        "version": VERSION,
+        "name": name,
+        "savedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "monitor": {"name": monitor_for(monitors, ws).get("name", ""), "width": area["width"],
+                    "height": area["height"], "reserved": area["reserved"]},
+        "layout": layout,
+        "windows": windows,
+        "tree": tree,
+    }
+    path = project_path(name)
+    write_project(path, data)
+    if ws.get("name") != name:
+        rename_workspace(ws["id"], unique_label(name, workspaces, except_id=ws["id"]))
+    refresh_shell()
+    print(f"Saved {name!r}: {len(windows)} window(s) → {path}")
+    if skipped:
+        print(f"Not saved (no way to relaunch): {', '.join(skipped)}", file=sys.stderr)
+    if not interactive():
+        body = f"{len(windows)} window(s)" + (f"; left out: {', '.join(skipped)}" if skipped else "")
+        notify(f"Saved {name}", body, expire=3000)
+
+
+def target_workspace(args, workspaces, active):
+    if args.here:
+        return active["id"]
+    if args.workspace is not None:
+        return args.workspace
+    # An empty, unlabeled workspace you are already on is as free as any.
+    if active.get("id", 0) > 0 and active.get("windows", 0) == 0 and not is_label(active):
+        return active["id"]
+    used = {w.get("id") for w in workspaces}
+    n = 1
+    while n in used:
+        n += 1
+    return n
+
+
+def scale_geometry(entry, saved, target):
+    """Saved monitor-relative geometry → global coordinates on the target
+    monitor, stretched if its usable area differs."""
+    sl, st, sw, sh = usable(saved)
+    tl, tt, tw, th = usable(target)
+    fx = tw / sw if sw > 0 else 1
+    fy = th / sh if sh > 0 else 1
+    x = target["x"] + tl + (entry["at"][0] - sl) * fx
+    y = target["y"] + tt + (entry["at"][1] - st) * fy
+    return {"x": round(x), "y": round(y), "w": max(1, round(entry["size"][0] * fx)), "h": max(1, round(entry["size"][1] * fy))}
+
+
+def cmd_load(args):
+    path, data = find_project(args.name)
+    entries = data["windows"]
+    if not entries:
+        raise ProjectError(f"project {data['name']!r} has no windows")
+
+    workspaces = hypr_json("workspaces")
+    active = hypr_json("activeworkspace")
+    ws_id = target_workspace(args, workspaces, active)
+    label = unique_label(data["name"], workspaces, except_id=ws_id)
+
+    dispatch(f"hl.dsp.focus({lua({'workspace': ws_id})})")
+    rename_workspace(ws_id, label)
+
+    # The monitor the workspace ended up on, now that focusing created it.
+    monitors = hypr_json("monitors")
+    mon = next((m for m in monitors if (m.get("activeWorkspace") or {}).get("id") == ws_id), None)
+    mon = mon or next((m for m in monitors if m.get("focused")), None) or monitors[0]
+    target_area = monitor_area(mon)
+    saved = data.get("monitor") or {}
+    saved_area = {"x": 0, "y": 0, "width": saved.get("width") or target_area["width"],
+                  "height": saved.get("height") or target_area["height"],
+                  "reserved": saved.get("reserved") or target_area["reserved"]}
+
+    before = {c["address"] for c in hypr_json("clients")}
+    toast = notify(f"Opening {label}", f"Starting {len(entries)} app(s)…")
+
+    # Everything spawns floating: out of the tiling tree until it is rebuilt,
+    # so nothing gets split around half-opened windows in the meantime. The
+    # workspace rule only catches windows of the pid exec_cmd started; apps
+    # that hand off to an already-running instance are moved below.
+    pending = []
+    for i, e in enumerate(entries):
+        cmd = launch_command(e)
+        if not cmd:
+            print(f"ionix-project: window {i} ({e.get('class')}) has no command, skipped", file=sys.stderr)
+            continue
+        rules = {"workspace": f"{ws_id} silent", "float": True}
+        dispatch(f"hl.dsp.exec_cmd({lua(cmd)}, {lua(rules)})")
+        pending.append(i)
+
+    matched = {}
+    if DRY_RUN:
+        matched = {i: f"0xWINDOW{i}" for i in pending}
+    else:
+        deadline = time.monotonic() + args.timeout
+        claimed = set()
+        while pending and time.monotonic() < deadline:
+            time.sleep(0.25)
+            try:
+                clients = hypr_json("clients")
+            except ProjectError:
+                continue
+            for c in clients:
+                addr = c.get("address")
+                if addr in before or addr in claimed or not c.get("mapped", True):
+                    continue
+                classes = {(c.get("initialClass") or "").lower(), (c.get("class") or "").lower()} - {""}
+                if not classes:
+                    continue  # some apps set their class a moment after mapping
+                idx = next((i for i in pending if (entries[i].get("class") or "").lower() in classes), None)
+                if idx is None:
+                    continue
+                pending.remove(idx)
+                claimed.add(addr)
+                matched[idx] = addr
+                if (c.get("workspace") or {}).get("id") != ws_id:
+                    dispatch(f"hl.dsp.window.move({lua({'workspace': ws_id, 'follow': False, 'window': selector(addr)})})")
+        # Give the last windows a moment to settle on their first size.
+        time.sleep(0.3)
+
+    # Placement spec for ionix_project_apply().
+    floats, fullscreen = [], []
+    tree = data.get("tree")
+    if tree is not None and not valid_tree(tree, len(entries)):
+        print("ionix-project: the saved layout tree does not match the window list, tiling in order", file=sys.stderr)
+        tree = None
+
+    tree = prune(tree, set(matched))
+    tree_windows = leaves(tree)
+    steps = [{"window": selector(matched[s["window"]]), "from": selector(matched[s["from"]]),
+              "dir": s["dir"], "ratio": s["ratio"]} for s in build_steps(tree)]
+    tiles = [selector(matched[i]) for i in tree_windows]
+    # Tiled windows the tree has no slot for (no tree at all, fullscreen ones)
+    # are tiled after it, in saved order, wherever dwindle puts them.
+    extras = []
+    for i, e in enumerate(entries):
+        if i not in matched:
+            continue
+        if e.get("floating"):
+            floats.append({"window": selector(matched[i]), **scale_geometry(e, saved_area, target_area)})
+        elif i not in tree_windows:
+            extras.append(selector(matched[i]))
+        if e.get("fullscreen"):
+            fullscreen.append({"window": selector(matched[i]), "mode": "maximized" if e["fullscreen"] == 1 else "fullscreen"})
+
+    focus_idx = next((i for i in range(len(entries)) if i in matched), None)
+    spec = {
+        "workspace": ws_id,
+        "floats": floats,
+        "tiles": tiles,
+        "steps": steps,
+        "extras": extras,
+        "fullscreen": fullscreen,
+        "focus": selector(matched[focus_idx]) if focus_idx is not None else None,
+    }
+    if matched:
+        hypr_call("eval", f"ionix_project_apply({lua(spec)})")
+
+    # The rename above can land before Hyprland has the workspace; now it
+    # certainly has.
+    rename_workspace(ws_id, label)
+    refresh_shell()
+
+    missing = [entries[i].get("class") or f"window {i}" for i in range(len(entries)) if i not in matched and launch_command(entries[i])]
+    if missing:
+        notify(f"{label}: {len(missing)} app(s) did not open", ", ".join(missing), replace=toast)
+        print(f"Loaded {label!r} on workspace {ws_id}; did not open: {', '.join(missing)}", file=sys.stderr)
+        return 1
+    notify(f"{label} is ready", f"Workspace {ws_id}", replace=toast, expire=3000)
+    print(f"Loaded {label!r} on workspace {ws_id}")
+    return 0
+
+
+def open_workspaces():
+    try:
+        return hypr_json("workspaces")
+    except ProjectError:
+        return []
+
+
+def cmd_list(args):
+    live = open_workspaces()
+    rows = []
+    for path, data in all_projects():
+        name = data["name"]
+        on = sorted(w["id"] for w in live if w.get("name") == name)
+        rows.append({
+            "name": name,
+            "slug": os.path.splitext(os.path.basename(path))[0],
+            "file": path,
+            "windows": len(data["windows"]),
+            "apps": [w.get("class", "") for w in data["windows"]],
+            "savedAt": data.get("savedAt", ""),
+            "workspace": on[0] if on else None,
+            "workspaces": on,
+        })
+    if args.json:
+        json.dump(rows, sys.stdout)
+        print()
+        return
+    if not rows:
+        print(f"No projects yet. Save one with: ionix-project save <name>   ({PROJECTS_DIR})")
+        return
+    width = max(len(r["name"]) for r in rows)
+    for r in rows:
+        where = f"open on {', '.join(map(str, r['workspaces']))}" if r["workspaces"] else ""
+        print(f"{r['name']:<{width}}  {r['windows']:>2} window(s)  {where}".rstrip())
+
+
+def cmd_show(args):
+    path, data = find_project(args.name)
+    print(f"# {path}")
+    json.dump(data, sys.stdout, indent=2, ensure_ascii=False)
+    print()
+
+
+def cmd_rename(args):
+    path, data = find_project(args.old)
+    new = args.new.strip()
+    if not new:
+        raise ProjectError("the new name is empty")
+    old = data["name"]
+    new_path = project_path(new)
+    if os.path.exists(new_path) and os.path.abspath(new_path) != os.path.abspath(path):
+        raise ProjectError(f"a project named {new!r} already exists")
+    data["name"] = new
+    write_project(new_path, data)
+    if not DRY_RUN and os.path.abspath(new_path) != os.path.abspath(path):
+        os.unlink(path)
+    workspaces = open_workspaces()
+    for w in workspaces:
+        if w.get("name") == old:
+            rename_workspace(w["id"], unique_label(new, workspaces, except_id=w["id"]))
+    refresh_shell()
+    print(f"Renamed {old!r} → {new!r}")
+
+
+def cmd_delete(args):
+    path, data = find_project(args.name)
+    if not DRY_RUN:
+        os.unlink(path)
+    refresh_shell()
+    print(f"Deleted {data['name']!r}")
+
+
+def cmd_label(args):
+    workspaces = hypr_json("workspaces")
+    ws = resolve_workspace(args.workspace, workspaces, hypr_json("activeworkspace"))
+    if ws.get("id", 0) < 1:
+        raise ProjectError("special workspaces cannot be labeled")
+    if args.clear:
+        rename_workspace(ws["id"], str(ws["id"]))
+    else:
+        if not args.name or not args.name.strip():
+            raise ProjectError("give a label, or --clear")
+        rename_workspace(ws["id"], unique_label(args.name.strip(), workspaces, except_id=ws["id"]))
+    refresh_shell()
+
+
+def cmd_current(args):
+    ws = hypr_json("activeworkspace")
+    if is_label(ws):
+        print(ws["name"])
+        return 0
+    return 1
+
+
+def main():
+    global DRY_RUN
+    p = argparse.ArgumentParser(prog="ionix-project", description="Save and load labeled project workspaces.")
+    p.add_argument("--dry-run", action="store_true", help="print what would be written or dispatched")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    s = sub.add_parser("save", help="save a workspace as a project")
+    s.add_argument("name")
+    s.add_argument("--workspace", type=int)
+    s.set_defaults(fn=cmd_save)
+
+    s = sub.add_parser("load", help="open a project on a free workspace")
+    s.add_argument("name")
+    g = s.add_mutually_exclusive_group()
+    g.add_argument("--workspace", type=int)
+    g.add_argument("--here", action="store_true", help="open on the active workspace")
+    s.add_argument("--timeout", type=float, default=30, help="seconds to wait for windows (default 30)")
+    s.set_defaults(fn=cmd_load)
+
+    s = sub.add_parser("list", help="list saved projects")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_list)
+
+    s = sub.add_parser("show", help="print a project file")
+    s.add_argument("name")
+    s.set_defaults(fn=cmd_show)
+
+    s = sub.add_parser("rename", help="rename a project (and its open workspaces)")
+    s.add_argument("old")
+    s.add_argument("new")
+    s.set_defaults(fn=cmd_rename)
+
+    s = sub.add_parser("delete", help="delete a saved project")
+    s.add_argument("name")
+    s.set_defaults(fn=cmd_delete)
+
+    s = sub.add_parser("label", help="label a workspace without saving it")
+    s.add_argument("name", nargs="?")
+    s.add_argument("--clear", action="store_true")
+    s.add_argument("--workspace", type=int)
+    s.set_defaults(fn=cmd_label)
+
+    s = sub.add_parser("current", help="print the active workspace's label")
+    s.set_defaults(fn=cmd_current)
+
+    args = p.parse_args()
+    DRY_RUN = args.dry_run
+    try:
+        return args.fn(args) or 0
+    except ProjectError as e:
+        print(f"ionix-project: {e}", file=sys.stderr)
+        if not interactive():
+            notify("Projects", str(e))
+        return 1
+    except KeyboardInterrupt:
+        return 130
+
+
+if __name__ == "__main__":
+    sys.exit(main())
