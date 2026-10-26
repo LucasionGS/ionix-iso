@@ -300,6 +300,35 @@ is not user-consentable in most tenants — an admin grants it once). Tokens go 
 (hence `libnotify` in `packages.x86_64`): the shell is the notification server, so the toast lands
 in its own centre and the blocked `notify-send` printing `join` is the cue to open the link.
 
+**Project workspaces are a CLI, a Lua function and a label.** `usr/local/bin/ionix-project`
+(stdlib Python) saves one workspace to `~/.config/ionix/projects/<slug>.json`: per window its class,
+how to start it again (the desktop entry's `Exec` matched by `StartupWMClass`/id, else
+`/proc/<pid>/cmdline`; a hand-written `"exec"` wins), the cwd of a terminal's shell, floating
+geometry, and the tiled windows as a **split tree** (`layout_tree()` finds the guillotine cuts; no
+cut, as under master, means `tree: null` and tiling in order). Loading launches everything on the
+next free workspace (an empty unlabeled active one counts) with `hl.dsp.exec_cmd(cmd, { workspace
+= "N silent", float = true })`, claims new windows by class from `hyprctl clients` (moving any that
+an already-running instance opened elsewhere), then calls `ionix_project_apply(spec)` in
+`hyprland.lua` through `hyprctl eval`, which rebuilds dwindle's tree in-process the way
+`arrange_grid` does. Things read out of Hyprland's source, not guessed:
+
+- every `hl.dsp.window.*` dispatcher takes `window = "address:0x…"`; `move`/`resize` with `x`/`y`
+  and no `relative` are absolute (global layout px);
+- `hl.dsp.layout("preselect r|d")` fixes the next split's direction *and* puts the new window
+  second, whatever the box shape or cursor; `splitratio <r> exact` sets the node's ratio, and the
+  split window (first child) gets `r/2` of it;
+- `float({ action = "disable" })` re-adds the window with no focal point, so under
+  `use_active_for_splits` (default on) the *focused* tiled window is the one divided.
+
+The label is the workspace's Hyprland name (`hl.dsp.workspace.rename`), not state of our own:
+`Projects.labelFor(ws)` in the shell is just "`ws.name` unless it is the id", Quickshell updates
+the name from the `renameworkspace` event, and the label goes when the workspace does. The shell
+(`services/Projects.qml`) hides the whole feature unless `ionix-project` is on PATH, since the AUR
+package also runs off Ionix. It re-reads `ionix-project list --json` when the start menu opens and
+on `qs ipc call projects refresh`, which the CLI sends after every change. Run without a terminal
+(from the shell or a bind) the CLI reports through `notify-send`. To try it without Hyprland:
+`HYPRCTL=<fake script> PROJECTS_DIR=<dir> ionix-project --dry-run load <name>` prints every dispatch.
+
 **First-login setup:** `ionix-first-login` is a marker-file-based one-time script that runs on first Hyprland session (e.g., clones NvChad config for neovim).
 
 **SVG asset pipeline:** Branding is stored as SVG in `assets/` and converted to PNG at build time. Generated PNGs are gitignored and cleaned by `clean.sh`.
@@ -350,6 +379,7 @@ in its own centre and the blocked `notify-send` printing `join` is the cue to op
 - `grub-install` — PATH-priority wrapper adding `--no-nvram`, so a plain `grub-install` call
   from inside the Calamares chroot does not fail trying to write EFI NVRAM
 - `ionix-arrange-workspace` — workspace helper
+- `ionix-project` — save/load labeled project workspaces (see "Project workspaces" above)
 - `ionix-login-mode` — greeter / autologin / locked; survives onto the installed system
 - `ionix-fingerprint` — fingerprint reader support; survives onto the installed system
 - `ionix-extras` — installs the optional bundles; survives onto the installed system

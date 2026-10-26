@@ -97,6 +97,23 @@ workspace or stay on the current one.
 
 ![The Alt-Tab switcher overlay showing five window cards with live previews: a system monitor, an audio visualiser, a terminal, a code editor and the file manager](docs/screenshots/alt-tab-switcher.webp)
 
+### Project workspaces
+
+Save a workspace as a named project - the apps on it, which folder each terminal was in, and
+where every window sat - and open it again later with one click. It opens on the next free
+workspace, so it never disturbs what you already have open, and the workspace carries the
+project's name in the bar and on the Alt-Tab cards. Projects live in the start menu
+(`Ctrl+Super+P`), in its search, and on the command line:
+
+```bash
+ionix-project save "Ionix ISO"     # this workspace, as a project
+ionix-project load "Ionix ISO"     # open it again on a free workspace
+ionix-project list
+```
+
+Each project is a small JSON file in `~/.config/ionix/projects/` that is fine to edit by hand -
+add an `"exec"` line to a window to change how its app is started.
+
 ### Panels, not applets
 
 Clicking an indicator opens a panel drawn by the shell itself rather than launching a separate
@@ -210,6 +227,8 @@ All of these live in `/etc/hypr/hyprland.lua`. Override any of them in
 | `Super+S` / `Super+Shift+S` | Toggle the scratchpad / throw a window into it |
 | `Super+numpad 1`…`9` | Snap this workspace's windows into a grid, laid out like the numpad |
 | `Super+numpad 0` | Put everything back under the tiler |
+| `Ctrl+Super+P` | Projects: open, rename or delete a saved project workspace |
+| `Ctrl+Super+Shift+P` | Save this workspace as a project |
 
 ### Screenshots
 

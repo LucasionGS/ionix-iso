@@ -679,9 +679,10 @@ hl.bind(mainMod .. " + J", cycle_layout)
 --   * `use_active_for_splits` means a window entering the tree splits the
 --     *active* window's node. So the focus before each un-float is the whole
 --     instruction: focus the window whose slot is being divided.
---   * `preserve_split` is off, so the direction of a split is never ours to
---     pick -- dwindle re-derives it from the node's box on every recalculation
---     and always cuts the longer side. That is what keeps the cells square, and
+--   * With nothing preselected, a split takes its direction from the node's
+--     box when it is created -- it cuts the longer side -- and `preserve_split`
+--     keeps it that way afterwards, so the direction is never ours to pick
+--     here. That is what keeps the cells square, and
 --     it is also why the ratios below have to be set as the tree is built: a
 --     band left at half width would be taller than it is wide, and the next
 --     window would then land underneath it instead of beside it.
@@ -825,6 +826,91 @@ local function arrange_grid()
 end
 
 hl.bind(mainMod .. " + SHIFT + J", arrange_grid)
+
+
+-- ══════════════════════════════════════════════════════════════
+-- ║  Project workspaces                                        ║
+-- ══════════════════════════════════════════════════════════════
+
+-- `ionix-project` saves a workspace's apps and layout under a label and opens
+-- them again later. It launches and finds the windows itself, then hands them
+-- here through `hyprctl eval` to be put in place in one pass:
+--
+--   ionix_project_apply({
+--     workspace  = 4,
+--     floats     = { { window = "address:0x…", x, y, w, h } },   -- global px
+--     tiles      = { "address:0x…", … },       -- the tree's windows, first = root
+--     steps      = { { window, from, dir = "r"|"d", ratio } },  -- one per split
+--     extras     = { "address:0x…", … },       -- tiled, no slot in the tree
+--     fullscreen = { { window, mode = "fullscreen"|"maximized" } },
+--     focus      = "address:0x…",
+--   })
+--
+-- Every window arrives floating (the script spawns them that way), so the tree
+-- is built from empty -- the grid arrange above, driven by a saved shape
+-- instead of a computed one. Two things differ from it, both read out of
+-- dwindle's source rather than assumed:
+--
+--   * Each split is preselected (`preselect r|d`), which fixes both its
+--     direction and which side the new window goes to, whatever the box's
+--     shape or the cursor. A saved split across the shorter side survives.
+--   * `splitratio <r> exact` sets the node's ratio outright, so no delta from
+--     default_split_ratio. The ratio is the node's: its first child -- the
+--     window that was split -- gets half of it, hence the doubling.
+--
+-- Each ratio is set straight after its split, while the split window's parent
+-- is still that node; the next step may split the same window again and
+-- re-parent it.
+function ionix_project_apply(spec)
+  local function float(window, on)
+    hl.dispatch(hl.dsp.window.float({ action = on and "enable" or "disable", window = window }))
+  end
+
+  for _, f in ipairs(spec.floats or {}) do
+    float(f.window, true)
+    hl.dispatch(hl.dsp.window.resize({ x = f.w, y = f.h, window = f.window }))
+    hl.dispatch(hl.dsp.window.move({ x = f.x, y = f.y, window = f.window }))
+  end
+
+  -- A window the exec rule missed (an app that handed off to an instance
+  -- already running) may have arrived tiled; empty the tree first.
+  for _, window in ipairs(spec.tiles or {}) do float(window, true) end
+  for _, window in ipairs(spec.extras or {}) do float(window, true) end
+
+  local tiles = spec.tiles or {}
+  if #tiles > 0 then
+    float(tiles[1], false)
+  end
+
+  if hl.get_config("general.layout") == "dwindle" then
+    for _, step in ipairs(spec.steps or {}) do
+      -- use_active_for_splits: the focused window is the one divided.
+      hl.dispatch(hl.dsp.focus({ window = step.from }))
+      hl.dispatch(hl.dsp.layout("preselect " .. step.dir))
+      float(step.window, false)
+      hl.dispatch(hl.dsp.focus({ window = step.from }))
+      hl.dispatch(hl.dsp.layout(string.format("splitratio %.4f exact", 2 * step.ratio)))
+    end
+  else
+    -- Other layouts have no tree to rebuild; saved order is the best hint.
+    for i = 2, #tiles do float(tiles[i], false) end
+  end
+
+  for _, window in ipairs(spec.extras or {}) do float(window, false) end
+
+  for _, fs in ipairs(spec.fullscreen or {}) do
+    hl.dispatch(hl.dsp.focus({ window = fs.window }))
+    hl.dispatch(hl.dsp.window.fullscreen({ mode = fs.mode, action = "set", window = fs.window }))
+  end
+
+  if spec.focus then
+    hl.dispatch(hl.dsp.focus({ window = spec.focus }))
+  end
+end
+
+-- The shell's Projects view (start menu), and straight to its save field.
+bind_exec("CTRL + " .. mainMod .. " + P", "qs -c ionix ipc call projects open")
+bind_exec("CTRL + " .. mainMod .. " + SHIFT + P", "qs -c ionix ipc call projects saveDialog")
 
 
 -- ══════════════════════════════════════════════════════════════
