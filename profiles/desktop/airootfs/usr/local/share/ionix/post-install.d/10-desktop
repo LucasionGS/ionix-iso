@@ -114,7 +114,8 @@ if lspci | grep -qi 'nvidia'; then
     # Ensure nvidia modules load early
     sed -i 's/^MODULES=(\(.*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
 else
-    # No NVIDIA GPU — remove NVIDIA packages to save space
+    # No NVIDIA GPU — remove NVIDIA packages to save space. patch-os.sh keeps
+    # the same list, so it does not offer them back.
     pacman -Rns --noconfirm nvidia-open nvidia-utils lib32-nvidia-utils egl-wayland libva-nvidia-driver 2>/dev/null || true
 fi
 
