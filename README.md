@@ -400,10 +400,11 @@ the defaults and applied live without a restart; a `user.qml` for your own QML; 
 is documented in `/etc/xdg/quickshell/ionix/defaults.json`.
 
 **Hyprland.** Your config lives at `~/.config/hypr/hyprland.lua` and loads the system defaults
-first, so you only write the differences:
+first, so you only write the differences. The keyboard layout follows the one you picked in the
+installer; `sudo localectl set-x11-keymap de` changes it for the whole system from the next login.
 
 ```lua
--- Use a US keyboard layout
+-- Use a different keyboard layout in Hyprland only
 hl.config({ input = { kb_layout = "us" } })
 
 -- Add your own keybinding
