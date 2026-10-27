@@ -247,7 +247,8 @@ def do_start(args):
     cmd += [
         "-device", "virtio-tablet-pci",   # absolute pointer: clicks land where told
         "-device", "virtio-keyboard-pci",
-        "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
+        "-netdev", "user,id=net0" + "".join(f",hostfwd=tcp:127.0.0.1:{f.replace(':', '-:')}" for f in args.forward),
+        "-device", "virtio-net-pci,netdev=net0",
         "-qmp", f"unix:{QMP_SOCK},server=on,wait=off",
         "-pidfile", PIDFILE,
         # Kernel console to a file: the only way to see why a boot died once the
@@ -440,6 +441,8 @@ def main():
     s.add_argument("--width", default="1920")
     s.add_argument("--height", default="1080")
     s.add_argument("--rendernode", default="/dev/dri/renderD128")
+    s.add_argument("--forward", action="append", default=[], metavar="HOST:GUEST",
+                   help="forward a localhost TCP port to the guest, e.g. 2222:22 for ssh")
     s.add_argument("--headed", action="store_true",
                    help="show the VM in a window on the host desktop (2D only)")
     s.add_argument("--gl", action="store_true",
