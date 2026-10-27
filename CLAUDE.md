@@ -134,7 +134,9 @@ published by `aur-publish.sh`. Their version is `r<count>.<hash>` of the commits
   `ionix-migrate`: `migrations/system/` from a pacman hook after every ionix-base install or
   upgrade (an ISO build runs them all too, on a fresh root, so each must be a no-op there),
   `migrations/user/` at login (fish's `ionix.fish` and the desktop's `init.sh`). `001-usr-local-to-usr`
-  moves an older install's `/usr/local` copies aside to `/var/lib/ionix/pre-package/`;
+  moves an older install's `/usr/local` copies aside to `/var/lib/ionix/pre-package/`, copying
+  back any theme Ionix does not ship (hand-made, or since dropped, like `macix`) into
+  `/usr/share/ionix/styler/themes`, the only place the picker and `ionixtheme` look;
 - `ionix-migrate system` also keeps `/usr/local/share/ionix/<name>` linked to
   `/usr/share/ionix/<name>`, on every system including fresh ones: user homes (theme symlinks,
   crontabs) and the shell's `Config.qml`/`LockMedia.qml`/`ionix-greeter` still name the old path;
