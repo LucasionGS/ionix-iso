@@ -179,41 +179,45 @@ done
 # ---------------------------------------------------------------------------
 # Package installation
 # ---------------------------------------------------------------------------
-install_packages() {
-    # Collect packages: strip comments and blank lines. The system packages
-    # were just installed from this checkout, and the AUR would replace them.
-    mapfile -t pkgs < <(cat "$PROFILES_DIR/common/packages.x86_64" "$PROFILES_DIR/$VARIANT/packages.x86_64" \
+# The variant's packages this system does not have yet. `pacman -T` counts a
+# package that provides the name, so a renamed or replaced one is not missing.
+# Packages it has are left to `yay -Syu`: asking yay for them again would
+# upgrade them against a stale database, or swap one built here (shim-signed)
+# for an AUR package of a similar name.
+missing_packages() {
+    cat "$PROFILES_DIR/common/packages.x86_64" "$PROFILES_DIR/$VARIANT/packages.x86_64" \
         | sed 's/[[:space:]]*#.*//; s/[[:space:]]*$//' | grep -v '^$' \
-        | grep -vxE 'ionix-(base|desktop|server)-git')
+        | xargs pacman -T || true
+}
 
-    if [[ ${#pkgs[@]} -eq 0 ]]; then
-        echo "No packages found in packages.x86_64, skipping."
-        return
-    fi
-
-    echo "Installing/updating ${#pkgs[@]} packages via yay --needed ..."
+install_packages() {
+    local pkgs=("$@")
+    echo "Installing ${#pkgs[@]} package(s) with a full yay -Syu: ${pkgs[*]}"
     echo ""
-
-    # yay must not run as root; use SUDO_USER if available
+    # yay must not run as root; use SUDO_USER if available. -Syu, never -S
+    # alone: new packages built against today's repos need today's libraries.
     if [[ -n "${SUDO_USER:-}" ]]; then
-        sudo -u "$SUDO_USER" yay --needed --noconfirm -S "${pkgs[@]}"
+        sudo -u "$SUDO_USER" yay -Syu --needed --noconfirm "${pkgs[@]}"
     else
-        yay --needed --noconfirm -S "${pkgs[@]}"
+        yay -Syu --needed --noconfirm "${pkgs[@]}"
     fi
 }
 
 # Only install packages when operating on the real root (--root skips this)
 if [[ -z "$TARGET_ROOT" ]]; then
-    if ! command -v yay &>/dev/null; then
-        echo "Warning: yay not found — skipping package installation."
+    echo "─────────────────────────────────────────────────────"
+    mapfile -t missing < <(missing_packages)
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        echo "Every package in packages.x86_64 is installed."
+    elif ! command -v yay &>/dev/null; then
+        echo "Warning: yay not found — not installing: ${missing[*]}"
     elif "$AUTO_ACCEPT"; then
-        echo "─────────────────────────────────────────────────────"
-        install_packages
+        install_packages "${missing[@]}"
     else
-        echo "─────────────────────────────────────────────────────"
-        read -r -p "Install/update packages from packages.x86_64? [y/N]: " choice < /dev/tty
+        echo "Missing from packages.x86_64: ${missing[*]}"
+        read -r -p "Install them (with a full yay -Syu)? [y/N]: " choice < /dev/tty
         if [[ "$choice" == [Yy]* ]]; then
-            install_packages
+            install_packages "${missing[@]}"
         else
             echo "Skipped package installation."
         fi

@@ -53,11 +53,15 @@ for entry in /usr/share/ionix/*; do
   stash "$old"
 done
 
-# Themes someone added by hand went into the backup with the rest of the styler.
+# Themes the packages do not ship (added by hand, or dropped from Ionix since)
+# went into the backup with the rest of the styler. Put them back next to the
+# shipped ones: the theme picker and ionixtheme only look there, and a user on
+# one of them has links into it. Pacman leaves files it does not own alone.
 if [[ -d "$BACKUP/usr/local/share/ionix/styler/themes" ]]; then
   for theme in "$BACKUP/usr/local/share/ionix/styler/themes"/*/; do
     theme="$(basename "$theme")"
-    [[ -d "/usr/share/ionix/styler/themes/$theme" ]] && continue
-    echo "  Theme \"$theme\" is not one Ionix ships; it is in $BACKUP/usr/local/share/ionix/styler/themes/$theme"
+    [[ -e "/usr/share/ionix/styler/themes/$theme" ]] && continue
+    cp -a "$BACKUP/usr/local/share/ionix/styler/themes/$theme" "/usr/share/ionix/styler/themes/$theme"
+    echo "  Kept theme \"$theme\", which Ionix does not ship, in /usr/share/ionix/styler/themes/$theme"
   done
 fi
