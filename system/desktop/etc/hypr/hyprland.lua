@@ -18,9 +18,38 @@ hl.monitor({
 })
 
 -- ── Input ─────────────────────────────────────────────────────
+-- The keyboard the system was set up with. The installer records it, and
+-- `localectl set-x11-keymap` changes it, in systemd-localed's X11 file:
+--   Option "XkbLayout" "dk"
+-- Without that file (the live medium) the console keymap stands in, minus its
+-- variant suffix as kmscon does it (dk-latin1 -> dk, uk -> gb), then "us".
+local function system_keyboard()
+  local kb = {}
+  local file = io.open("/etc/X11/xorg.conf.d/00-keyboard.conf", "r")
+  if file then
+    for key, value in file:read("a"):gmatch('Option%s+"Xkb(%a+)"%s+"([^"]*)"') do
+      kb[key] = value
+    end
+    file:close()
+  end
+
+  if (kb.Layout or "") == "" then
+    file = io.open("/etc/vconsole.conf", "r")
+    local keymap = file and file:read("a"):match('KEYMAP="?([%w_]+)')
+    if file then file:close() end
+    kb = { Layout = keymap == "uk" and "gb" or keymap or "us" }
+  end
+  return kb
+end
+
+local keyboard = system_keyboard()
+
 hl.config({
   input = {
-    kb_layout = "dk",
+    kb_layout = keyboard.Layout,
+    kb_variant = keyboard.Variant or "",
+    kb_model = keyboard.Model or "",
+    kb_options = keyboard.Options or "",
     follow_mouse = 1,
     sensitivity = 0,
 

@@ -153,6 +153,10 @@ live in the desktop's `skel/.config/fish/conf.d/ionix-desktop.fish`, which conf.
 config.fish as before.
 
 **Layered Hyprland config:** System defaults live in `system/desktop/etc/hypr/hyprland.lua`, user config in `system/desktop/etc/skel/.config/hypr/hyprland.lua` which loads the system config with `dofile`, then allows user overrides.
+The keyboard layout is never hardcoded: `system_keyboard()` in hyprland.lua reads
+`/etc/X11/xorg.conf.d/00-keyboard.conf` (Calamares' keyboard page writes it, `localectl
+set-x11-keymap` changes it) at config load, falling back to `/etc/vconsole.conf`'s `KEYMAP`, then
+`us` — so the live medium is `us`. Hyprland's Lua has `io`; verified with `hyprctl eval`.
 
 **Post-install is a base plus hooks.** `ionix-post-install` (common) does what turning any copy of
 the live medium into an installed system takes: live-artefact cleanup, each kernel in
