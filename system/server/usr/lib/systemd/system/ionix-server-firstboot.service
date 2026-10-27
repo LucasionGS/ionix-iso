@@ -1,0 +1,16 @@
+# Enabled by the installer; disables itself once it has run. The firewall is
+# set up here rather than in the installer's chroot, where ufw would load its
+# rules into the live medium's kernel instead of the installed system's.
+[Unit]
+Description=Ionix Server first boot (firewall, first snapshot)
+After=ufw.service local-fs.target
+Before=network-pre.target sshd.service
+Wants=network-pre.target
+ConditionPathExists=/etc/ionix/firstboot
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ionix-server-firstboot
+
+[Install]
+WantedBy=multi-user.target

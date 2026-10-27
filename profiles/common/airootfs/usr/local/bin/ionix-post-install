@@ -87,10 +87,10 @@ done
 # The GRUB theme /etc/default/grub names. It travels outside /boot because
 # mkarchiso deletes everything under the image's /boot; the installer's
 # grub-mkconfig runs after this script.
-if [[ -d /usr/local/share/ionix/grub-theme ]]; then
+if [[ -d /usr/share/ionix/grub-theme ]]; then
     rm -rf /boot/grub/themes/ionix
     mkdir -p /boot/grub/themes
-    cp -r /usr/local/share/ionix/grub-theme /boot/grub/themes/ionix
+    cp -r /usr/share/ionix/grub-theme /boot/grub/themes/ionix
 fi
 
 # The variant's own configuration.

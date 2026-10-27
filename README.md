@@ -54,7 +54,7 @@ reasonable thing to want - and Ionix is the opposite of it. Install plain Arch i
 | **Colours from your wallpaper** | The `ionix-adaptive` theme derives its whole palette from whatever image is on screen |
 | **Built for gaming** | SteamOS-style kernel tuning, with Steam, Lutris, Proton and MangoHud preloaded |
 | **Two desktops, one install** | Hyprland or a full GNOME session, chosen at the boot menu |
-| **The desktop updates itself** | The shell is a normal AUR package, so `yay -Syu` advances it without a new ISO |
+| **The desktop updates itself** | The shell and Ionix's own configs are normal AUR packages, so `yay -Syu` advances them without a new ISO |
 | **Rolling Arch underneath** | Full `pacman` and AUR access; nothing wrapped, nothing hidden |
 
 ---
@@ -313,7 +313,7 @@ and [`profiles/desktop/packages.x86_64`](profiles/desktop/packages.x86_64).
 ### Gaming tuning
 
 Ionix ships SteamOS-inspired kernel settings out of the box
-([`99-ionix-gaming.conf`](profiles/desktop/airootfs/etc/sysctl.d/99-ionix-gaming.conf)):
+([`99-ionix-gaming.conf`](system/desktop/etc/sysctl.d/99-ionix-gaming.conf)):
 
 - `vm.max_map_count = 2147483642` - required by many Proton and Wine titles
 - Split-lock mitigation disabled - older games trip it and get serialised by the kernel
@@ -414,7 +414,7 @@ hl.monitor({ output = "DP-1", mode = "2560x1440@144", position = "0x0", scale = 
 ```
 
 **Themes.** `ionixtheme --list` shows what is available and `ionixtheme <name>` switches. To make
-your own, copy a shipped theme out of `/usr/local/share/ionix/styler/themes/` and edit it.
+your own, copy a shipped theme out of `/usr/share/ionix/styler/themes/` and edit it.
 
 ---
 
@@ -424,12 +424,20 @@ Ionix is rolling, so there is nothing special to do:
 
 ```bash
 sudo pacman -Syu    # everything from the Arch repositories
-yay -Syu            # the above, plus the AUR - including the Ionix shell
+yay -Syu            # the above, plus the AUR - including the Ionix shell and system files
 ```
 
-The desktop shell is published to the AUR as `ionix-quickshell-git`, and the installer removes the
-local `[ionix]` repository, so `yay` treats it as an ordinary foreign package and upgrades it in
-place. You do not need a new ISO to get a newer desktop.
+The desktop shell is published to the AUR as `ionix-quickshell-git`, and Ionix's own files (themes,
+Hyprland defaults, its scripts) as `ionix-base-git` plus `ionix-desktop-git` or `ionix-server-git`.
+The installer removes the local `[ionix]` repository, so `yay` treats them as ordinary foreign
+packages and upgrades them in place. You do not need a new ISO to get a newer desktop.
+
+A config file in `/etc` that you edited is never overwritten: if an update changes it too, the new
+version lands next to yours as `.pacnew` (`pacdiff` helps you merge). Your own files in your home
+directory are never touched.
+
+Installed before these packages existed? Run `sudo ./patch-os.sh` from a checkout of this repository once.
+It installs them and walks you through any config file where your copy and the new one differ.
 
 ---
 

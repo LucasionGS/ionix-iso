@@ -1,83 +1,45 @@
 #!/bin/bash
-# This script is used to patch an existing OS with the latest updates to Ionix.
-# It will be used to update files in the OS that has changed since the original ISO installation.
+# Brings an installed Ionix system up to date with this checkout.
+#
+# Ionix's own files are packages now (ionix-base-git plus ionix-desktop-git or
+# ionix-server-git, built from system/), so this builds them from the working
+# tree and installs them with pacman. Pacman then does what this script used to
+# do by hand: a config file you edited is kept and the new one written next to
+# it as .pacnew, which this script walks you through. On a system installed
+# before the packages existed, the first run also takes ownership of the files
+# the ISO copied in, and the ionix-base hook moves the old /usr/local copies
+# out of the way.
+#
+# Once the packages are on the AUR, `yay -Syu` does the same from there; this
+# script is for trying unpublished changes and for adopting an older install.
 
 set -euo pipefail
 
 AUTO_ACCEPT=false
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILES_DIR="$SCRIPT_DIR/profiles"
+SYSTEM_DIR="$SCRIPT_DIR/system"
 TARGET_ROOT=""
 VARIANT=""
-
-# Exact paths (relative to airootfs) to always exclude from patching.
-# These are installer/live-specific files that must never be copied to an
-# installed system.
-SKIP_EXACT=(
-    "etc/default/grub"
-    # The live ISO keeps its journal in RAM; an installed system must not.
-    "etc/systemd/journald.conf.d/volatile-storage.conf"
-    "etc/mkinitcpio.d/linux.preset"
-    "etc/mkinitcpio.d/linux-lts.preset"
-    "etc/sudoers.d/10-ionix"
-    "home/liveuser/.gitkeep"
-    "usr/local/bin/grub-install"
-    "usr/local/bin/ionix-install"
-    "usr/local/bin/ionix-post-install"
-    "usr/local/bin/ionix-server-install"
-    "usr/local/bin/ionix-live-console"
-    "root/.config/fish/conf.d/ionix-live.fish"
-    "usr/share/applications/ionix-install.desktop"
-    "etc/motd"
-    "etc/ssh/sshd_config.d/10-ionix-live.conf"
-    "etc/systemd/system/ionix-live-setup.service"
-    # Holds the palette ionix-console-theme manages, and the keyboard layout.
-    "etc/kmscon/kmscon.conf"
-)
-
-# Path prefixes (relative to airootfs) to skip — these are either live-ISO-specific,
-# per-machine configuration, or managed by other tools (e.g. systemctl).
-SKIP_PATTERNS=(
-    "etc/shadow"
-    "etc/gshadow"
-    "etc/group"
-    "etc/passwd"
-    "etc/hostname"
-    "etc/locale.gen"
-    "etc/locale.conf"
-    "etc/vconsole.conf"
-    # "etc/skel"
-    "etc/mkinitcpio.conf.d"
-    "etc/pacman.d/hooks"
-    "etc/calamares"
-    "etc/systemd/system/multi-user.target.wants"
-    "etc/systemd/system/NetworkManager-wait-online.service"
-    "etc/systemd/system/getty@tty1.service.d"
-    "etc/systemd/system/etc-pacman.d-gnupg.mount"
-    "etc/systemd/system/pacman-init.service"
-    "etc/systemd/system/choose-mirror.service"
-    "usr/local/share/ionix/post-install.d"
-)
 
 usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Compare Ionix airootfs against an installed system and apply updates.
+Build the Ionix system packages from this checkout and install them.
 
 Options:
-  -y               Auto-accept all updates (non-interactive)
-  --root PATH      Target root directory (default: /)
+  -y               Take every new config file without asking (yours is kept
+                   next to it as .pacorig)
+  --root PATH      Install into the system mounted at PATH (default: /);
+                   skips the package list
   --variant NAME   desktop or server (default: read from the target's
                    /etc/ionix/variant, else desktop)
   -h, --help       Show this help
 
-In interactive mode (default), each changed file shows a diff and prompts
-whether to update or keep the local version. Files kept locally are listed
-at the end for manual review.
-
-Files under etc/skel/ (user home templates) and live-ISO-specific paths
-are excluded from patching.
+In interactive mode (default), each config file you changed that the packages
+also changed shows a diff and asks which version to keep. Files kept are
+listed at the end, with the new version left beside them as .pacnew.
 EOF
     exit 0
 }
@@ -92,8 +54,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ -z "$TARGET_ROOT" && "$EUID" -ne 0 ]]; then
-    echo "Error: must be run as root when targeting /." >&2
+if [[ "$EUID" -ne 0 ]]; then
+    echo "Error: must be run as root." >&2
     echo "Run: sudo $0 $*" >&2
     exit 1
 fi
@@ -102,143 +64,127 @@ fi
 if [[ -z "$VARIANT" ]]; then
     VARIANT="$(cat "${TARGET_ROOT}/etc/ionix/variant" 2>/dev/null || echo desktop)"
 fi
-if [[ "$VARIANT" == common || ! -d "$PROFILES_DIR/$VARIANT" ]]; then
+if [[ "$VARIANT" != desktop && "$VARIANT" != server ]]; then
     echo "Error: unknown variant '$VARIANT' (desktop or server)." >&2
     exit 2
 fi
 
-# The airootfs the ISO would carry: common/ with the variant laid over it, the
-# way build.sh stages it.
-AIROOTFS="$(mktemp -d)"
-trap 'rm -rf "$AIROOTFS"' EXIT
-cp -a "$PROFILES_DIR/common/airootfs/." "$AIROOTFS/"
-cp -a "$PROFILES_DIR/$VARIANT/airootfs/." "$AIROOTFS/"
-
-kept_files=()
-
-should_skip() {
-    local rel="$1"
-    for exact in "${SKIP_EXACT[@]}"; do
-        [[ "$rel" == "$exact" ]] && return 0
-    done
-    for pattern in "${SKIP_PATTERNS[@]}"; do
-        if [[ "$rel" == "$pattern" || "$rel" == "$pattern/"* ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-is_binary() {
-    grep -qP "\x00" "$1" 2>/dev/null
-}
-
-install_file() {
-    local src="$1" dst="$2"
-    mkdir -p "$(dirname "$dst")"
-    cp "$src" "$dst"
-}
+# makepkg refuses to run as root.
+BUILD_USER="${SUDO_USER:-nobody}"
+[[ "$BUILD_USER" == root ]] && BUILD_USER=nobody
 
 echo "Ionix OS Patcher"
 echo "================"
-echo "Repo:   $PROFILES_DIR (common + $VARIANT)"
-echo "Target: ${TARGET_ROOT:-/}"
+echo "Repo:    $SCRIPT_DIR ($VARIANT)"
+echo "Target:  ${TARGET_ROOT:-/}"
 if "$AUTO_ACCEPT"; then
-    echo "Mode:   auto-accept"
+    echo "Mode:    auto-accept"
 else
-    echo "Mode:   interactive"
+    echo "Mode:    interactive"
 fi
 echo ""
 
-QUIT=false
+# ---------------------------------------------------------------------------
+# Build the system packages
+# ---------------------------------------------------------------------------
+BUILD_DIR="$(mktemp -d)"
+trap 'rm -rf "$BUILD_DIR"' EXIT
 
-while IFS= read -r -d '' repo_file; do
-    "$QUIT" && break
+echo "Building the Ionix system packages..."
+pacman -S --needed --noconfirm --asdeps librsvg make > /dev/null
+cp -a "$SYSTEM_DIR/." "$BUILD_DIR/"
+rm -rf "$BUILD_DIR"/{build,pkg,src} "$BUILD_DIR"/*.pkg.tar.*
+# The same version aur/build-aur.sh gives an ISO build of this commit.
+printf "r%s.%s" \
+    "$(git -c safe.directory='*' -C "$SYSTEM_DIR" rev-list --count HEAD -- .)" \
+    "$(git -c safe.directory='*' -C "$SYSTEM_DIR" log -1 --format=%h -- .)" \
+    > "$BUILD_DIR/.pkgver"
+chown -R "$BUILD_USER" "$BUILD_DIR"
+(cd "$BUILD_DIR" && sudo -u "$BUILD_USER" makepkg --nodeps --noprogressbar > "$BUILD_DIR/makepkg.log" 2>&1) || {
+    echo "Failed to build the packages. makepkg said:" >&2
+    tail -20 "$BUILD_DIR/makepkg.log" >&2
+    exit 1
+}
 
-    rel="${repo_file#"$AIROOTFS"/}"
-    # The GRUB theme travels outside /boot (mkarchiso empties the image's
-    # /boot); on an installed system it belongs where /etc/default/grub points.
-    case "$rel" in
-        usr/local/share/ionix/grub-theme/*) rel="boot/grub/themes/ionix/${rel#usr/local/share/ionix/grub-theme/}" ;;
-    esac
-    system_file="${TARGET_ROOT}/${rel}"
+PKG_FILES=("$BUILD_DIR"/ionix-base-git-*.pkg.tar.* "$BUILD_DIR"/ionix-"$VARIANT"-git-*.pkg.tar.*)
 
-    should_skip "$rel" && continue
+# ---------------------------------------------------------------------------
+# Install them
+# ---------------------------------------------------------------------------
+# Every path the packages ship may already be on disk, unowned, from the ISO
+# or an older run of this script. --overwrite lets pacman take those over;
+# it only ever applies to these paths, never to another package's files.
+overwrite=()
+while read -r _ path; do
+    overwrite+=(--overwrite "$path")
+done < <(for f in "${PKG_FILES[@]}"; do pacman -Qlp "$f"; done)
 
-    if [[ ! -e "$system_file" ]]; then
-        # File does not exist on the target system
-        if "$AUTO_ACCEPT"; then
-            echo "[NEW]    /$rel"
-            install_file "$repo_file" "$system_file"
-        else
-            echo "─────────────────────────────────────────────────────"
-            echo "NEW FILE: /$rel"
-            read -r -p "Install this file? [y/N/q]: " choice < /dev/tty
-            case "$choice" in
-                [Yy])
-                    install_file "$repo_file" "$system_file"
-                    echo "Installed."
-                    ;;
-                [Qq])
-                    QUIT=true
-                    ;;
-                *)
-                    kept_files+=("/$rel  (new — not installed)")
-                    echo "Skipped."
-                    ;;
-            esac
-            echo ""
-        fi
-        continue
-    fi
+pacman_args=(-U --noconfirm "${overwrite[@]}")
+[[ -n "$TARGET_ROOT" ]] && pacman_args+=(--sysroot "$TARGET_ROOT")
 
-    # Skip identical files
-    cmp -s "$repo_file" "$system_file" && continue
+echo "Installing $(for f in "${PKG_FILES[@]}"; do basename "$f" | sed 's/-any\.pkg\.tar\..*//'; done | paste -sd' ')..."
+pacman "${pacman_args[@]}" "${PKG_FILES[@]}"
+echo ""
 
-    # Files differ
+# ---------------------------------------------------------------------------
+# Merge config files
+# ---------------------------------------------------------------------------
+kept_files=()
+
+# Config files of ours with a .pacnew beside them: ones you changed and the
+# packages changed too, or (on the first run) every one the ISO put there that
+# differs from today's.
+mapfile -t pacnews < <(
+    for f in "${PKG_FILES[@]}"; do
+        bsdtar -xOf "$f" .PKGINFO | sed -n 's/^backup = //p'
+    done | while IFS= read -r rel; do
+        [[ -f "${TARGET_ROOT}/$rel.pacnew" ]] && printf '/%s\n' "$rel"
+    done
+)
+
+for rel in "${pacnews[@]}"; do
+    current="${TARGET_ROOT}${rel}"
+    new="$current.pacnew"
+
     if "$AUTO_ACCEPT"; then
-        echo "[UPDATE] /$rel"
-        install_file "$repo_file" "$system_file"
+        echo "[UPDATE] $rel (yours kept as $rel.pacorig)"
+        mv "$current" "$current.pacorig"
+        mv "$new" "$current"
         continue
     fi
 
     echo "─────────────────────────────────────────────────────"
-    echo "CHANGED: /$rel"
+    echo "CHANGED: $rel"
     echo ""
-
-    if is_binary "$repo_file" || is_binary "$system_file"; then
-        echo "(binary file — diff not shown)"
-    else
-        diff --color=always -u "$system_file" "$repo_file" || true
-    fi
-
+    diff --color=always -u "$current" "$new" || true
     echo ""
-    read -r -p "Update this file? [y/N/q]: " choice < /dev/tty
+    read -r -p "Take the new version? [y/N/q]: " choice < /dev/tty
     case "$choice" in
         [Yy])
-            install_file "$repo_file" "$system_file"
+            mv "$new" "$current"
             echo "Updated."
             ;;
         [Qq])
-            QUIT=true
-            kept_files+=("/$rel")
+            kept_files+=("$rel")
+            break
             ;;
         *)
-            kept_files+=("/$rel")
-            echo "Kept local."
+            kept_files+=("$rel")
+            echo "Kept yours; the new version stays as $rel.pacnew."
             ;;
     esac
     echo ""
-
-done < <(find "$AIROOTFS" -type f -print0 | sort -z)
+done
 
 # ---------------------------------------------------------------------------
 # Package installation
 # ---------------------------------------------------------------------------
 install_packages() {
-    # Collect packages: strip blank lines and comments
+    # Collect packages: strip comments and blank lines. The system packages
+    # were just installed from this checkout, and the AUR would replace them.
     mapfile -t pkgs < <(cat "$PROFILES_DIR/common/packages.x86_64" "$PROFILES_DIR/$VARIANT/packages.x86_64" \
-        | grep -v '^\s*#' | grep -v '^\s*$')
+        | sed 's/[[:space:]]*#.*//; s/[[:space:]]*$//' | grep -v '^$' \
+        | grep -vxE 'ionix-(base|desktop|server)-git')
 
     if [[ ${#pkgs[@]} -eq 0 ]]; then
         echo "No packages found in packages.x86_64, skipping."
@@ -279,7 +225,7 @@ echo "Patch complete."
 
 if [[ ${#kept_files[@]} -gt 0 ]]; then
     echo ""
-    echo "Files requiring manual intervention (kept local / not installed):"
+    echo "Kept your version of these; the new one is next to each as .pacnew"
+    echo "(pacdiff, from pacman-contrib, merges them):"
     printf "  %s\n" "${kept_files[@]}"
 fi
-

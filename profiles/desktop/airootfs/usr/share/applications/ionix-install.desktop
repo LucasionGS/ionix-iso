@@ -3,6 +3,6 @@ Type=Application
 Name=Install Ionix
 Comment=Install Ionix to your hard drive
 Exec=ionix-install
-Icon=/usr/local/share/ionix/ionix-logo.svg
+Icon=/usr/share/ionix/ionix-logo.svg
 Terminal=false
 Categories=System;

@@ -70,7 +70,7 @@ pam_add_after /etc/pam.d/passwd "password   optional     pam_gnome_keyring.so" '
 # in the shell's settings file and can be written now. "ionix" and "default" are
 # what a fresh account already gets, so they write nothing.
 if [[ -n "$NEWUSER" && -d "/home/$NEWUSER" ]]; then
-    if [[ "$IONIX_THEME" != "ionix" && -d "/usr/local/share/ionix/styler/themes/$IONIX_THEME" ]]; then
+    if [[ "$IONIX_THEME" != "ionix" && -d "/usr/share/ionix/styler/themes/$IONIX_THEME" ]]; then
         install -d -o "$NEWUSER" -g "$NEWUSER" "/home/$NEWUSER/.config/ionix"
         printf '%s\n' "$IONIX_THEME" > "/home/$NEWUSER/.config/ionix/pending-theme"
         chown "$NEWUSER:$NEWUSER" "/home/$NEWUSER/.config/ionix/pending-theme"
@@ -123,8 +123,8 @@ fi
 # with no D-Bus and no running fprintd. fprintd itself stays installed either
 # way — it is D-Bus activated, so it costs nothing idle, and leaving it means a
 # USB reader plugged in later needs only `sudo ionix-fingerprint enable`.
-if /usr/local/bin/ionix-fingerprint detect --quiet 2>/dev/null; then
-    /usr/local/bin/ionix-fingerprint enable --quiet || true
+if /usr/bin/ionix-fingerprint detect --quiet 2>/dev/null; then
+    /usr/bin/ionix-fingerprint enable --quiet || true
 fi
 
 # Remove bin files we added to /usr/local/bin during the live session

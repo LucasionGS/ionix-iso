@@ -1,0 +1,84 @@
+#!/bin/bash
+# Ionix - Cycle Wallpaper
+# Randomly cycles wallpapers across all connected displays using awww.
+# It can be run as a cron job, e.g. every X minutes,
+# to continuously cycle wallpapers. You can set it up like this (every 5 minutes cycle):
+# */5 * * * * hyprctl -i 0 dispatch "hl.dsp.exec_cmd('bash /usr/share/ionix/bin/ionix-cycle-wallpaper')"
+
+IONIX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix"
+WALLPAPER_DIR="$IONIX_DIR/.wallpapers_active"
+AWWW_ARGS="--transition-type=wave --transition-duration=2 --transition-fps=60 --transition-step=255"
+IONIX_EXTRA_AWWW_ARGS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/ionix/extra_awww_args"
+# If the extra awww args file exists, read it and append its contents to AWWW_ARGS
+# Only if IONIX_EXTRA_AWWW_ARGS aren't already set
+if [ -z "$IONIX_EXTRA_AWWW_ARGS" ] && [ -f "$IONIX_EXTRA_AWWW_ARGS_FILE" ]; then
+  IONIX_EXTRA_AWWW_ARGS=$(<"$IONIX_EXTRA_AWWW_ARGS_FILE")
+fi
+if [ -n "$IONIX_EXTRA_AWWW_ARGS" ]; then
+  AWWW_ARGS="$AWWW_ARGS $IONIX_EXTRA_AWWW_ARGS"
+fi
+
+mapfile -d '' ALL_WALLPAPERS < <(find "$WALLPAPER_DIR" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" \) -print0)
+
+if [ ${#ALL_WALLPAPERS[@]} -eq 0 ]; then
+  echo "No wallpapers found in $WALLPAPER_DIR"
+  exit 1
+fi
+
+DISPLAYS=($(awww query | grep -oP '(?<=: ).+(?=: \d+x\d+)'))
+
+if [ ${#DISPLAYS[@]} -eq 0 ]; then
+  echo "No displays found"
+  exit 1
+fi
+
+declare -A CURRENT_WALLPAPERS
+for display in "${DISPLAYS[@]}"; do
+  # awww prefixes every query line with ": " before the output name, so an
+  # anchored "^$display:" never matches — which silently left CURRENT_WALLPAPERS
+  # empty and degraded "a different image per display" to "a random one".
+  current_wall=$(awww query | grep "^: *$display:" | grep -oP '(?<=image: ).*')
+  if [ -n "$current_wall" ]; then
+    CURRENT_WALLPAPERS["$display"]="$(realpath "$current_wall")"
+  fi
+done
+
+mapfile -d '' SHUFFLED_WALLPAPERS < <(printf '%s\0' "${ALL_WALLPAPERS[@]}" | shuf -z)
+
+wallpaper_index=0
+for display in "${DISPLAYS[@]}"; do
+  selected_wallpaper=""
+  for ((i = wallpaper_index; i < ${#SHUFFLED_WALLPAPERS[@]}; i++)); do
+    candidate=$(realpath "${SHUFFLED_WALLPAPERS[$i]}")
+    if [ "$candidate" != "${CURRENT_WALLPAPERS[$display]}" ]; then
+      selected_wallpaper="$candidate"
+      wallpaper_index=$((i + 1))
+      break
+    fi
+  done
+
+  if [ -z "$selected_wallpaper" ]; then
+    if [ $wallpaper_index -lt ${#SHUFFLED_WALLPAPERS[@]} ]; then
+      selected_wallpaper=$(realpath "${SHUFFLED_WALLPAPERS[$wallpaper_index]}")
+      wallpaper_index=$((wallpaper_index + 1))
+    else
+      wallpaper_index=0
+      selected_wallpaper=$(realpath "${SHUFFLED_WALLPAPERS[$wallpaper_index]}")
+      wallpaper_index=$((wallpaper_index + 1))
+    fi
+  fi
+
+  echo "Setting wallpaper for $display: $(basename "$selected_wallpaper")"
+  awww img $AWWW_ARGS --outputs "$display" "$selected_wallpaper"
+done
+
+# Once, after the loop: every display now has a different image, so exactly one
+# of them has to win the palette, and the generator picks the focused monitor's.
+# Calling this inside the loop would regenerate N times and leave whichever
+# display happened to be iterated last. A no-op unless the theme opted in.
+/usr/share/ionix/bin/ionix-adaptive-colors --quiet || true
+
+# Leave the login greeter a copy of this look (theme, wallpaper, avatar) for the
+# next boot. After the 2s wallpaper transition, so `awww query` has settled;
+# backgrounded, and a no-op where the greeter is not installed.
+( sleep 3; ionix-greeter-sync --quiet ) >/dev/null 2>&1 &

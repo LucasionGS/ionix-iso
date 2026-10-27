@@ -1,0 +1,15 @@
+# GRUB reads its theme from /boot, which may be a filesystem of its own that
+# /usr is not on, so the copy the installer put there is refreshed from
+# /usr/share/ionix/grub-theme. Only where that copy exists:
+# a system that removed or replaced Ionix's theme is left alone, and so is an
+# ISO build, whose /boot has none.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/share/ionix/grub-theme/*
+
+[Action]
+Description = Updating the Ionix GRUB theme...
+When = PostTransaction
+Exec = /usr/bin/bash -c 'if [[ -d /boot/grub/themes/ionix ]]; then rm -rf /boot/grub/themes/ionix && cp -r /usr/share/ionix/grub-theme /boot/grub/themes/ionix; fi'
