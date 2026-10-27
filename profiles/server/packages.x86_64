@@ -1,6 +1,10 @@
 # Server packages, on top of common/packages.x86_64. Networking is
 # systemd-networkd + systemd-resolved, both part of systemd.
 
+# --- Ionix ---
+# Built from system/, like ionix-base-git.
+ionix-server-git
+
 # --- Kernel ---
 linux-lts
 

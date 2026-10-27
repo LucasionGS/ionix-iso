@@ -127,97 +127,26 @@ cp -r "$LOCAL_REPO" "$REPO_MOUNT"
 
 echo "    Local repo at: $REPO_MOUNT"
 
-# ── Step 4: Copy branding assets into airootfs ────────────────
+# ── Step 4: Render the installer's branding ──────────────────
+# Only what the live medium itself shows. The wallpaper, the logo and the GRUB
+# theme belong to the installed system too, so ionix-base-git and
+# ionix-desktop-git render and ship them (system/Makefile).
 echo ""
-echo "==> Step 4/5: Copying branding assets..."
-
-# Copy logo
-LOGO_DEST="${PROFILE_DIR}/airootfs/usr/local/share/ionix/ionix-logo.svg"
-if [[ -f "${ASSETS_DIR}/ionix-logo.svg" ]]; then
-    cp "${ASSETS_DIR}/ionix-logo.svg" "$LOGO_DEST"
-fi
-
-# A 128px logo PNG: the Calamares branding logo on the desktop, and the source
-# of the GRUB theme logo below on both variants.
-LOGO_PNG="$(mktemp --suffix=.png)"
-trap 'rm -f "$LOGO_PNG"' EXIT
-if command -v rsvg-convert &>/dev/null && [[ -f "${ASSETS_DIR}/ionix-logo.svg" ]]; then
-    rsvg-convert -w 128 -h 128 "${ASSETS_DIR}/ionix-logo.svg" -o "$LOGO_PNG"
-elif command -v magick &>/dev/null && [[ -f "${ASSETS_DIR}/ionix-logo.svg" ]]; then
-    magick "${ASSETS_DIR}/ionix-logo.svg" -resize 128x128 "$LOGO_PNG"
-else
-    echo "    WARNING: Cannot convert logo SVG to PNG."
-    rm -f "$LOGO_PNG"
-fi
+echo "==> Step 4/5: Rendering installer branding..."
 
 CALA_BRANDING="${PROFILE_DIR}/airootfs/etc/calamares/branding/ionix"
 if [[ -d "$CALA_BRANDING" ]]; then
-    # Convert SVG wallpaper to PNG if rsvg-convert is available, otherwise copy SVG
-    WALLPAPER_DEST="${PROFILE_DIR}/airootfs/usr/local/share/ionix/wallpaper.png"
-    if command -v rsvg-convert &>/dev/null && [[ -f "${ASSETS_DIR}/wallpaper.svg" ]]; then
-        rsvg-convert -w 3840 -h 2160 "${ASSETS_DIR}/wallpaper.svg" -o "$WALLPAPER_DEST"
-        echo "    Converted wallpaper SVG to PNG (3840x2160)"
-    elif command -v magick &>/dev/null && [[ -f "${ASSETS_DIR}/wallpaper.svg" ]]; then
-        magick "${ASSETS_DIR}/wallpaper.svg" -resize 3840x2160 "$WALLPAPER_DEST"
-        echo "    Converted wallpaper SVG to PNG (3840x2160)"
-    elif [[ -f "${ASSETS_DIR}/wallpaper.png" ]]; then
-        cp "${ASSETS_DIR}/wallpaper.png" "$WALLPAPER_DEST"
-        echo "    Copied wallpaper PNG"
-    else
-        echo "    WARNING: No wallpaper found. Generating a solid color placeholder."
-        # Generate a simple solid purple PNG using ImageMagick or a fallback
-        if command -v magick &>/dev/null; then
-            magick -size 3840x2160 'xc:#1a1025' "$WALLPAPER_DEST"
-        else
-            echo "    WARNING: No image tools available. Wallpaper will be missing."
-        fi
+    if ! command -v rsvg-convert &>/dev/null; then
+        echo "ERROR: rsvg-convert not found (pacman -S librsvg); the Calamares branding would fail to load."
+        exit 1
     fi
-
-    # Copy logo to calamares branding
-    if [[ -f "$LOGO_PNG" ]]; then
-        cp "$LOGO_PNG" "${CALA_BRANDING}/ionix-logo.png"
-    fi
-
+    rsvg-convert -w 128 -h 128 "${SCRIPT_DIR}/system/assets/ionix-logo.svg" -o "${CALA_BRANDING}/ionix-logo.png"
     # Calamares welcome-page hero (branding.desc `productWelcome`, also the first
     # install slide). Rendered at its native 1200x520; Calamares scales it down.
-    CALA_WELCOME="${CALA_BRANDING}/welcome.png"
-    if command -v rsvg-convert &>/dev/null && [[ -f "${ASSETS_DIR}/calamares-welcome.svg" ]]; then
-        rsvg-convert -w 1200 -h 520 "${ASSETS_DIR}/calamares-welcome.svg" -o "$CALA_WELCOME"
-    elif command -v magick &>/dev/null && [[ -f "${ASSETS_DIR}/calamares-welcome.svg" ]]; then
-        magick -background none "${ASSETS_DIR}/calamares-welcome.svg" -resize 1200x520 "$CALA_WELCOME"
-    else
-        echo "    WARNING: Cannot render the Calamares welcome image; the branding will fail to load."
-    fi
-fi
-
-# Generate GRUB theme assets (fonts + logo)
-# Not under airootfs/boot: mkarchiso empties that from the image, so the theme
-# would never reach an installed system. ionix-post-install copies it there.
-GRUB_THEME_DIR="${PROFILE_DIR}/airootfs/usr/local/share/ionix/grub-theme"
-echo "    Generating GRUB theme assets..."
-if command -v grub-mkfont &>/dev/null; then
-    FONT_DIR="${GRUB_THEME_DIR}/fonts"
-    mkdir -p "$FONT_DIR"
-    grub-mkfont /usr/share/fonts/noto/NotoSans-Regular.ttf -o "${FONT_DIR}/regular-16.pf2" -s 16 -n "NotoSans Regular 16" 2>/dev/null
-    grub-mkfont /usr/share/fonts/noto/NotoSans-Regular.ttf -o "${FONT_DIR}/regular-14.pf2" -s 14 -n "NotoSans Regular 14" 2>/dev/null
-    grub-mkfont /usr/share/fonts/noto/NotoSans-Bold.ttf    -o "${FONT_DIR}/bold-16.pf2"    -s 16 -n "NotoSans Bold 16"    2>/dev/null
-    grub-mkfont /usr/share/fonts/noto/NotoSans-Bold.ttf    -o "${FONT_DIR}/bold-24.pf2"    -s 24 -n "NotoSans Bold 24"    2>/dev/null
-    echo "    GRUB fonts generated."
+    rsvg-convert -w 1200 -h 520 "${ASSETS_DIR}/calamares-welcome.svg" -o "${CALA_BRANDING}/welcome.png"
+    echo "    Rendered the Calamares logo and welcome image."
 else
-    echo "    WARNING: grub-mkfont not found — GRUB theme fonts not regenerated."
-fi
-# Regenerate GRUB theme logo from the freshly-converted logo PNG
-if [[ -f "$LOGO_PNG" ]] && command -v python3 &>/dev/null; then
-    python3 - "$LOGO_PNG" "${GRUB_THEME_DIR}/ionix-logo.png" <<'PYEOF'
-import sys
-from PIL import Image
-src, dst = sys.argv[1], sys.argv[2]
-Image.open(src).convert("RGBA").resize((160, 160), Image.LANCZOS).save(dst)
-PYEOF
-    echo "    GRUB theme logo updated."
-elif command -v magick &>/dev/null && [[ -f "$LOGO_PNG" ]]; then
-    magick "$LOGO_PNG" -resize 160x160 "${GRUB_THEME_DIR}/ionix-logo.png"
-    echo "    GRUB theme logo updated (ImageMagick)."
+    echo "    Nothing to render for the ${VARIANT} ISO."
 fi
 
 # ── Step 5: Build ISO ─────────────────────────────────────────

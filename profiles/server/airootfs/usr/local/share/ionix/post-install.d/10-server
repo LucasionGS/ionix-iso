@@ -166,7 +166,7 @@ sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect microcode modconf kms keyboard k
 # The account already links the ionix theme's terminal files (from /etc/skel);
 # running the styler records the choice and switches to another one.
 runuser -u "$NEWUSER" -- env HOME="$HOME_DIR" XDG_CONFIG_HOME="$HOME_DIR/.config" \
-    /usr/local/share/ionix/styler/bin/ionixtheme "$IONIX_THEME" > /dev/null 2>&1 \
+    /usr/share/ionix/styler/bin/ionixtheme "$IONIX_THEME" > /dev/null 2>&1 \
     || echo "Could not apply the $IONIX_THEME theme; run ionixtheme $IONIX_THEME after logging in." >&2
 if [[ "$IONIX_THEME" != ionix ]]; then
     ionix-console-theme "$IONIX_THEME" > /dev/null

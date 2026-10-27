@@ -3,7 +3,7 @@
  * A notesqml instance (see settings.conf and modules/ionix-software.conf).
  * None of these bundles is on the installation medium. The page only records the
  * choice — `ionixExtras` in GlobalStorage, a comma-separated list or "none" — and
- * /usr/local/bin/ionix-extras installs it at the end of the install. The bundle
+ * /usr/bin/ionix-extras installs it at the end of the install. The bundle
  * ids here must match the ones that script knows.
  */
 import io.calamares.core 1.0

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Ionix First Login Setup
+# Runs on user's first Hyprland session to set up per-user configs.
+# Only runs once (checks for marker file).
+
+MARKER="$HOME/.local/share/ionix/first-login-done"
+
+if [[ -f "$MARKER" ]]; then
+    exit 0
+fi
+
+mkdir -p "$(dirname "$MARKER")"
+
+# Clone NvChad starter config if nvim config doesn't exist yet
+if [[ ! -d "$HOME/.config/nvim" ]]; then
+    git clone --depth 1 https://github.com/NvChad/starter "$HOME/.config/nvim" 2>/dev/null || true
+fi
+
+# Create standard XDG user directories
+xdg-user-dirs-update 2>/dev/null || true
+
+# Set dark color scheme for GTK/portal-aware apps
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
+gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true
+
+# Fonts, cursor and dark mode for GTK apps. They read these from the
+# org.gnome.desktop.interface schema whatever the desktop is (as do the GTK
+# settings portal and Chrome), so this is not GNOME-only despite the name.
+if [[ -f /usr/share/ionix/gtk-defaults.dconf ]]; then
+    dconf load / < /usr/share/ionix/gtk-defaults.dconf 2>/dev/null || true
+fi
+
+# Theme picked on the installer's Personalize page. ionix-post-install can only
+# queue it: ionixtheme wants a running session (the adaptive theme reads the
+# wallpaper), and this is the first one.
+PENDING_THEME="$HOME/.config/ionix/pending-theme"
+if [[ -s "$PENDING_THEME" ]]; then
+    /usr/share/ionix/styler/bin/ionixtheme "$(cat "$PENDING_THEME")" >/dev/null 2>&1 || true
+    rm -f "$PENDING_THEME"
+fi
+
+# Optional software chosen in the installer that could not be installed then
+# (offline, or a failed build). ionix-extras keeps the list; retrying is one
+# command, so say which.
+if [[ ! -d /run/archiso && -s /var/lib/ionix/extras-pending ]] \
+   && command -v notify-send >/dev/null 2>&1; then
+    notify-send --icon=system-software-install --app-name=Ionix \
+        "Some extras aren't installed yet" \
+        "$(tr '\n' ' ' < /var/lib/ionix/extras-pending)— connect to the internet and run <tt>sudo ionix-extras install</tt> to finish." \
+        2>/dev/null || true
+fi
+
+# Nudge about the fingerprint reader, if there is one. The installer has
+# already wired PAM up by this point, but enrolling is per-user and needs a
+# session, so this is the first moment it can actually be done. Skipped on the
+# live medium, where there is no persistent user to enroll against.
+if [[ ! -d /run/archiso ]] \
+   && command -v notify-send >/dev/null 2>&1 \
+   && ionix-fingerprint detect --quiet 2>/dev/null; then
+    notify-send --icon=fingerprint --app-name=Ionix \
+        "Fingerprint reader ready" \
+        "Run <tt>ionix-fingerprint enroll</tt> in a terminal to set up unlock by finger." \
+        2>/dev/null || true
+fi
+
+# Mark first login as complete
+touch "$MARKER"
+
+sleep 2 && [[ -d /run/archiso ]] && ionix-install & disown

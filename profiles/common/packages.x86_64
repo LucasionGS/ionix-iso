@@ -2,6 +2,12 @@
 # (desktop/packages.x86_64 or server/packages.x86_64) to this one; the kernel is
 # in there, since the two variants boot different ones.
 
+# --- Ionix ---
+# Ionix's own files (styler, themes, shell config, GRUB theme), built from
+# system/ by aur/build-aur.sh. Packaged so an installed system keeps them up to
+# date with `yay -Syu`; see system/README.md.
+ionix-base-git
+
 # --- Base system ---
 base
 base-devel

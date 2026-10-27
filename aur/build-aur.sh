@@ -63,6 +63,7 @@ AUR_PACKAGES=(
 # below rather than assumed from the path.
 LOCAL_PACKAGES=(
     "submodules/ionix-quickshell"
+    "system"                           # ionix-base-git, ionix-desktop-git, ionix-server-git
     "aur/local/shim-signed"            # AUR version 404s; see that PKGBUILD's header
 )
 
@@ -309,7 +310,19 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
     # the invoking user, which git otherwise rejects as "dubious ownership". A
     # submodule's .git is a gitlink into the superproject, so the exemption has
     # to cover every path, not just $src.
+    #
+    # A submodule is versioned from its whole history. A directory of this
+    # repository (system/) counts only the commits that touched it, so an
+    # ISO-only change is not an upgrade; its AUR PKGBUILD uses the same formula.
     if [[ -e "$src/.git" ]]; then
+        version_args=()
+        hash_cmd=(rev-parse --short HEAD)
+    else
+        version_args=(-- .)
+        hash_cmd=(log -1 --format=%h -- .)
+    fi
+    # Only for a PKGBUILD whose pkgver() reads .pkgver; shim-signed has a fixed version.
+    if grep -q '/\.pkgver' "$src/PKGBUILD"; then
         if ! git -c safe.directory='*' -C "$src" rev-parse HEAD > /dev/null 2>&1; then
             echo "ERROR: $src is a git checkout but its history is unreadable."
             echo "       A -git PKGBUILD there would be versioned from a placeholder."
@@ -317,8 +330,8 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
             continue
         fi
         printf "r%s.%s" \
-            "$(git -c safe.directory='*' -C "$src" rev-list --count HEAD)" \
-            "$(git -c safe.directory='*' -C "$src" rev-parse --short HEAD)" \
+            "$(git -c safe.directory='*' -C "$src" rev-list --count HEAD "${version_args[@]}")" \
+            "$(git -c safe.directory='*' -C "$src" "${hash_cmd[@]}")" \
             > "$PKG_DIR/.pkgver"
         echo "==> $pkg version: $(cat "$PKG_DIR/.pkgver")"
     fi
@@ -349,8 +362,8 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
     rm -f "$LOCAL_REPO/${pkg}"-[0-9]*.pkg.tar.*
 
     # Nothing is built after the local packages, so there is nothing to install
-    # them for. (They depend only on official packages; if one ever depends on
-    # an AUR package, LAST_PENDING above must count it.)
+    # them for. (Their build-time dependencies are all official packages; if one
+    # ever needs an AUR package to build, LAST_PENDING above must count it.)
     build_pkgdir "$pkg" "$PKG_DIR" skip || FAILED_PACKAGES+=("$pkg")
 done
 

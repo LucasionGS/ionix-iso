@@ -18,7 +18,7 @@ VERSION="1.0.0"
 TARGET=/mnt/ionix
 LOG=/var/log/ionix-server-install.log
 EXAMPLE=/usr/local/share/ionix/server/install.conf.example
-THEMES_DIR=/usr/local/share/ionix/styler/themes
+THEMES_DIR=/usr/share/ionix/styler/themes
 # Where live-setup leaves an answer file it found on an IONIXCFG filesystem.
 RUN_DIR=/run/ionix
 FOUND_ANSWERS="$RUN_DIR/install.conf"

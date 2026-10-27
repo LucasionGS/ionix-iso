@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Before Ionix was packaged, the ISO (and patch-os.sh) put its commands in
+# /usr/local/bin and its data in /usr/local/share/ionix. The packages install
+# them under /usr instead, and the old copies would win: /usr/local/bin comes
+# first in PATH, and ionix-migrate only links a name in /usr/local/share/ionix
+# that is free.
+#
+# Each old copy is moved to /var/lib/ionix/pre-package/, not deleted, in case
+# it carried local edits. A command that moved gets a link in its old place, for
+# anything that calls it by its full path. On a fresh system (or an ISO build)
+# there is nothing to move and this does nothing.
+
+set -euo pipefail
+
+BACKUP=/var/lib/ionix/pre-package
+
+# Every command the ISO used to install in /usr/local/bin and a package now
+# installs in /usr/bin. Listed rather than globbed, so a script of the user's
+# own that happens to start with "ionix-" is left alone.
+MOVED_COMMANDS=(
+  ionix-arrange-workspace
+  ionix-console-theme
+  ionix-extras
+  ionix-fingerprint
+  ionix-first-login
+  ionix-login-mode
+  ionix-project
+  ionix-server-firstboot
+)
+
+# Move $1 into the backup tree, keeping its path.
+stash() {
+  local SRC="$1"
+  mkdir -p "$BACKUP$(dirname "$SRC")"
+  rm -rf "${BACKUP:?}$SRC"
+  mv "$SRC" "$BACKUP$SRC"
+  echo "  Moved $SRC to $BACKUP$SRC"
+}
+
+for name in "${MOVED_COMMANDS[@]}"; do
+  old="/usr/local/bin/$name"
+  [[ -e "$old" && ! -L "$old" && -e "/usr/bin/$name" ]] || continue
+  stash "$old"
+  ln -s "/usr/bin/$name" "$old"
+done
+
+# Only names the packages now ship. Anything else in there (the installer's
+# post-install.d on a live medium, files of the user's own) stays.
+for entry in /usr/share/ionix/*; do
+  name="$(basename "$entry")"
+  old="/usr/local/share/ionix/$name"
+  [[ -e "$old" && ! -L "$old" ]] || continue
+  stash "$old"
+done
+
+# Themes someone added by hand went into the backup with the rest of the styler.
+if [[ -d "$BACKUP/usr/local/share/ionix/styler/themes" ]]; then
+  for theme in "$BACKUP/usr/local/share/ionix/styler/themes"/*/; do
+    theme="$(basename "$theme")"
+    [[ -d "/usr/share/ionix/styler/themes/$theme" ]] && continue
+    echo "  Theme \"$theme\" is not one Ionix ships; it is in $BACKUP/usr/local/share/ionix/styler/themes/$theme"
+  done
+fi

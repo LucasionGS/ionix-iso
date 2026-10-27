@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+################################################
+# ionix-migrate — one-time steps for upgrades  #
+################################################
+#
+# Packages replace files; this runs the changes that are not files: enabling a
+# unit, editing a config another package owns, moving a user's settings along.
+# Each migration is an executable named NNN-name, run once, in name order:
+#
+#   /usr/share/ionix/migrations/system/   as root, by a pacman hook after every
+#                                         install or upgrade of ionix-base
+#   /usr/share/ionix/migrations/user/     as each user, at login
+#
+# What has run is recorded one name per line, in /var/lib/ionix/migrations for
+# the system and ~/.local/state/ionix/migrations per user. A migration must be
+# idempotent and must cope with a fresh system, because an ISO build runs every
+# system migration on a root that has never seen the old state.
+
+set -euo pipefail
+
+IONIX_MIGRATE_VERSION="1.0.0"
+MIGRATIONS_DIR="${IONIX_MIGRATIONS_DIR:-/usr/share/ionix/migrations}"
+SYSTEM_STATE="${IONIX_MIGRATE_SYSTEM_STATE:-/var/lib/ionix/migrations}"
+USER_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/ionix/migrations"
+QUIET=false
+
+# Print usage
+usage() {
+  cat <<EOF
+Usage: ionix-migrate <command> [--quiet]
+
+  system      Run pending system migrations (root; the pacman hook does this)
+  user        Run pending migrations for the current user (done at login)
+  list        Show every migration and whether it has run
+  help        Show this help
+  version     Show the version
+
+Run "ionix-migrate help <command>" for more information on a command.
+EOF
+}
+
+# Print a line unless --quiet was given
+say() {
+  "$QUIET" || printf '%s\n' "$*"
+}
+
+# Whether migration $2 is recorded in state file $1
+has_run() {
+  [[ -f "$1" ]] && grep -qxF -- "$2" "$1"
+}
+
+# Run every pending migration of one kind, in name order. Stops at the first
+# failure: a later migration may rely on an earlier one.
+#   $1 = system or user, $2 = state file
+run_pending() {
+  local KIND="$1" STATE="$2" migration name rc
+  local DIR="$MIGRATIONS_DIR/$KIND"
+
+  [[ -d "$DIR" ]] || return 0
+  mkdir -p "$(dirname "$STATE")"
+  touch "$STATE"
+
+  # One runner at a time: a login shell and the session's autostart can both
+  # call `user` at once.
+  exec 9< "$STATE"
+  flock 9
+
+  for migration in "$DIR"/*; do
+    [[ -f "$migration" && -x "$migration" ]] || continue
+    name="$(basename "$migration")"
+    has_run "$STATE" "$name" && continue
+
+    say "Running $KIND migration $name..."
+    rc=0
+    "$migration" || rc=$?
+    if [[ $rc -ne 0 ]]; then
+      echo "Migration $name failed (exit $rc). It will be retried on the next run; later migrations are held back until it succeeds." >&2
+      return 1
+    fi
+    printf '%s\n' "$name" >> "$STATE"
+  done
+}
+
+# Keep /usr/local/share/ionix/<entry> pointing at /usr/share/ionix/<entry>.
+# Everything there lived under /usr/local before Ionix was packaged, and that
+# path is still written into user homes (theme symlinks, crontabs, copies of
+# old configs) and into older builds of the shell. Only missing names are
+# linked, so a real file someone put there wins.
+refresh_compat_links() {
+  local entry name link
+  mkdir -p /usr/local/share/ionix
+  for entry in /usr/share/ionix/*; do
+    name="$(basename "$entry")"
+    [[ "$name" == migrations ]] && continue
+    link="/usr/local/share/ionix/$name"
+    [[ -e "$link" || -L "$link" ]] || ln -s "$entry" "$link"
+  done
+  # Drop links whose target a later release removed.
+  for link in /usr/local/share/ionix/*; do
+    [[ -L "$link" && ! -e "$link" && "$(readlink "$link")" == /usr/share/ionix/* ]] && rm -f "$link"
+  done
+  return 0
+}
+
+# Print the state of every migration of one kind
+#   $1 = system or user, $2 = state file
+list_kind() {
+  local KIND="$1" STATE="$2" migration name status
+  for migration in "$MIGRATIONS_DIR/$KIND"/*; do
+    [[ -f "$migration" ]] || continue
+    name="$(basename "$migration")"
+    status="pending"
+    has_run "$STATE" "$name" && status="done"
+    printf '  %-8s %-7s %s\n' "$KIND" "$status" "$name"
+  done
+}
+
+cmd_system() {
+  if [[ $EUID -ne 0 ]]; then
+    echo "System migrations must run as root: sudo ionix-migrate system" >&2
+    return 1
+  fi
+  local rc=0
+  run_pending system "$SYSTEM_STATE" || rc=$?
+  refresh_compat_links
+  return "$rc"
+}
+
+cmd_user() {
+  if [[ $EUID -eq 0 ]]; then
+    echo "User migrations run as the user they belong to, not as root." >&2
+    return 2
+  fi
+  run_pending user "$USER_STATE"
+}
+
+cmd_list() {
+  list_kind system "$SYSTEM_STATE"
+  [[ $EUID -ne 0 ]] && list_kind user "$USER_STATE"
+  return 0
+}
+
+# Print the usage of one command
+cmd_help() {
+  case "${1:-}" in
+    system)
+      echo "Run every system migration that has not run yet, then refresh the /usr/local/share/ionix compatibility links."
+      echo "Usage: sudo ionix-migrate system [--quiet]" ;;
+    user)
+      echo "Run every user migration that has not run yet for the current user."
+      echo "Usage: ionix-migrate user [--quiet]" ;;
+    list)
+      echo "Show every migration and whether it has run (user migrations only when not root)."
+      echo "Usage: ionix-migrate list" ;;
+    "") usage ;;
+    *) echo "Command not found: $1" >&2; return 2 ;;
+  esac
+}
+
+main() {
+  local COMMAND="${1:-}"
+  [[ $# -gt 0 ]] && shift
+  local args=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -q|--quiet) QUIET=true ;;
+      -*) echo "Unknown flag: $1" >&2; return 2 ;;
+      *) args+=("$1") ;;
+    esac
+    shift
+  done
+
+  case "$COMMAND" in
+    system) cmd_system ;;
+    user) cmd_user ;;
+    list|ls) cmd_list ;;
+    help|-h|--help) cmd_help "${args[@]}" ;;
+    version|--version) echo "ionix-migrate $IONIX_MIGRATE_VERSION" ;;
+    "") usage; return 2 ;;
+    *) echo "Command not found: $COMMAND" >&2; usage >&2; return 2 ;;
+  esac
+}
+
+main "$@"

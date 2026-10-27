@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# ionix-console-theme — give the console (kmscon) an Ionix theme's colours.
+#
+# Usage: ionix-console-theme [THEME | FILE]
+#
+#   THEME   a theme name from `ionixtheme --list`
+#   FILE    a palette file in a theme's tty/kmscon.conf format
+#   (none)  the theme the invoking user has active, else ionix
+#
+# The palette lives in /etc/kmscon/kmscon.conf, between two marker lines that
+# this script owns and rewrites; everything else in the file is left alone.
+# kmscon reads it when it starts, so a change shows on consoles started after
+# it: reboot, or `systemctl restart kmsconvt@tty1` (which ends any session on
+# that console). ionixtheme calls this on a theme switch when sudo allows.
+#
+# Exit codes: 0 done, 1 failed, 2 bad arguments.
+
+set -euo pipefail
+
+KMSCON_CONF="${IONIX_KMSCON_CONF:-/etc/kmscon/kmscon.conf}"
+THEMES_DIR="${IONIX_STYLER_DIR:-/usr/share/ionix/styler}/themes"
+BEGIN_MARK="# >>> ionix palette (managed by ionix-console-theme; edits in here are replaced)"
+END_MARK="# <<< ionix palette"
+
+usage() {
+    sed -n '/^# Usage:/,/^#   (none)/s/^# \{0,1\}//p' "$0"
+}
+
+# The theme the user who ran sudo has active, so that `sudo ionix-console-theme`
+# with no argument follows `ionixtheme`.
+current_theme() {
+    local user="${SUDO_USER:-${USER:-}}" home file
+    home="$(getent passwd "$user" | cut -d: -f6)" || true
+    file="${home:-$HOME}/.config/ionix/current-theme"
+    if [[ -s "$file" ]]; then
+        head -n1 "$file"
+    else
+        echo ionix
+    fi
+}
+
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+    -*) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
+esac
+
+target="${1:-$(current_theme)}"
+if [[ -f "$target" ]]; then
+    palette_file="$target"
+    label="$target"
+elif [[ -f "$THEMES_DIR/$target/tty/kmscon.conf" ]]; then
+    palette_file="$THEMES_DIR/$target/tty/kmscon.conf"
+    label="$target"
+else
+    echo "No console palette for theme: $target. See \`ionixtheme --list\`." >&2
+    exit 2
+fi
+
+if [[ ! -f "$KMSCON_CONF" ]]; then
+    echo "kmscon is not set up on this machine: $KMSCON_CONF does not exist." >&2
+    exit 1
+fi
+if [[ $EUID -ne 0 ]]; then
+    echo "The console palette is system-wide. Run: sudo ionix-console-theme $*" >&2
+    exit 1
+fi
+
+# Only palette lines are taken: kmscon.conf also accepts `login=`, and this
+# runs as root on a file a user may have named.
+mapfile -t lines < <(grep -E '^palette(-[a-z-]+)?=[a-z0-9, -]+$' "$palette_file" || true)
+if [[ ${#lines[@]} -eq 0 ]]; then
+    echo "No palette lines in $palette_file. Expected lines like palette-red=231,76,60." >&2
+    exit 1
+fi
+
+# Same directory, so the rename is atomic and kmscon never reads half a file.
+tmp="$(mktemp "$KMSCON_CONF.XXXXXX")"
+trap 'rm -f "$tmp"' EXIT
+{
+    awk -v begin="$BEGIN_MARK" -v end="$END_MARK" '
+        $0 == begin { skip = 1; next }
+        $0 == end   { skip = 0; next }
+        !skip
+    ' "$KMSCON_CONF"
+    printf '%s\n' "$BEGIN_MARK" "${lines[@]}" "$END_MARK"
+} > "$tmp"
+chmod 644 "$tmp"
+mv -f "$tmp" "$KMSCON_CONF"
+
+echo "Console palette set to $label. It shows on consoles started from now on (reboot, or \`systemctl restart kmsconvt@tty1\`)."

@@ -81,20 +81,22 @@ the keyboard; see [Unattended server installs](#unattended-server-installs).
    Everything below happens in that copy, so a build never modifies the source tree.
 2. **AUR packages.** 15 AUR packages (Calamares, Google Chrome, `yay`, the Ionix tooling,
    ProtonUp-Qt and friends) are compiled in dependency order into a local pacman repository at
-   `localrepo/`, alongside 2 packages built from sources inside this repo — the
-   `ionix-quickshell` submodule and `aur/local/shim-signed`. Already-built AUR packages are
+   `localrepo/`, alongside the packages built from sources inside this repo: the
+   `ionix-quickshell` submodule, Ionix's own files in `system/` (`ionix-base-git` plus
+   `ionix-desktop-git` or `ionix-server-git`) and `aur/local/shim-signed`. Already-built AUR packages are
    skipped via sentinel files; the local ones are always rebuilt, because their sources change
    with your working tree. Only the ones the staged package list names are built, so the server
-   build needs just `yay`, `oh-my-posh-bin` and `shim-signed`.
+   build needs just `yay`, `oh-my-posh-bin`, `shim-signed` and the system packages.
 3. **Repo staging.** `localrepo/` is copied to `/tmp/ionix-localrepo` so `mkarchiso` can read it
    as the `[ionix]` repository declared in `profiles/common/pacman.conf`.
-4. **Branding.** The SVGs in `assets/` are rasterised to PNG with `rsvg-convert`, or ImageMagick
-   as a fallback, into the staged profile.
+4. **Branding.** The installer's own images (the Calamares logo and welcome hero) are rasterised
+   with `rsvg-convert` into the staged profile. The wallpaper, logo and GRUB theme are rendered
+   by the system packages instead, because installed systems need them too.
 5. **ISO assembly.** `mkarchiso` builds the squashfs and the final hybrid ISO into `out/`.
 
 The `[ionix]` repository exists only during the build and on the live medium.
 `ionix-post-install` strips it from the installed system, which is what lets `yay` treat
-`ionix-quickshell-git` as an ordinary AUR package afterwards.
+`ionix-quickshell-git` and the system packages as ordinary AUR packages afterwards.
 
 ---
 
@@ -155,20 +157,30 @@ percentage reflects bytes actually on the stick rather than bytes sitting in the
 
 ---
 
-## Patching an already-installed system
+## Keeping installed systems up to date
 
-`patch-os.sh` copies changed files from `profiles/common/airootfs/` and the installed variant's
-`airootfs/` (read from `/etc/ionix/variant`, desktop when missing) onto a running Ionix install, so
-you can pull configuration changes across without rebuilding and reinstalling:
+Ionix's own files (the styler and themes, Hyprland's defaults, the session scripts, the GRUB
+theme...) ship as packages built from `system/`, so an installed system updates them like any
+other package:
+
+```bash
+yay -Syu
+```
+
+That needs a publish to the AUR (`system/packaging/aur/aur-publish.sh`, after pushing).
+`system/README.md` explains which files are packaged, how a config file you edited is kept
+(`.pacnew`), and how changes that are not files (migrations) reach existing systems.
+
+To try a change before publishing, or to bring a system installed before the packages existed
+up to date, `patch-os.sh` builds the packages from your checkout and installs them:
 
 ```bash
 sudo ./patch-os.sh
 ```
 
-It skips paths that only make sense on the live medium and paths that are per-machine — see the
-`SKIP_EXACT` and `SKIP_PATTERNS` arrays at the top of the script. It only touches system
-configuration under `/etc` and `/usr/local`; it will not update packages, so anything that ships
-as a package (the shell included) still comes from `pacman`/`yay`.
+It walks you through every config file where your version and the new one differ, then offers
+to install anything new in the variant's `packages.x86_64` with `yay`. Live-medium and
+per-machine files (`profiles/*/airootfs/`) are never touched.
 
 ---
 
@@ -211,15 +223,15 @@ unresolvable dependency, because the package is requested but was never built.
 
 ```
 ionix-iso/
-├── assets/                 # SVG branding (logo, wallpaper) — rasterised at build time
+├── assets/                 # The installer's SVG branding, rasterised at build time
 ├── aur/
 │   ├── build-aur.sh        # Builds AUR packages into localrepo/ in dependency order
 │   └── local/              # PKGBUILDs maintained here rather than pulled from the AUR
 ├── docs/                   # README screenshots and the logo
 ├── includes/               # Pre-built package cache
 ├── profiles/               # The archiso profile, in layers build.sh merges
-│   ├── common/             # Both variants: fish, the styler and its themes, boot, pacman
-│   │   ├── airootfs/       # Root filesystem overlay — becomes the live ISO's filesystem
+│   ├── common/             # Both variants: boot, pacman, archiso's live units
+│   │   ├── airootfs/       # Live-medium and per-machine files laid over the ISO's root
 │   │   ├── packages.x86_64 # Packages on both ISOs
 │   │   ├── pacman.conf     # pacman config referencing the local [ionix] repo
 │   │   └── profiledef.sh   # Shared archiso settings and file permissions
@@ -227,12 +239,13 @@ ionix-iso/
 │   └── server/             # ionix-server-install, kmscon, ufw, snapper, LTS boot entries
 ├── submodules/
 │   └── ionix-quickshell/   # The desktop shell (its own repo, built into the ISO)
+├── system/                 # Ionix's own files as packages (ionix-base/desktop/server-git)
 ├── .github/workflows/      # CI: build-iso.yml
 ├── build.sh                # Main build entry point (run as root)
 ├── docker-build.sh         # Docker wrapper around build.sh
 ├── clean.sh                # Remove all build artifacts
 ├── flash-usb.sh            # Write a built ISO to a USB stick
-├── patch-os.sh             # Rsync profile changes onto an installed system
+├── patch-os.sh             # Install the system packages from this checkout
 ├── test.sh                 # Boot the ISO in QEMU
 └── test-distro.sh          # Boot the installed disk image in QEMU
 ```

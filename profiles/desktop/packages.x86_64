@@ -61,7 +61,7 @@ swaync
 
 # --- Optional bundles ---
 # The gaming stack, OBS Studio and Tabby are not on the medium. The
-# installer's Software page offers them and /usr/local/bin/ionix-extras downloads
+# installer's Software page offers them and /usr/bin/ionix-extras downloads
 # them at the end of the install (or any time later: `sudo ionix-extras install
 # <bundle>`). The package lists live in that script.
 
@@ -173,4 +173,6 @@ ionix-file-manager-git
 ioexplorer-git
 ionterm-git
 ionix-quickshell-git
+# ionix-desktop-git is built from system/, like ionix-base-git in common.
+ionix-desktop-git
 grim-hyprland-git
