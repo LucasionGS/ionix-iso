@@ -184,9 +184,18 @@ done
 # Packages it has are left to `yay -Syu`: asking yay for them again would
 # upgrade them against a stale database, or swap one built here (shim-signed)
 # for an AUR package of a similar name.
+#
+# The installer removes the NVIDIA stack from a machine without an NVIDIA GPU
+# (post-install.d/10-desktop); keep this list in step with the one there, or
+# every such machine is offered the drivers back.
+NVIDIA_PACKAGES=(nvidia-open nvidia-utils lib32-nvidia-utils egl-wayland libva-nvidia-driver)
+
 missing_packages() {
+    local skip=()
+    lspci 2>/dev/null | grep -qi nvidia || skip=("${NVIDIA_PACKAGES[@]}")
     cat "$PROFILES_DIR/common/packages.x86_64" "$PROFILES_DIR/$VARIANT/packages.x86_64" \
         | sed 's/[[:space:]]*#.*//; s/[[:space:]]*$//' | grep -v '^$' \
+        | grep -vxF -f <(printf '%s\n' "${skip[@]}" "") \
         | xargs pacman -T || true
 }
 
