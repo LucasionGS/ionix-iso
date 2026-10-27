@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# The greeter used to run as `cage -s -- ionix-greeter`, which types US whatever
+# the machine's keyboard is. ionix-greeter-cage starts cage with the system's
+# layout. greetd's config belongs to the greetd package, so only the exact line
+# Ionix wrote is changed: a command someone set by hand stays.
+#
+# Ships with ionix-desktop, next to ionix-greeter-cage, so it cannot run before
+# the command it points at is installed.
+
+set -euo pipefail
+
+CONFIG=/etc/greetd/config.toml
+OLD='command = "cage -s -- ionix-greeter"'
+NEW='command = "ionix-greeter-cage"'
+
+[[ -f "$CONFIG" ]] || exit 0
+grep -qxF "$OLD" "$CONFIG" || exit 0
+sed -i "s|^${OLD}\$|${NEW}|" "$CONFIG"
+echo "  Greeter now types in the system's keyboard layout ($CONFIG)"

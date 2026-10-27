@@ -42,10 +42,13 @@ still resolve through links that `ionix-migrate` keeps (see below).
 
 Some changes are actions rather than files: enabling a unit, editing a key in a file another
 package owns, moving a user's settings along. Each one is an executable named `NNN-name` in
-`base/usr/share/ionix/migrations/`:
+`usr/share/ionix/migrations/` of whichever layer it belongs to. A migration that needs one
+package's files ships in that package (`desktop/` has `002-greeter-keyboard`), so it cannot run
+before they are there. Numbers are shared across the layers.
 
 - `system/`: runs as root from the `ionix-migrate` pacman hook after every install or upgrade
-  of `ionix-base`. What has run is recorded in `/var/lib/ionix/migrations`.
+  of `ionix-base`, or of any package that ships a migration. What has run is recorded in
+  `/var/lib/ionix/migrations`.
 - `user/`: runs as each user at login (fish's `conf.d/ionix.fish` for login shells, the
   desktop's `init.sh` for greeter sessions). What has run is recorded in `~/.local/state/ionix/migrations`.
 

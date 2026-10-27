@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ionix-greeter-cage — what greetd runs: ionix-greeter inside cage, typing in
+# the system's keyboard layout.
+#
+# cage takes its layout only from libxkbcommon's XKB_DEFAULT_* variables and
+# otherwise types US, which garbles any password with punctuation in it on a
+# non-US keyboard. This reads the same files hyprland.lua does: systemd-localed's
+# X11 file (the installer writes it, `localectl set-x11-keymap` changes it), then
+# the console keymap, then nothing (US).
+
+set -euo pipefail
+
+X11_KEYBOARD=/etc/X11/xorg.conf.d/00-keyboard.conf
+VCONSOLE=/etc/vconsole.conf
+
+# Example:
+#         Option "XkbLayout" "dk"
+xkb_option() {
+  sed -n "s/^[[:space:]]*Option[[:space:]]*\"Xkb$1\"[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$X11_KEYBOARD" 2>/dev/null | head -n1
+}
+
+layout="$(xkb_option Layout)"
+if [[ -n "$layout" ]]; then
+  export XKB_DEFAULT_LAYOUT="$layout"
+  variant="$(xkb_option Variant)"; [[ -n "$variant" ]] && export XKB_DEFAULT_VARIANT="$variant"
+  model="$(xkb_option Model)"; [[ -n "$model" ]] && export XKB_DEFAULT_MODEL="$model"
+  options="$(xkb_option Options)"; [[ -n "$options" ]] && export XKB_DEFAULT_OPTIONS="$options"
+else
+  # Example: KEYMAP=dk-latin1 -> dk, KEYMAP=uk -> gb
+  keymap="$(sed -n 's/^KEYMAP="\{0,1\}\([[:alnum:]_]*\).*/\1/p' "$VCONSOLE" 2>/dev/null | head -n1)"
+  [[ "$keymap" == uk ]] && keymap=gb
+  [[ -n "$keymap" ]] && export XKB_DEFAULT_LAYOUT="$keymap"
+fi
+
+exec cage -s -- ionix-greeter "$@"

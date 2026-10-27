@@ -1,10 +1,11 @@
 # greetd, for `ionix-login-mode greeter`. The greeter is ionix-greeter (the lock
 # screen with a username field) in cage, a compositor that shows one fullscreen
-# app and nothing else. `-s` lets it switch VTs, which greetd needs to hand the
-# screen to the session.
+# app and nothing else; ionix-greeter-cage starts it as `cage -s` in the system's
+# keyboard layout. `-s` lets it switch VTs, which greetd needs to hand the screen
+# to the session.
 [terminal]
 vt = 1
 
 [default_session]
-command = "cage -s -- ionix-greeter"
+command = "ionix-greeter-cage"
 user = "greeter"
