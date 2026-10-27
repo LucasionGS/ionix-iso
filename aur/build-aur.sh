@@ -5,9 +5,14 @@
 
 set -euo pipefail
 
-LOCAL_REPO="${1:?Usage: build-aur.sh <local-repo-path>}"
+LOCAL_REPO="${1:?Usage: build-aur.sh <local-repo-path> [packages-file]}"
 LOCAL_REPO="$(realpath "$LOCAL_REPO")"
 mkdir -p "$LOCAL_REPO"
+
+# The staged profile's package list. When given, only the AUR and local packages
+# it names are built, so the server ISO does not compile Chrome and Calamares.
+# An AUR package another AUR package depends on must therefore be listed too.
+PACKAGES_FILE="${2:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$(mktemp -d /tmp/ionix-aur-build.XXXXXX)"
@@ -68,6 +73,21 @@ LOCAL_PACKAGES=(
 EXTRA_BUILD_DEPS=()
 
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Whether the staged package list names a package. Everything counts as wanted
+# when no list was given.
+is_wanted() {
+    [[ -z "$PACKAGES_FILE" ]] && return 0
+    grep -qxF -- "$1" < <(sed 's/[[:space:]]*#.*//; s/[[:space:]]*$//' "$PACKAGES_FILE")
+}
+
+if [[ -n "$PACKAGES_FILE" ]]; then
+    wanted=()
+    for pkg in "${AUR_PACKAGES[@]}"; do
+        is_wanted "$pkg" && wanted+=("$pkg")
+    done
+    AUR_PACKAGES=("${wanted[@]}")
+fi
 
 cleanup() {
     echo "==> Cleaning up..."
@@ -172,7 +192,7 @@ build_pkgdir() {
 # be built against it, and that install drags in all of its dependencies (Qt for
 # calamares, WebEngine for openconnect-sso, ...). With every package already
 # built, the whole loop below then costs nothing — the common case when only
-# profile/ or a local package changed.
+# profiles/ or a local package changed.
 LAST_PENDING=-1
 for i in "${!AUR_PACKAGES[@]}"; do
     [[ -f "$LOCAL_REPO/.built-${AUR_PACKAGES[$i]}" ]] || LAST_PENDING=$i
@@ -238,6 +258,27 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
     echo "══════════════════════════════════════════════════"
     echo "  Building (local): $pkg"
     echo "══════════════════════════════════════════════════"
+
+    # An unfetched submodule cannot say what it builds. build.sh refuses to
+    # build the desktop without ionix-quickshell, so with a list given this is
+    # a variant that does not need it.
+    if [[ ! -f "$src/PKGBUILD" && -n "$PACKAGES_FILE" ]]; then
+        echo "==> WARNING: $pkgpath has no PKGBUILD (submodule not fetched?), skipping"
+        continue
+    fi
+
+    # Names it builds, read from the PKGBUILD; see the sweep further down.
+    mapfile -t pkg_names < <(
+        bash -c 'source "$1" > /dev/null 2>&1; printf "%s\n" "${pkgname[@]}"' _ "$src/PKGBUILD" 2>/dev/null
+    )
+    any_wanted=false
+    for name in "${pkg_names[@]}"; do
+        [[ -n "$name" ]] && is_wanted "$name" && any_wanted=true
+    done
+    if [[ -f "$src/PKGBUILD" && "$any_wanted" == false ]]; then
+        echo "==> Not in this ISO's package list, skipping: $pkg"
+        continue
+    fi
 
     if [[ ! -f "$src/PKGBUILD" ]]; then
         echo "ERROR: $src/PKGBUILD not found."
@@ -329,7 +370,7 @@ if [[ ${#FAILED_PACKAGES[@]} -gt 0 ]]; then
     echo "ERROR: ${#FAILED_PACKAGES[@]} package(s) failed to build:"
     printf '  - %s\n' "${FAILED_PACKAGES[@]}"
     echo ""
-    echo "They are listed in profile/packages.x86_64, so mkarchiso would fail"
+    echo "They are listed in the profile's packages.x86_64, so mkarchiso would fail"
     echo "with 'target not found'. Fix the builds above, or drop the packages."
     exit 1
 fi

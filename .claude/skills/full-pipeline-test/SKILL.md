@@ -153,7 +153,7 @@ Work the evidence in this order:
    sudo umount /mnt && sudo qemu-nbd --disconnect /dev/nbd0
    ```
 
-Fix the cause in the repo, then retry at the **cheapest sufficient level**: a change under `profile/airootfs/` or `packages.x86_64` needs only `./docker-build.sh` (sentinels keep the AUR packages warm) — not `./clean.sh`. Only re-clean if the local repo itself is suspect. Then re-run Phase 2 with `--fresh-disk`.
+Fix the cause in the repo, then retry at the **cheapest sufficient level**: a change under `profiles/*/airootfs/` or a `packages.x86_64` needs only `./docker-build.sh` (sentinels keep the AUR packages warm) — not `./clean.sh`. Only re-clean if the local repo itself is suspect. Then re-run Phase 2 with `--fresh-disk`.
 
 Failures that trace to a real repo bug should be fixed in the repo, not worked around in the VM. Report anything you change.
 

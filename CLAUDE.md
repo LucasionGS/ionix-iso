@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ionix is a custom Arch Linux distribution built with **archiso**. It produces a bootable live/installer ISO featuring **Hyprland** (Wayland compositor) as its desktop environment and **Calamares** as the graphical installer. The project is entirely shell scripts, configuration files, and archiso profile definitions — there is no application source code.
+Ionix is a custom Arch Linux distribution built with **archiso**, in two variants. The **desktop** ISO is a live/installer featuring **Hyprland** (Wayland compositor) as its desktop environment and **Calamares** as the graphical installer. The **server** ISO is headless: the same shell, tools and themes, installed from the console, over SSH or unattended by `ionix-server-install` (see "Ionix Server" below). The project is entirely shell scripts, configuration files, and archiso profile definitions — there is no application source code.
 
 ## Build Commands
 
@@ -13,19 +13,19 @@ Ionix is a custom Arch Linux distribution built with **archiso**. It produces a 
 git submodule update --init --recursive
 
 # Native build (Arch Linux only, requires root):
-sudo ./build.sh
+sudo ./build.sh [--variant desktop|server] [--answers FILE]
 
 # Docker build (any Linux with Docker):
-./docker-build.sh [--rebuild-image]
+./docker-build.sh [--rebuild-image] [--variant desktop|server] [--answers FILE]
 
 # Clean all build artifacts:
 ./clean.sh
 
-# Test ISO in QEMU (live environment, boots from ISO):
-./test.sh
+# Test ISO in QEMU (live environment, boots from ISO; newest desktop ISO by default):
+./test.sh [out/ionix-server-*.iso]
 
 # Test installed distro in QEMU (boots from disk only):
-./test-distro.sh
+./test-distro.sh [server]
 
 # Write the built ISO to a USB stick for real hardware:
 ./flash-usb.sh                      # interactive picker
@@ -50,11 +50,19 @@ There are no automated tests, linters, or CI pipelines. Testing is done manually
 
 ## Build Pipeline (build.sh)
 
-1. **Step 1/4** — Builds ~35 AUR packages via `aur/build-aur.sh` into `localrepo/`, then the local
-   packages listed in that script's `LOCAL_PACKAGES` array (currently `submodules/ionix-quickshell`)
-2. **Step 2/4** — Copies the local repo to `/tmp/ionix-localrepo` for archiso access
-3. **Step 3/4** — Converts SVG branding assets (wallpaper, logo, Calamares welcome hero) to PNG using `rsvg-convert` or ImageMagick
-4. **Step 4/4** — Deletes `work/`, then runs `mkarchiso` against `profile/` to produce the final ISO in `out/`
+1. **Step 1/5** — Stages the profile: `profiles/common/` copied to `staging/<variant>/`, the variant's
+   directory laid over it (same path replaces), `packages.x86_64` and `profiledef.sh` concatenated
+   common-first instead. `--answers` adds `/etc/ionix/install.conf` (mode 600) here
+2. **Step 2/5** — Builds the AUR packages via `aur/build-aur.sh` into `localrepo/`, then the local
+   packages listed in that script's `LOCAL_PACKAGES` array (currently `submodules/ionix-quickshell`
+   and `aur/local/shim-signed`) — but only those the staged package list names, so the server
+   builds three
+3. **Step 3/5** — Copies the local repo to `/tmp/ionix-localrepo` for archiso access
+4. **Step 4/5** — Converts SVG branding assets (logo, GRUB theme logo and fonts; on the desktop also
+   wallpaper and Calamares welcome hero) to PNG with `rsvg-convert` or ImageMagick, **into the
+   staged profile** — a build never writes to the source tree
+5. **Step 5/5** — Deletes `work/`, then runs `mkarchiso` against the staged profile to produce
+   `out/ionix-<date>-x86_64.iso` or `out/ionix-server-<date>-x86_64.iso`
 
 Rebuilding after a change is cheap as long as you **don't run `clean.sh`**: the AUR packages keep
 their `.built-*` sentinels in `localrepo/`, and an already-built package is only reinstalled into
@@ -67,11 +75,18 @@ there and would ship the previous airootfs. `docker-build.sh` keeps pacman's dow
 
 ### Directory Layout
 
-- **`profile/`** — archiso profile (heart of the distro)
-  - `airootfs/` — root filesystem overlay that becomes the live ISO's filesystem
-  - `packages.x86_64` — full package list for the ISO (official + AUR)
-  - `pacman.conf` — pacman config referencing the local `[ionix]` repo
-  - `profiledef.sh` — archiso profile definition (boot modes, compression, file permissions)
+- **`profiles/`** — the archiso profile (heart of the distro), in layers `build.sh` merges
+  - `common/` — both variants: fish and the skel shell config, the styler and every theme,
+    `ionix-post-install` (base), `ionix-console-theme`, the GRUB theme, shared syslinux files,
+    `pacman.conf`, `bootstrap_packages`, and the first half of `packages.x86_64`/`profiledef.sh`
+  - `desktop/` — Hyprland, Calamares, the desktop's scripts, `post-install.d/10-desktop`,
+    liveuser, `linux` boot entries
+  - `server/` — `ionix-server-install`, kmscon, sshd/networkd live setup,
+    `post-install.d/10-server`, `linux-lts` boot entries (with serial-console ones)
+  - in each: `airootfs/` (root filesystem overlay), `packages.x86_64`, `profiledef.sh`
+    (`file_permissions+=(...)` in a variant), `efiboot/`/`grub/`/`syslinux/` where they differ
+  - `etc/ionix/variant` (`desktop`/`server`) says which one a machine was installed from;
+    `patch-os.sh` reads it, defaulting to desktop
 - **`aur/`** — AUR package build infrastructure; `build-aur.sh` builds packages in dependency order with sentinel files to skip already-built packages
 - **`submodules/`** — in-repo sources built into the local pacman repo
   - `ionix-quickshell/` — the desktop shell (QML/Quickshell). Built from the working tree by
@@ -89,9 +104,26 @@ there and would ship the previous airootfs. `docker-build.sh` keeps pacman's dow
 
 **Local packages that are also AUR packages:** `ionix-quickshell` builds as `ionix-quickshell-git`, the same name it is published under on the AUR. Since `ionix-post-install` strips the `[ionix]` repo from the installed system, pacman then treats it as a foreign package and `yay -Syu` upgrades it from the AUR normally. This only works while the version *scheme* matches on both sides: `build-aur.sh` writes `r<count>.<shorthash>` of the submodule commit into `.pkgver` in the scratch dir (the copy has no `.git` for a `pkgver()` to read), using the same formula as the submodule's `packaging/aur/aur-publish.sh`. Change one, change the other.
 
-**Layered Hyprland config:** System defaults live in `profile/airootfs/etc/hypr/hyprland.lua`, user config in `profile/airootfs/etc/skel/.config/hypr/hyprland.lua` which loads the system config with `dofile`, then allows user overrides.
+**Layered profile:** a file belongs in `common/` only if *both* ISOs want it as is; anything a
+variant would override goes in each variant instead (`loader.conf`, `etc/default/grub`,
+`hostname`, `motd`, `passwd`…), so `common/` never quietly carries desktop values. The skel
+`config.fish` is common; the desktop's tty1 `uwsm start`, keyring `SSH_AUTH_SOCK` (which would break
+agent forwarding on a server), `TERMINAL` and `BROWSER` live in the desktop's
+`skel/.config/fish/conf.d/ionix-desktop.fish`, which conf.d runs before config.fish as before.
 
-**Installer flow:** Calamares runs its module sequence, ending with `ionix-post-install` (via shellprocess), which configures the installed system: sets fish as default shell, enables systemd services, handles NVIDIA and fingerprint-reader detection, enables `[multilib]`, installs GRUB. Then `ionix-extras` installs whatever the Software page selected.
+**Layered Hyprland config:** System defaults live in `profiles/desktop/airootfs/etc/hypr/hyprland.lua`, user config in `profiles/desktop/airootfs/etc/skel/.config/hypr/hyprland.lua` which loads the system config with `dofile`, then allows user overrides.
+
+**Post-install is a base plus hooks.** `ionix-post-install` (common) does what turning any copy of
+the live medium into an installed system takes: live-artefact cleanup, each kernel in
+`/usr/lib/modules/*/pkgbase` copied to `/boot` with a standard preset, then every executable in
+`/usr/local/share/ionix/post-install.d/` in name order, then **one** `mkinitcpio -P` (so a hook
+may edit `mkinitcpio.conf` — the desktop's NVIDIA `MODULES`, the server's `HOOKS`), the keyring,
+sudoers. Hooks get the installer's `IONIX_*` environment and `NEWUSER`. It also copies the GRUB
+theme from `/usr/local/share/ionix/grub-theme` to `/boot/grub/themes/ionix`: mkarchiso deletes
+everything under the image's `/boot` (`_cleanup_pacstrap_dir`), so a theme kept in
+`airootfs/boot/` never reached an installed system and GRUB quietly fell back to its plain menu.
+
+**Installer flow:** Calamares runs its module sequence, ending with `ionix-post-install` (via shellprocess), whose `10-desktop` hook configures the installed desktop: login mode, keyring PAM, theme/bar, `[multilib]`, services, NVIDIA and fingerprint-reader detection. Then shellprocess installs GRUB and `ionix-extras` installs whatever the Software page selected.
 
 **The installer's look lives in `etc/calamares/branding/ionix/`.** `stylesheet.qss` styles every
 page Calamares draws in C++; the sidebar and the button bar are QML (`calamares-sidebar.qml`,
@@ -344,6 +376,84 @@ is what the loader then waits for, so a command that opens something else needs 
 
 **SVG asset pipeline:** Branding is stored as SVG in `assets/` and converted to PNG at build time. Generated PNGs are gitignored and cleaned by `clean.sh`.
 
+### Ionix Server
+
+`profiles/server/` makes a headless ISO (`ionix-server-<date>`, `linux-lts`) with no desktop, no
+Calamares and no liveuser: the live medium autologins **root** on tty1 (kmscon, see below), runs
+`sshd` (root may log in with a key or, once `passwd` has set one, a password —
+`sshd_config.d/10-ionix-live.conf`), systemd-networkd/resolved with archiso releng's `.network`
+files, and iwd for Wi-Fi. Boot menus add a serial-console entry (`console=ttyS0,115200 console=tty0`:
+the **last** `console=` is `/dev/console`, so the screen keeps the boot log).
+
+**`ionix-server-install`** (`usr/local/bin`, Bash, the repo's CLI conventions: `install` default,
+`disks`, `example`, `help`, `version`; exit 2 bad args, 3 bad answers) installs it:
+
+- **Answer file** — `KEY=value`, parsed, never sourced (a password hash contains `$`). Keys and
+  defaults are documented in `usr/local/share/ionix/server/install.conf.example`, which is what
+  `ionix-server-install example` prints; an unknown key is an error. Interactive runs ask for
+  whatever the file left out; `--auto` never asks.
+- **Where answers come from** — `--config`, else what `ionix-live-setup.service`
+  (`ionix-server-install live-setup`, at boot) found: `/etc/ionix/install.conf` baked in by
+  `build.sh --answers`, else `ionix-install.conf` on any filesystem labelled `IONIXCFG`, copied to
+  `/run/ionix/install.conf`. live-setup also writes its `SSH_KEY`s to root's `authorized_keys`, and
+  with `AUTO_INSTALL=yes` starts the install as its own unit (`ionix-autoinstall`, output on the
+  console) so the boot is not held up. That stick is left out of `disks`.
+- **Unattended safety** — `--auto` requires `DISK=/dev/disk/by-id/...` (a baked ISO booted on
+  another machine finds nothing to erase), waits 15 s, and live-setup skips a disk whose
+  `@/etc/ionix/installed-from` equals this medium's `archisosearchuuid`. That guard matters:
+  OVMF in QEMU boots the CD again after the reboot despite the new NVRAM entry, and without it the
+  install loops. Verified.
+- **Layout** — GPT: 1 MiB BIOS boot, 1 GiB ESP (`/boot/efi`), btrfs `ionix` with `@` `/`,
+  `@home`, `@snapshots` `/.snapshots`, `@log`, `@pkg` `/var/cache/pacman/pkg`, `@docker`; `/boot`
+  lives in `@`, so a snapshot includes its kernel. `genfstab` output has `subvolid=` stripped
+  (a rollback replaces ids). GRUB is installed for **both** `i386-pc` and `x86_64-efi` (plus the
+  removable `EFI/BOOT/BOOTX64.EFI`), `--no-nvram` when not booted UEFI. Booted both ways in QEMU.
+- **Steps** — partition, format, `unsquashfs` the live image (`/run/archiso/copytoram/airootfs.sfs`),
+  fstab, `systemd-machine-id-setup --root`, `useradd` + `chpasswd -e`, `ionix-post-install` with
+  `IONIX_*` env (and `SNAP_PAC_SKIP=y`, so the keyring refresh in there does not leave pre/post
+  snapshots of a half-installed system), GRUB, log to `/var/log/ionix-server-install.log` on the
+  target. Command output goes to the log only; the screen gets one line per step.
+
+**`post-install.d/10-server`** writes the answers into the target: hostname/locale/timezone, kmscon
+on every VT (`systemctl disable getty@tty1`, delete `/etc/systemd/system/autovt@.service` — systemd's
+install script aliased it to getty@ and `enable` refuses to take it over — then `enable kmsconvt@.service`),
+`xkb-layout=` in `kmscon.conf` (kmscon takes X layout names; `xkb_from_keymap` strips `-latin1`
+and maps `uk`→`gb`), serial console in `/etc/default/grub`, networkd (static: `10-static.network`
+matched before the DHCP `20-ethernet.network`; wait-online unmasked with `--any`), sshd
+(`PermitRootLogin no`, password logins only if asked or no key given — `passwd -l root`), Docker
+(+ docker group), snapper by hand (template copied to `configs/root`, `SNAPPER_CONFIGS="root"`:
+`snapper create-config` would make its own nested `.snapshots`), timers, `grub-btrfsd`, and
+`HOOKS=(... grub-btrfs-overlayfs)` on the **udev** hook set — that hook is a busybox runscript,
+and mkinitcpio now defaults to systemd hooks. It runs `ionixtheme` as the user and
+`ionix-console-theme` as root, clones NvChad (best effort), and deletes the installer.
+
+**`ionix-server-firstboot`** (oneshot, `Before=network-pre.target sshd.service`, gated on
+`/etc/ionix/firstboot`, disables itself) sets up ufw — deny in, allow SSH and `FIREWALL_ALLOW` —
+and takes snapper's "Fresh install" snapshot (`--no-dbus`). ufw is not run in the chroot: it would
+load its rules into the *live* kernel. Docker-published ports bypass ufw (Docker's own iptables
+chains come first); the example answer file says so.
+
+**The console is kmscon.** `etc/kmscon/kmscon.conf` (server only) sets `font-name=JetBrainsMono
+Nerd Font` (needs `fontconfig`, an optdepend), `term=xterm-256color` (kmscon's own default,
+`kmscon`, is unknown to most remote hosts), `dpms-timeout=600`, and holds the palette between the
+markers `ionix-console-theme` rewrites. Prompt glyphs, powerline arrows and `lsd` icons render —
+the kernel console cannot, whatever the font: its bitmap fonts hold at most 512 glyphs. The plain
+getty kmscon falls back to (`OnFailure=getty@%i`) uses `ter-v20n` and the fish section's OSC P
+palette. On the **live medium** `kmsconvt@` cannot be enabled (it conflicts with `getty@tty1`, which
+systemd's own install script enables before the overlay could stop it), so getty@tty1's drop-in
+runs `ionix-live-console` instead: kmscon with `login -f root`, falling back to the autologin
+agetty if kmscon dies within 5 s. kmscon owning the screen hides kernel console output, so
+`root/.config/fish/conf.d/ionix-live.fish` (live only, like the wrapper; 10-server deletes both)
+repeats live-setup's messages at login and follows an unattended install with
+`journalctl -f -t ionix-server-install` — `-t`, because `-u` also catches useradd/runuser syslog
+lines from the chroot. live-setup is ordered `Before=getty@tty1.service` for that.
+
+**Known, not ours:** `linux-lts` 6.18.57+ registers no fixed-feature ACPI power button (no
+"Power Button" input device, `/sys/firmware/acpi/interrupts/ff_pwr_btn` stays 0), so QEMU's
+`system_powerdown`/IPMI soft-off are ignored until upstream fixes it. Shut a test VM down over SSH.
+Also: QEMU's default i440fx machine shows the same symptom on any kernel; test on `-machine q35`.
+QEMU no longer takes `serial=` on `-drive`; a by-id name needs `-device virtio-blk-pci,serial=`.
+
 ### Desktop Stack
 
 - **Compositor:** Hyprland (Wayland) managed by UWSM
@@ -385,7 +495,7 @@ is what the loader then waits for, so a command that opens something else needs 
 - **Shell:** fish + oh-my-posh
 - **Login flow:** TTY autologin → fish → auto-starts Hyprland via UWSM
 
-### Important Scripts in `profile/airootfs/usr/local/bin/`
+### Important Scripts in `profiles/*/airootfs/usr/local/bin/`
 
 - `ionix-install` — Launches the Calamares installer
 - `ionix-post-install` — Post-installation system configuration (runs inside chroot)
@@ -399,6 +509,10 @@ is what the loader then waits for, so a command that opens something else needs 
 - `ionix-login-mode` — greeter / autologin / locked; survives onto the installed system
 - `ionix-fingerprint` — fingerprint reader support; survives onto the installed system
 - `ionix-extras` — installs the optional bundles; survives onto the installed system
+- `ionix-console-theme` — (common) copies a theme's `tty/kmscon.conf` palette lines, and only
+  those, into `/etc/kmscon/kmscon.conf`; root; a no-op error where kmscon is not set up
+- `ionix-server-install`, `ionix-server-firstboot` — the server's installer and first-boot job
+  (see "Ionix Server" above)
 
 ## Visual Theme
 
@@ -443,7 +557,7 @@ Tint using the deep background colors (`#1a1025` / `#0f0a18`) at the appropriate
 ### Wallpaper-adaptive themes
 
 A theme can have its colours derived from the current wallpaper instead of stating them. It opts in
-with `export USE_ADAPTIVE_COLORS=true` in its `install` file; `profile/airootfs/usr/local/share/ionix/bin/ionix-adaptive-colors`
+with `export USE_ADAPTIVE_COLORS=true` in its `install` file; `profiles/desktop/airootfs/usr/local/share/ionix/bin/ionix-adaptive-colors`
 then renders its templates against the wallpaper into `~/.config/ionix/adaptive-colors/`, and
 `install-default`'s `ionix_theme_file` makes each `ionix_install_<section>` link that instead of the
 theme's own file. `ionix-adaptive` is the first such theme; `ionix-adaptive/install` documents every knob.
@@ -473,6 +587,28 @@ for a source colour and hard-fails headless; its `colors.surface*` roles are gre
 `base16` block is a monochrome ramp, so neither is usable — the palette comes from
 `palettes.secondary`/`palettes.primary` tones under `-t scheme-content`, which are CIE L\* and so hold
 text contrast steady across hues.
+
+### Terminal sections
+
+Four styler sections theme the terminal, and are all the server installs: `fish/theme.fish`
+(→ `~/.config/fish/conf.d/ionix-theme.fish`: syntax and pager colours as `set -g`, which shadows
+fish's universal defaults; `FZF_DEFAULT_OPTS`; and on `TERM=linux` the 16-slot console palette by
+OSC P, clearing once on a login shell because existing cells keep their old background),
+`prompt/theme.omp.json` (→ `~/.config/ionix/theme.omp.json`, which the skel `config.fish` prefers
+over the stock `ionix.omp.json`), `btop/ionix.theme` (→ `~/.config/btop/themes/ionix-styler.theme`,
+`color_theme` set once in `btop.conf`) and `tty/kmscon.conf` (via `ionix-console-theme`: system-wide,
+so `sudo -n` or a hint). `/etc/skel` ships the first three as symlinks into the `ionix` theme, so
+a new account is themed before anyone runs `ionixtheme`. `bat` is set to `--theme=ansi` in skel
+and follows the terminal's palette instead.
+
+Every section of every theme, including `ionix-adaptive`'s templates (static = template rendered
+with the base palette), comes from one set of templates; the oh-my-posh one is the stock prompt
+with each colour turned into a slot and every Go action written `{{ if`, never `{{if`, because
+`ionix-adaptive-colors` refuses a file with anything matching `{{[A-Za-z]` left in it.
+
+`ionixtheme` skips installing a section whose `ionix_available_<section>` (install-default) fails —
+`command -v` for the desktop apps, `/etc/kmscon/kmscon.conf` for `tty` — and
+`ionix-adaptive-colors`' re-link loop asks the same, so one theme tree serves both variants.
 
 ### Thunderbird
 
@@ -507,7 +643,7 @@ appears without matugen.
 
 ## Working with This Repo
 
-- When adding new packages: edit `profile/packages.x86_64`. AUR packages must also be added to `aur/build-aur.sh` with correct dependency ordering.
+- When adding new packages: edit `profiles/common/packages.x86_64` (both ISOs) or a variant's. AUR packages must also be added to `aur/build-aur.sh` with correct dependency ordering, and an AUR package another one depends on must be listed too: `build-aur.sh` builds only what the staged list names.
 - When changing the desktop shell: edit `submodules/ionix-quickshell/ionix/**`. Iterate without
   rebuilding the ISO — `make -C submodules/ionix-quickshell dev` symlinks the tree into
   `~/.config/quickshell/ionix`, then `qs -c ionix` runs it and **hot-reloads on save**. Errors
@@ -540,7 +676,7 @@ appears without matugen.
   round trip is byte-identical; keep it that way. Test it without touching your own machine by
   overriding `HWDB`, `SPI_RULES`, `PAM_MODULE`, `PAM_ETC_DIR` and `PAM_VENDOR_DIR` at the top of a
   copy of the script — every path it writes to is one of those.
-- When modifying default user config: edit files under `profile/airootfs/etc/skel/.config/`.
-- When modifying system config: edit files under `profile/airootfs/etc/`.
-- When adding new scripts: add to `profile/airootfs/usr/local/bin/` and register permissions in `profile/profiledef.sh`'s `file_permissions` array.
+- When modifying default user config: edit files under `profiles/<layer>/airootfs/etc/skel/.config/`.
+- When modifying system config: edit files under `profiles/<layer>/airootfs/etc/`.
+- When adding new scripts: add to `profiles/<layer>/airootfs/usr/local/bin/` and register permissions in that layer's `profiledef.sh` (`file_permissions=(...)` in common, `file_permissions+=(...)` in a variant). mkarchiso copies the overlay with `--no-preserve=mode`, so a script without an entry is not executable on the ISO.
 - Build output (`out/`, `work/`, `localrepo/`) and generated assets are gitignored.

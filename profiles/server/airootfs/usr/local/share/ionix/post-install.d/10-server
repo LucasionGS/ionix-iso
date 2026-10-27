@@ -1,0 +1,188 @@
+#!/usr/bin/env bash
+# Server part of ionix-post-install, which runs it inside the installed
+# system's chroot with NEWUSER set and the initramfs not yet built. The IONIX_*
+# answers come from ionix-server-install, already validated there.
+
+set -euo pipefail
+
+NEWUSER="${NEWUSER:?ionix-post-install did not find the new user}"
+HOME_DIR="/home/$NEWUSER"
+IONIX_HOSTNAME="${IONIX_HOSTNAME:-ionix-server}"
+IONIX_TIMEZONE="${IONIX_TIMEZONE:-UTC}"
+IONIX_LOCALE="${IONIX_LOCALE:-en_US.UTF-8}"
+IONIX_KEYMAP="${IONIX_KEYMAP:-us}"
+IONIX_XKB_LAYOUT="${IONIX_XKB_LAYOUT:-us}"
+IONIX_SERIAL_CONSOLE="${IONIX_SERIAL_CONSOLE:-}"    # ttyS0,115200; empty = none
+IONIX_SSH_KEYS="${IONIX_SSH_KEYS:-}"                # one public key per line
+IONIX_SSH_PASSWORD_AUTH="${IONIX_SSH_PASSWORD_AUTH:-no}"
+IONIX_NETWORK="${IONIX_NETWORK:-dhcp}"              # dhcp | static
+IONIX_INTERFACE="${IONIX_INTERFACE:-}"
+IONIX_ADDRESS="${IONIX_ADDRESS:-}"
+IONIX_GATEWAY="${IONIX_GATEWAY:-}"
+IONIX_DNS="${IONIX_DNS:-}"
+IONIX_FIREWALL_ALLOW="${IONIX_FIREWALL_ALLOW:-}"
+IONIX_DOCKER="${IONIX_DOCKER:-yes}"
+IONIX_THEME="${IONIX_THEME:-ionix}"
+IONIX_MEDIA_ID="${IONIX_MEDIA_ID:-}"
+
+# ── Identity, locale, time ──────────────────────────────────
+echo "$IONIX_HOSTNAME" > /etc/hostname
+cat > /etc/hosts << HOSTS
+127.0.0.1  localhost
+::1        localhost
+127.0.1.1  $IONIX_HOSTNAME
+HOSTS
+
+# locale.gen is glibc's full commented list; enable the one line asked for.
+sed -i "s/^#\(${IONIX_LOCALE//./\\.} \)/\1/" /etc/locale.gen
+locale-gen
+echo "LANG=$IONIX_LOCALE" > /etc/locale.conf
+
+ln -sf "/usr/share/zoneinfo/$IONIX_TIMEZONE" /etc/localtime
+hwclock --systohc 2>/dev/null || true
+
+# ── Console ─────────────────────────────────────────────────
+# kmscon on every VT instead of getty: the terminals' font and the theme's
+# palette on a plugged-in screen. Enabling the template aliases autovt@ to it,
+# which is what logind starts on tty2 and up. If kmscon fails, its unit starts
+# getty@ itself (OnFailure=), so a console is always there.
+printf 'KEYMAP=%s\nFONT=ter-v20n\n' "$IONIX_KEYMAP" > /etc/vconsole.conf
+if [[ "$IONIX_XKB_LAYOUT" != us ]]; then
+    printf '\n# Keyboard layout (ionix-server-install)\nxkb-layout=%s\n' "$IONIX_XKB_LAYOUT" >> /etc/kmscon/kmscon.conf
+fi
+# The live medium's root autologin.
+rm -rf /etc/systemd/system/getty@tty1.service.d
+systemctl disable getty@tty1.service
+# systemd's own install aliased autovt@ to getty@ already, and `enable` will not
+# replace an alias another unit owns.
+rm -f /etc/systemd/system/autovt@.service
+systemctl enable kmsconvt@.service
+
+if [[ -n "$IONIX_SERIAL_CONSOLE" ]]; then
+    serial_dev="${IONIX_SERIAL_CONSOLE%%,*}"
+    serial_speed=115200
+    [[ "$IONIX_SERIAL_CONSOLE" == *,* ]] && serial_speed="${IONIX_SERIAL_CONSOLE#*,}"
+    serial_speed="${serial_speed%%[!0-9]*}"
+    # The last console= is /dev/console, so the screen keeps the boot messages.
+    sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=\"\(.*\)\"|GRUB_CMDLINE_LINUX_DEFAULT=\"\1 console=${serial_dev},${serial_speed} console=tty0\"|" /etc/default/grub
+    cat >> /etc/default/grub << GRUB
+
+# Serial console (ionix-server-install): the menu on ${serial_dev} as well.
+GRUB_TERMINAL_INPUT="console serial"
+GRUB_TERMINAL_OUTPUT="gfxterm serial"
+GRUB_SERIAL_COMMAND="serial --unit=${serial_dev#ttyS} --speed=${serial_speed}"
+GRUB
+    systemctl enable "serial-getty@${serial_dev}.service"
+fi
+
+# ── Network ─────────────────────────────────────────────────
+# systemd-networkd: every wired interface on DHCP (20-ethernet.network, from the
+# live medium), unless the install gave one a static address, which matches
+# first. The live medium masks wait-online to boot faster; a server wants
+# network-online.target to mean it, but from any one interface, not all.
+rm -f /etc/systemd/system/systemd-networkd-wait-online.service
+mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d
+cat > /etc/systemd/system/systemd-networkd-wait-online.service.d/any.conf << 'WAIT'
+[Service]
+ExecStart=
+ExecStart=/usr/lib/systemd/systemd-networkd-wait-online --any
+WAIT
+
+if [[ "$IONIX_NETWORK" == static ]]; then
+    {
+        printf '[Match]\nName=%s\n\n[Link]\nRequiredForOnline=routable\n\n[Network]\n' "$IONIX_INTERFACE"
+        printf 'Address=%s\nGateway=%s\n' "$IONIX_ADDRESS" "$IONIX_GATEWAY"
+        for dns in $IONIX_DNS; do
+            printf 'DNS=%s\n' "$dns"
+        done
+    } > /etc/systemd/network/10-static.network
+fi
+
+# Wi-Fi was the live medium's convenience; a server that needs it can
+# `systemctl enable --now iwd`.
+rm -f /etc/systemd/system/multi-user.target.wants/iwd.service
+systemctl enable systemd-networkd.service systemd-resolved.service systemd-timesyncd.service
+
+# ── SSH ─────────────────────────────────────────────────────
+rm -f /etc/ssh/sshd_config.d/10-ionix-live.conf
+cat > /etc/ssh/sshd_config.d/10-ionix.conf << SSHD
+# Ionix Server (ionix-server-install). root has no password; log in as
+# $NEWUSER and use sudo.
+PermitRootLogin no
+PasswordAuthentication $IONIX_SSH_PASSWORD_AUTH
+KbdInteractiveAuthentication no
+SSHD
+
+if [[ -n "$IONIX_SSH_KEYS" ]]; then
+    install -d -m700 -o "$NEWUSER" -g "$NEWUSER" "$HOME_DIR/.ssh"
+    printf '%s\n' "$IONIX_SSH_KEYS" > "$HOME_DIR/.ssh/authorized_keys"
+    chown "$NEWUSER:$NEWUSER" "$HOME_DIR/.ssh/authorized_keys"
+    chmod 600 "$HOME_DIR/.ssh/authorized_keys"
+fi
+systemctl enable sshd.service
+passwd -l root > /dev/null
+
+# ── Firewall ────────────────────────────────────────────────
+# Applied on the first boot by ionix-server-firstboot: run here, ufw would load
+# its rules into the live medium's kernel.
+printf 'FIREWALL_ALLOW="%s"\n' "$IONIX_FIREWALL_ALLOW" > /etc/ionix/firstboot
+systemctl enable ufw.service ionix-server-firstboot.service
+
+# ── Docker ──────────────────────────────────────────────────
+if [[ "$IONIX_DOCKER" == yes ]]; then
+    systemctl enable docker.service
+    usermod -aG docker "$NEWUSER"
+fi
+
+# ── Snapshots ───────────────────────────────────────────────
+# Root is the btrfs subvolume @ and /.snapshots is @snapshots beside it (the
+# installer mounts both), so snapper is configured by hand rather than with
+# `snapper create-config`, which would create its own nested .snapshots.
+# snap-pac then snapshots before and after every pacman transaction, and
+# grub-btrfs lists the snapshots in the boot menu.
+install -Dm640 /usr/share/snapper/config-templates/default /etc/snapper/configs/root
+sed -i \
+    -e 's/^ALLOW_GROUPS=.*/ALLOW_GROUPS="wheel"/' \
+    -e 's/^NUMBER_LIMIT=.*/NUMBER_LIMIT="20"/' \
+    -e 's/^NUMBER_LIMIT_IMPORTANT=.*/NUMBER_LIMIT_IMPORTANT="5"/' \
+    -e 's/^TIMELINE_LIMIT_HOURLY=.*/TIMELINE_LIMIT_HOURLY="5"/' \
+    -e 's/^TIMELINE_LIMIT_DAILY=.*/TIMELINE_LIMIT_DAILY="7"/' \
+    -e 's/^TIMELINE_LIMIT_WEEKLY=.*/TIMELINE_LIMIT_WEEKLY="2"/' \
+    -e 's/^TIMELINE_LIMIT_MONTHLY=.*/TIMELINE_LIMIT_MONTHLY="1"/' \
+    -e 's/^TIMELINE_LIMIT_YEARLY=.*/TIMELINE_LIMIT_YEARLY="0"/' \
+    /etc/snapper/configs/root
+sed -i 's/^SNAPPER_CONFIGS=.*/SNAPPER_CONFIGS="root"/' /etc/conf.d/snapper
+chmod 750 /.snapshots
+chown :wheel /.snapshots
+systemctl enable snapper-timeline.timer snapper-cleanup.timer grub-btrfsd.service
+
+# Booting a snapshot from the GRUB menu mounts it read-only; the
+# grub-btrfs-overlayfs hook puts a writable overlay on it so the system comes
+# up normally. That hook is a busybox runscript, so the initramfs uses the udev
+# hooks rather than the systemd ones mkinitcpio defaults to.
+sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck grub-btrfs-overlayfs)/' /etc/mkinitcpio.conf
+
+# ── Theme ───────────────────────────────────────────────────
+# The account already links the ionix theme's terminal files (from /etc/skel);
+# running the styler records the choice and switches to another one.
+runuser -u "$NEWUSER" -- env HOME="$HOME_DIR" XDG_CONFIG_HOME="$HOME_DIR/.config" \
+    /usr/local/share/ionix/styler/bin/ionixtheme "$IONIX_THEME" > /dev/null 2>&1 \
+    || echo "Could not apply the $IONIX_THEME theme; run ionixtheme $IONIX_THEME after logging in." >&2
+if [[ "$IONIX_THEME" != ionix ]]; then
+    ionix-console-theme "$IONIX_THEME" > /dev/null
+fi
+
+# Neovim's NvChad starter, as the desktop clones at first login. Best effort:
+# the network may not be up, and nvim works without it.
+if [[ ! -d "$HOME_DIR/.config/nvim" ]]; then
+    timeout 60 runuser -u "$NEWUSER" -- git clone --depth 1 --quiet \
+        https://github.com/NvChad/starter "$HOME_DIR/.config/nvim" 2>/dev/null || true
+fi
+
+# ── Live medium leftovers ───────────────────────────────────
+rm -f /etc/systemd/system/multi-user.target.wants/ionix-live-setup.service
+rm -f /etc/systemd/system/ionix-live-setup.service
+rm -f /usr/local/bin/ionix-server-install
+rm -f /usr/local/bin/ionix-live-console /root/.config/fish/conf.d/ionix-live.fish
+# What live-setup compares, so a medium left in does not reinstall in a loop.
+printf '%s\n' "$IONIX_MEDIA_ID" > /etc/ionix/installed-from

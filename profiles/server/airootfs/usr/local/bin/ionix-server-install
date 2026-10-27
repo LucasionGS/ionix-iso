@@ -1,0 +1,803 @@
+#!/usr/bin/env bash
+# ionix-server-install — install Ionix Server from its live medium.
+#
+# At the console, over SSH, or with nobody there at all: every question it asks
+# can be answered in advance by an answer file (`ionix-server-install example`).
+# The disk gets a BIOS boot partition, an EFI system partition and one btrfs
+# filesystem with snapper-ready subvolumes; GRUB goes on for both firmware
+# kinds, so the disk boots wherever it ends up. The installed system is the
+# live root filesystem minus the live-only parts, configured by
+# ionix-post-install and its post-install.d/10-server hook.
+#
+# Exit codes: 0 done, 1 failed, 2 bad arguments, 3 invalid answers.
+
+set -euo pipefail
+
+VERSION="1.0.0"
+
+TARGET=/mnt/ionix
+LOG=/var/log/ionix-server-install.log
+EXAMPLE=/usr/local/share/ionix/server/install.conf.example
+THEMES_DIR=/usr/local/share/ionix/styler/themes
+# Where live-setup leaves an answer file it found on an IONIXCFG filesystem.
+RUN_DIR=/run/ionix
+FOUND_ANSWERS="$RUN_DIR/install.conf"
+BAKED_ANSWERS=/etc/ionix/install.conf
+CFG_LABEL=IONIXCFG
+MIN_DISK_GB=16
+AUTO_DELAY=15
+
+# Answers, keyed by setting name; SSH_KEY is the one that can repeat.
+declare -A A=()
+SSH_KEYS=()
+KNOWN_KEYS=(AUTO_INSTALL AFTER_INSTALL DISK HOSTNAME TIMEZONE LOCALE KEYMAP XKB_LAYOUT
+            SERIAL_CONSOLE USERNAME PASSWORD PASSWORD_HASH SSH_PASSWORD_AUTH NETWORK
+            INTERFACE ADDRESS GATEWAY DNS FIREWALL_ALLOW DOCKER THEME)
+
+CONFIG=""
+ASSUME_YES=false
+AUTO=false
+
+#region Output
+
+bold()  { printf '\033[1m%s\033[0m\n' "$*"; }
+green() { printf '\033[1;32m%s\033[0m\n' "$*"; }
+red()   { printf '\033[1;31m%s\033[0m\n' "$*" >&2; }
+
+# Print an error and exit with the given code (default 1).
+die() {
+    red "$1"
+    exit "${2:-1}"
+}
+
+# A progress line, on screen and in the log.
+step() {
+    printf '%s\n' "$*"
+    printf '\n==> %s\n' "$*" >> "$LOG"
+}
+
+# Run a command with its output going to the log only.
+run() {
+    "$@" >> "$LOG" 2>&1
+}
+
+#endregion
+
+#region Help
+
+usage() {
+    cat <<EOF
+Ionix Server installer $VERSION
+
+Usage: ionix-server-install [command] [options]
+
+  install [-c FILE] [-y]   Install Ionix Server to a disk (the default command)
+  disks                    List the disks it can install to
+  example                  Print an example answer file
+  version                  Print the version
+  help [command]           Show this help, or a command's
+
+Run "ionix-server-install help <command>" for more information on a command.
+EOF
+}
+
+usage_install() {
+    cat <<EOF
+Install Ionix Server to a disk, erasing all of it.
+
+Usage: ionix-server-install install [-c FILE] [-y]
+
+Options:
+  -c, --config FILE   Answer file to read (see \`ionix-server-install example\`).
+                      Without one, the one found at boot is used, if any.
+  -y, --yes           Do not ask before erasing the disk.
+      --auto          Unattended: never prompt, missing answers are an error.
+      --trace         Print every command as it runs (debugging).
+EOF
+}
+
+#endregion
+
+#region Answers
+
+# Load an answer file into A and SSH_KEYS. KEY=value lines, optionally quoted;
+# never sourced, so a value is only ever data.
+answers_load() {
+    local file="$1" line key value n=0 known
+
+    [[ -r "$file" ]] || die "Cannot read the answer file: $file" 2
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        n=$((n + 1))
+        line="${line%$'\r'}"
+        [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+        if [[ ! "$line" =~ ^[[:space:]]*([A-Z_][A-Z0-9_]*)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
+            die "$file:$n: expected KEY=value, got: $line" 3
+        fi
+        key="${BASH_REMATCH[1]}"
+        value="${BASH_REMATCH[2]}"
+        if [[ "$value" =~ ^\"(.*)\"[[:space:]]*(#.*)?$ ]]; then
+            value="${BASH_REMATCH[1]}"
+        elif [[ "$value" =~ ^\'(.*)\'[[:space:]]*(#.*)?$ ]]; then
+            value="${BASH_REMATCH[1]}"
+        else
+            value="${value%%[[:space:]]#*}"
+            value="${value%"${value##*[![:space:]]}"}"
+        fi
+
+        if [[ "$key" == SSH_KEY ]]; then
+            [[ -n "$value" ]] && SSH_KEYS+=("$value")
+            continue
+        fi
+        known=false
+        for k in "${KNOWN_KEYS[@]}"; do
+            [[ "$k" == "$key" ]] && known=true
+        done
+        $known || die "$file:$n: unknown setting $key. See \`ionix-server-install example\` for the list." 3
+        A[$key]="$value"
+    done < "$file"
+}
+
+# The answer file to use when none was named: one live-setup found on an
+# IONIXCFG filesystem, else one baked into the ISO.
+answers_default_file() {
+    if [[ -f "$FOUND_ANSWERS" ]]; then
+        echo "$FOUND_ANSWERS"
+    elif [[ -f "$BAKED_ANSWERS" ]]; then
+        echo "$BAKED_ANSWERS"
+    fi
+}
+
+# An answer, or the given default when it is unset or empty.
+get() {
+    local v="${A[$1]:-}"
+    echo "${v:-${2:-}}"
+}
+
+#endregion
+
+#region Disks
+
+# The disk the live medium was booted from, which is never a target.
+boot_disk() {
+    local uuid dev parent
+    uuid="$(sed -n 's/.*archisosearchuuid=\([^ ]*\).*/\1/p' /proc/cmdline)"
+    [[ -n "$uuid" ]] || return 0
+    dev="$(blkid -U "$uuid" 2>/dev/null)" || return 0
+    parent="$(lsblk -ndo PKNAME "$dev" 2>/dev/null)"
+    if [[ -n "$parent" ]]; then
+        echo "/dev/$parent"
+    else
+        echo "$dev"
+    fi
+}
+
+# A disk's most readable /dev/disk/by-id/ name, if it has one.
+disk_by_id() {
+    local dev link best=""
+    dev="$(readlink -f "$1")"
+    for link in /dev/disk/by-id/*; do
+        [[ "$link" == *-part* ]] && continue
+        [[ "$(readlink -f "$link")" == "$dev" ]] || continue
+        # wwn- and eui. names are unique but say nothing about the disk.
+        if [[ -z "$best" || ( "$best" =~ /(wwn-|nvme-eui\.) && ! "$link" =~ /(wwn-|nvme-eui\.) ) ]]; then
+            best="$link"
+        fi
+    done
+    echo "$best"
+}
+
+# Whole disks that could be installed to, one /dev path per line.
+candidate_disks() {
+    local boot name type
+    boot="$(boot_disk)"
+    while read -r name type; do
+        [[ "$type" == disk ]] || continue
+        [[ "$name" == "$boot" ]] && continue
+        [[ "$name" == /dev/zram* ]] && continue
+        # The stick an answer file came on.
+        lsblk -nlo LABEL "$name" 2> /dev/null | grep -qx "$CFG_LABEL" && continue
+        echo "$name"
+    done < <(lsblk -dnpo NAME,TYPE)
+}
+
+# Partition N of a disk: sda → sda1, nvme0n1 → nvme0n1p1.
+part_path() {
+    local disk="$1" n="$2"
+    if [[ "$disk" =~ [0-9]$ ]]; then
+        echo "${disk}p${n}"
+    else
+        echo "${disk}${n}"
+    fi
+}
+
+cmd_disks() {
+    local dev id found=false
+    printf '  %-12s %-8s %-28s %s\n' DEVICE SIZE MODEL BY-ID
+    while read -r dev; do
+        found=true
+        id="$(disk_by_id "$dev")"
+        printf '  %-12s %-8s %-28s %s\n' "$dev" \
+            "$(lsblk -dno SIZE "$dev" | tr -d ' ')" \
+            "$(lsblk -dno MODEL "$dev" | sed 's/[[:space:]]*$//' | cut -c1-28)" \
+            "${id:--}"
+    done < <(candidate_disks)
+    $found || echo "  (no disks found besides the boot medium)"
+    return 0
+}
+
+#endregion
+
+#region Prompts
+
+# Ask for a value with a default; prints the answer.
+ask() {
+    local prompt="$1" default="${2:-}" reply
+    if [[ -n "$default" ]]; then
+        read -r -p "$prompt [$default]: " reply
+    else
+        read -r -p "$prompt: " reply
+    fi
+    echo "${reply:-$default}"
+}
+
+# Fill in what the answer file left out, at a terminal.
+prompt_missing() {
+    local reply pass pass2 i disks=()
+
+    if [[ -z "$(get DISK)" ]]; then
+        mapfile -t disks < <(candidate_disks)
+        [[ ${#disks[@]} -gt 0 ]] || die "No disk to install to: the only disk found is the boot medium."
+        echo "Disks:"
+        for i in "${!disks[@]}"; do
+            printf '  %d) %-12s %-8s %s\n' "$((i + 1))" "${disks[$i]}" \
+                "$(lsblk -dno SIZE "${disks[$i]}" | tr -d ' ')" \
+                "$(lsblk -dno MODEL "${disks[$i]}" | sed 's/[[:space:]]*$//')"
+        done
+        reply="$(ask "Install to which disk (number or path)" 1)"
+        if [[ "$reply" =~ ^[0-9]+$ ]] && (( reply >= 1 && reply <= ${#disks[@]} )); then
+            reply="${disks[$((reply - 1))]}"
+        fi
+        A[DISK]="$reply"
+    fi
+
+    [[ -n "$(get HOSTNAME)" ]] || A[HOSTNAME]="$(ask Hostname ionix-server)"
+    [[ -n "$(get TIMEZONE)" ]] || A[TIMEZONE]="$(ask "Timezone (e.g. Europe/Copenhagen)" UTC)"
+    [[ -n "$(get KEYMAP)" ]] || A[KEYMAP]="$(ask "Keyboard layout" us)"
+    [[ -n "$(get USERNAME)" ]] || A[USERNAME]="$(ask "Username for the admin account")"
+
+    if [[ -z "$(get PASSWORD_HASH)" && -z "$(get PASSWORD)" ]]; then
+        while true; do
+            read -r -s -p "Password for $(get USERNAME): " pass; echo
+            read -r -s -p "Password again: " pass2; echo
+            if [[ -z "$pass" ]]; then
+                echo "The password cannot be empty."
+            elif [[ "$pass" != "$pass2" ]]; then
+                echo "The passwords did not match."
+            else
+                break
+            fi
+        done
+        A[PASSWORD_HASH]="$(printf '%s' "$pass" | openssl passwd -6 -stdin)"
+    fi
+
+    if [[ ${#SSH_KEYS[@]} -eq 0 ]]; then
+        reply="$(ask "SSH public key to log in with (empty to skip)")"
+        [[ -n "$reply" ]] && SSH_KEYS+=("$reply")
+    fi
+
+    if [[ -z "${A[NETWORK]+set}" ]]; then
+        A[NETWORK]="$(ask "Network (dhcp or static)" dhcp)"
+    fi
+    if [[ "$(get NETWORK)" == static ]]; then
+        [[ -n "$(get INTERFACE)" ]] || A[INTERFACE]="$(ask Interface "$(default_interface)")"
+        [[ -n "$(get ADDRESS)" ]] || A[ADDRESS]="$(ask "Address with prefix (e.g. 192.168.1.10/24)")"
+        [[ -n "$(get GATEWAY)" ]] || A[GATEWAY]="$(ask Gateway)"
+        [[ -n "$(get DNS)" ]] || A[DNS]="$(ask "DNS servers" "$(get GATEWAY)")"
+    fi
+
+    if [[ -z "${A[FIREWALL_ALLOW]+set}" ]]; then
+        A[FIREWALL_ALLOW]="$(ask "Ports to open besides SSH (e.g. 80/tcp 443/tcp)" "")"
+    fi
+    if [[ -z "${A[DOCKER]+set}" ]]; then
+        reply="$(ask "Start Docker at boot? [Y/n]" "")"
+        [[ "$reply" =~ ^[Nn] ]] && A[DOCKER]=no || A[DOCKER]=yes
+    fi
+}
+
+#endregion
+
+#region Validation
+
+# The interface the live medium's default route goes out of, else the first
+# wired one.
+default_interface() {
+    local iface
+    iface="$(ip route show default 2>/dev/null | awk '{ for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit } }' || true)"
+    if [[ -z "$iface" ]]; then
+        iface="$(ls /sys/class/net | grep -E '^(en|eth)' | head -n1 || true)"
+    fi
+    echo "$iface"
+}
+
+# The serial console the live medium was booted with, if any.
+cmdline_serial() {
+    tr ' ' '\n' < /proc/cmdline | sed -n 's/^console=\(ttyS[0-9]*.*\)$/\1/p' | tail -n1
+}
+
+# kmscon takes X keyboard layout names; console keymaps mostly match them once
+# their variant suffix is gone.
+xkb_from_keymap() {
+    local k="${1%%-*}"
+    case "$k" in
+        uk) echo gb ;;
+        *) echo "$k" ;;
+    esac
+}
+
+# Defaults, then every answer checked; exits 3 on the first bad one.
+validate() {
+    local dev size_gb key root_mounts
+
+    A[HOSTNAME]="$(get HOSTNAME ionix-server)"
+    A[TIMEZONE]="$(get TIMEZONE UTC)"
+    A[LOCALE]="$(get LOCALE en_US.UTF-8)"
+    A[KEYMAP]="$(get KEYMAP us)"
+    A[XKB_LAYOUT]="$(get XKB_LAYOUT "$(xkb_from_keymap "$(get KEYMAP)")")"
+    [[ -n "${A[SERIAL_CONSOLE]+set}" ]] || A[SERIAL_CONSOLE]="$(cmdline_serial)"
+    A[NETWORK]="$(get NETWORK dhcp)"
+    A[DOCKER]="$(get DOCKER yes)"
+    A[THEME]="$(get THEME ionix)"
+    A[AFTER_INSTALL]="$(get AFTER_INSTALL reboot)"
+    if [[ ${#SSH_KEYS[@]} -gt 0 ]]; then
+        A[SSH_PASSWORD_AUTH]="$(get SSH_PASSWORD_AUTH no)"
+    else
+        A[SSH_PASSWORD_AUTH]="$(get SSH_PASSWORD_AUTH yes)"
+    fi
+
+    # Disk
+    [[ -n "$(get DISK)" ]] || die "No DISK given. \`ionix-server-install disks\` lists them." 3
+    if $AUTO && [[ "$(get DISK)" != /dev/disk/by-id/* ]]; then
+        die "An unattended install needs DISK as a /dev/disk/by-id/ path, so it can only ever erase that one disk. Got: $(get DISK)" 3
+    fi
+    dev="$(readlink -f "$(get DISK)")"
+    [[ -b "$dev" ]] || die "DISK is not a block device: $(get DISK)" 3
+    [[ "$(lsblk -dno TYPE "$dev")" == disk ]] || die "DISK must be a whole disk, not a partition: $(get DISK)" 3
+    [[ "$dev" != "$(boot_disk)" ]] || die "DISK is the medium Ionix Server is running from: $(get DISK)" 3
+    root_mounts="$(lsblk -nlpo MOUNTPOINTS "$dev" | grep -v '^$' || true)"
+    [[ -z "$root_mounts" ]] || die "$dev has mounted filesystems ($(echo "$root_mounts" | tr '\n' ' ')). Unmount them first." 3
+    size_gb=$(( $(lsblk -bdno SIZE "$dev") / 1000000000 ))
+    (( size_gb >= MIN_DISK_GB )) || die "$dev is ${size_gb} GB; Ionix Server needs at least ${MIN_DISK_GB} GB." 3
+    DISK_DEV="$dev"
+
+    # System
+    [[ "$(get HOSTNAME)" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$ ]] \
+        || die "Invalid HOSTNAME: $(get HOSTNAME). Letters, digits and inner hyphens, up to 63." 3
+    [[ -f "/usr/share/zoneinfo/$(get TIMEZONE)" ]] \
+        || die "Unknown TIMEZONE: $(get TIMEZONE). Use a name from /usr/share/zoneinfo, such as Europe/Copenhagen." 3
+    grep -qE "^#?$(get LOCALE | sed 's/\./\\./g') " /etc/locale.gen \
+        || die "Unknown LOCALE: $(get LOCALE). Use a name from /etc/locale.gen, such as en_US.UTF-8." 3
+    [[ -n "$(find /usr/share/kbd/keymaps -name "$(get KEYMAP).map.gz" -print -quit)" ]] \
+        || die "Unknown KEYMAP: $(get KEYMAP). See \`localectl list-keymaps\`." 3
+    if [[ -n "$(get SERIAL_CONSOLE)" && ! "$(get SERIAL_CONSOLE)" =~ ^ttyS[0-9]+(,[0-9]+[a-z0-9]*)?$ ]]; then
+        die "Invalid SERIAL_CONSOLE: $(get SERIAL_CONSOLE). Expected e.g. ttyS0,115200." 3
+    fi
+
+    # User
+    [[ "$(get USERNAME)" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
+        || die "Invalid USERNAME: '$(get USERNAME)'. Must match ^[a-z_][a-z0-9_-]*\$." 3
+    ! getent passwd "$(get USERNAME)" > /dev/null \
+        || die "USERNAME $(get USERNAME) is taken by a system account. Pick another." 3
+    if [[ -z "$(get PASSWORD_HASH)" ]]; then
+        [[ -n "$(get PASSWORD)" ]] || die "No PASSWORD_HASH (or PASSWORD) for $(get USERNAME)." 3
+        A[PASSWORD_HASH]="$(printf '%s' "$(get PASSWORD)" | openssl passwd -6 -stdin)"
+    fi
+    [[ "$(get PASSWORD_HASH)" == \$* ]] \
+        || die "PASSWORD_HASH does not look like a crypt(3) hash. Make one with: openssl passwd -6" 3
+    for key in "${SSH_KEYS[@]}"; do
+        [[ "$key" =~ ^(ssh-[a-z0-9]+|ecdsa-sha2-[a-z0-9]+|sk-[a-z0-9@.-]+)\ [A-Za-z0-9+/=]+ ]] \
+            || die "Not an SSH public key: ${key:0:40}..." 3
+    done
+    [[ "$(get SSH_PASSWORD_AUTH)" =~ ^(yes|no)$ ]] || die "SSH_PASSWORD_AUTH must be yes or no." 3
+    if [[ ${#SSH_KEYS[@]} -eq 0 && "$(get SSH_PASSWORD_AUTH)" == no ]]; then
+        die "SSH_PASSWORD_AUTH=no with no SSH_KEY would leave nobody able to log in over SSH. Add an SSH_KEY line." 3
+    fi
+
+    # Network
+    case "$(get NETWORK)" in
+        dhcp) ;;
+        static)
+            A[INTERFACE]="$(get INTERFACE "$(default_interface)")"
+            [[ -n "$(get INTERFACE)" ]] || die "NETWORK=static needs an INTERFACE; none could be guessed." 3
+            [[ "$(get ADDRESS)" =~ ^[0-9a-fA-F:.]+/[0-9]{1,3}$ ]] \
+                || die "NETWORK=static needs ADDRESS with a prefix length, e.g. 192.168.1.10/24. Got: '$(get ADDRESS)'" 3
+            [[ "$(get GATEWAY)" =~ ^[0-9a-fA-F:.]+$ ]] \
+                || die "NETWORK=static needs a GATEWAY address. Got: '$(get GATEWAY)'" 3
+            ;;
+        *) die "NETWORK must be dhcp or static, not $(get NETWORK)." 3 ;;
+    esac
+
+    # Firewall
+    for key in $(get FIREWALL_ALLOW); do
+        [[ "$key" =~ ^([0-9]+(:[0-9]+)?(/(tcp|udp))?|[A-Za-z][A-Za-z0-9_-]*)$ ]] \
+            || die "Invalid FIREWALL_ALLOW entry: $key. Use port/protocol (443/tcp), a range (6000:6007/tcp) or a service name." 3
+    done
+
+    # Software and finish
+    [[ "$(get DOCKER)" =~ ^(yes|no)$ ]] || die "DOCKER must be yes or no." 3
+    [[ -f "$THEMES_DIR/$(get THEME)/tty/kmscon.conf" ]] \
+        || die "Unknown THEME: $(get THEME). Choose from: $(ls "$THEMES_DIR" | tr '\n' ' ')" 3
+    [[ "$(get AFTER_INSTALL)" =~ ^(reboot|poweroff|stay)$ ]] || die "AFTER_INSTALL must be reboot, poweroff or stay." 3
+}
+
+summary() {
+    local id
+    id="$(disk_by_id "$DISK_DEV")"
+    echo ""
+    bold "Ionix Server will be installed with these settings:"
+    echo ""
+    printf '  %-16s %s\n' Disk "$DISK_DEV ($(echo $(lsblk -dno SIZE,MODEL "$DISK_DEV"))) — ERASED"
+    [[ -n "$id" ]] && printf '  %-16s %s\n' "" "$id"
+    printf '  %-16s %s\n' Hostname "$(get HOSTNAME)"
+    printf '  %-16s %s\n' Timezone "$(get TIMEZONE)"
+    printf '  %-16s %s\n' Locale "$(get LOCALE)"
+    printf '  %-16s %s\n' Keymap "$(get KEYMAP)"
+    printf '  %-16s %s\n' "Serial console" "$(get SERIAL_CONSOLE none)"
+    printf '  %-16s %s\n' User "$(get USERNAME) (sudo)"
+    printf '  %-16s %s\n' "SSH keys" "${#SSH_KEYS[@]}, password logins $(get SSH_PASSWORD_AUTH)"
+    if [[ "$(get NETWORK)" == static ]]; then
+        printf '  %-16s %s\n' Network "static $(get ADDRESS) via $(get GATEWAY) on $(get INTERFACE)"
+    else
+        printf '  %-16s %s\n' Network dhcp
+    fi
+    printf '  %-16s %s\n' Firewall "SSH $(get FIREWALL_ALLOW)"
+    printf '  %-16s %s\n' Docker "$(get DOCKER)"
+    printf '  %-16s %s\n' Theme "$(get THEME)"
+    echo ""
+}
+
+#endregion
+
+#region Install
+
+# The live root filesystem image: in RAM with copytoram, else on the medium.
+squashfs_image() {
+    local f
+    for f in /run/archiso/copytoram/airootfs.sfs /run/archiso/bootmnt/*/x86_64/airootfs.sfs; do
+        [[ -f "$f" ]] && { echo "$f"; return 0; }
+    done
+    return 1
+}
+
+# Identifies the medium, so live-setup can tell a disk it installed already.
+media_id() {
+    local id
+    id="$(sed -n 's/.*archisosearchuuid=\([^ ]*\).*/\1/p' /proc/cmdline)"
+    echo "${id:-$(cat /version 2>/dev/null || true)}"
+}
+
+cleanup_target() {
+    if mountpoint -q "$TARGET"; then
+        umount -R "$TARGET" 2>/dev/null || true
+    fi
+}
+
+on_error() {
+    local rc=$?
+    red "The install failed. The full log is in $LOG; its last lines:"
+    tail -n 15 "$LOG" >&2 || true
+    cleanup_target
+    exit "$rc"
+}
+
+partition() {
+    local p
+    step "Partitioning $DISK_DEV..."
+    # Old signatures first, so nothing on the disk is recognised afterwards.
+    for p in $(lsblk -nlpo NAME "$DISK_DEV" | tail -n +2); do
+        run wipefs -af "$p"
+    done
+    run wipefs -af "$DISK_DEV"
+    run sgdisk --zap-all "$DISK_DEV"
+    # 8304 is the "Linux x86-64 root" type of the Discoverable Partitions Spec.
+    run sgdisk \
+        -n1:0:+1M -t1:ef02 -c1:"BIOS boot" \
+        -n2:0:+1G -t2:ef00 -c2:"EFI system" \
+        -n3:0:0   -t3:8304 -c3:"Ionix Server" \
+        "$DISK_DEV"
+    run partprobe "$DISK_DEV" || true
+    run udevadm settle
+    ESP="$(part_path "$DISK_DEV" 2)"
+    ROOT="$(part_path "$DISK_DEV" 3)"
+    [[ -b "$ESP" && -b "$ROOT" ]] || die "The new partitions did not appear ($ESP, $ROOT)."
+}
+
+format_and_mount() {
+    local opts="noatime,compress=zstd:1" sv path
+    # subvolume → mount point. Separate subvolumes stay out of root's snapshots,
+    # so rolling back the system leaves logs, homes and containers alone.
+    local -A subvols=(
+        [@home]=home
+        [@snapshots]=.snapshots
+        [@log]=var/log
+        [@pkg]=var/cache/pacman/pkg
+        [@docker]=var/lib/docker
+    )
+
+    step "Formatting..."
+    run mkfs.fat -F 32 -n EFI "$ESP"
+    run mkfs.btrfs -f -L ionix "$ROOT"
+
+    step "Creating btrfs subvolumes..."
+    mkdir -p "$TARGET"
+    run mount -t btrfs "$ROOT" "$TARGET"
+    run btrfs subvolume create "$TARGET/@"
+    for sv in "${!subvols[@]}"; do
+        run btrfs subvolume create "$TARGET/$sv"
+    done
+    run umount "$TARGET"
+
+    run mount -t btrfs -o "$opts,subvol=@" "$ROOT" "$TARGET"
+    for sv in "${!subvols[@]}"; do
+        path="$TARGET/${subvols[$sv]}"
+        mkdir -p "$path"
+        run mount -t btrfs -o "$opts,subvol=$sv" "$ROOT" "$path"
+    done
+    mkdir -p "$TARGET/boot/efi"
+    run mount "$ESP" "$TARGET/boot/efi"
+}
+
+unpack() {
+    local sfs
+    sfs="$(squashfs_image)" || die "The live root filesystem image was not found. Is this the Ionix Server live medium?"
+    step "Copying the system to disk (this takes a few minutes)..."
+    if [[ -t 1 ]] && ! $AUTO; then
+        unsquashfs -f -d "$TARGET" "$sfs" 2>> "$LOG"
+    else
+        run unsquashfs -f -no-progress -d "$TARGET" "$sfs"
+    fi
+}
+
+configure() {
+    local env=()
+
+    step "Writing fstab..."
+    # subvolid= would pin each mount to one subvolume id, which a snapshot
+    # rollback replaces; subvol= by name is what has to stay.
+    genfstab -U "$TARGET" | sed -E 's/,subvolid=[0-9]+//; s/subvolid=[0-9]+,//' > "$TARGET/etc/fstab"
+
+    # A fresh identity for the machine; the live medium's would be shared by
+    # every server installed from it.
+    rm -f "$TARGET/etc/machine-id"
+    run systemd-machine-id-setup --root="$TARGET"
+
+    step "Creating user $(get USERNAME)..."
+    run arch-chroot "$TARGET" useradd -m -G wheel -s /usr/bin/fish "$(get USERNAME)"
+    printf '%s:%s\n' "$(get USERNAME)" "$(get PASSWORD_HASH)" | run arch-chroot "$TARGET" chpasswd -e
+
+    step "Configuring the system..."
+    env=(
+        IONIX_HOSTNAME="$(get HOSTNAME)"
+        IONIX_TIMEZONE="$(get TIMEZONE)"
+        IONIX_LOCALE="$(get LOCALE)"
+        IONIX_KEYMAP="$(get KEYMAP)"
+        IONIX_XKB_LAYOUT="$(get XKB_LAYOUT)"
+        IONIX_SERIAL_CONSOLE="$(get SERIAL_CONSOLE)"
+        IONIX_SSH_KEYS="$(printf '%s\n' "${SSH_KEYS[@]}")"
+        IONIX_SSH_PASSWORD_AUTH="$(get SSH_PASSWORD_AUTH)"
+        IONIX_NETWORK="$(get NETWORK)"
+        IONIX_INTERFACE="$(get INTERFACE)"
+        IONIX_ADDRESS="$(get ADDRESS)"
+        IONIX_GATEWAY="$(get GATEWAY)"
+        IONIX_DNS="$(get DNS)"
+        IONIX_FIREWALL_ALLOW="$(get FIREWALL_ALLOW)"
+        IONIX_DOCKER="$(get DOCKER)"
+        IONIX_THEME="$(get THEME)"
+        IONIX_MEDIA_ID="$(media_id)"
+        # No snap-pac snapshots of a half-installed system (post-install
+        # refreshes the keyring); ionix-server-firstboot takes the first one.
+        SNAP_PAC_SKIP=y
+    )
+    [[ ${#SSH_KEYS[@]} -gt 0 ]] || env[6]="IONIX_SSH_KEYS="
+    run arch-chroot "$TARGET" env "${env[@]}" /usr/local/bin/ionix-post-install
+}
+
+bootloader() {
+    local efi_args=(--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ionix)
+
+    step "Installing the bootloader..."
+    # Both firmware kinds, so the disk boots wherever it is moved to. Only a
+    # UEFI boot can write a boot entry; the removable-media path below covers
+    # firmware that has none, or forgets it.
+    run arch-chroot "$TARGET" grub-install --target=i386-pc "$DISK_DEV"
+    [[ -d /sys/firmware/efi ]] || efi_args+=(--no-nvram)
+    run arch-chroot "$TARGET" grub-install "${efi_args[@]}"
+    mkdir -p "$TARGET/boot/efi/EFI/BOOT"
+    cp "$TARGET/boot/efi/EFI/Ionix/grubx64.efi" "$TARGET/boot/efi/EFI/BOOT/BOOTX64.EFI"
+    run arch-chroot "$TARGET" grub-mkconfig -o /boot/grub/grub.cfg
+}
+
+finish() {
+    step "Finishing..."
+    sync
+    install -Dm600 "$LOG" "$TARGET/var/log/ionix-server-install.log"
+    run umount -R "$TARGET"
+    trap - ERR
+    echo ""
+    green "Done! Ionix Server is installed on $DISK_DEV."
+}
+
+after_install() {
+    local reply
+    if $AUTO; then
+        case "$(get AFTER_INSTALL)" in
+            reboot) echo "Rebooting..."; systemctl reboot ;;
+            poweroff) echo "Powering off..."; systemctl poweroff ;;
+            stay) ;;
+        esac
+    elif [[ -t 0 ]]; then
+        read -r -p "Reboot into it now? Remove the install medium first. [y/N]: " reply
+        [[ "$reply" == y ]] && systemctl reboot
+    fi
+    return 0
+}
+
+cmd_install() {
+    local reply i
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -c|--config) CONFIG="${2:-}"; [[ -n "$CONFIG" ]] || die "--config needs a file." 2; shift 2 ;;
+            -y|--yes) ASSUME_YES=true; shift ;;
+            --auto) AUTO=true; ASSUME_YES=true; shift ;;
+            --trace) set -x; shift ;;
+            -*) usage_install >&2; die "Unknown option: $1" 2 ;;
+            *) usage_install >&2; die "Unexpected argument: $1" 2 ;;
+        esac
+    done
+
+    [[ $EUID -eq 0 ]] || die "Run as root (the live medium logs in as root)."
+    [[ -d /run/archiso ]] || die "This runs from the Ionix Server live medium only."
+
+    [[ -n "$CONFIG" ]] || CONFIG="$(answers_default_file)"
+    if [[ -n "$CONFIG" ]]; then
+        echo "Using answers from $CONFIG"
+        answers_load "$CONFIG"
+    fi
+
+    if ! $AUTO; then
+        [[ -t 0 ]] || die "No terminal to ask questions on. Give every answer in a file and pass --auto." 2
+        prompt_missing
+    fi
+    validate
+    summary
+
+    if $AUTO; then
+        echo "Erasing $DISK_DEV and installing in $AUTO_DELAY seconds. Power off now to stop it."
+        for (( i = AUTO_DELAY; i > 0; i-- )); do
+            sleep 1
+        done
+    elif ! $ASSUME_YES; then
+        read -r -p "Erase $DISK_DEV and install Ionix Server? [y/N]: " reply
+        [[ "$reply" == y ]] || { echo "Nothing was changed."; return 0; }
+    fi
+
+    : > "$LOG"
+    # errtrace, so a failure inside any step reaches on_error; and whatever
+    # happens, nothing is left mounted.
+    set -E
+    trap on_error ERR
+    trap cleanup_target EXIT
+    cleanup_target
+    partition
+    format_and_mount
+    unpack
+    configure
+    bootloader
+    finish
+    after_install
+}
+
+#endregion
+
+#region Live setup
+
+# Boot-time job on the live medium (ionix-live-setup.service): find an answer
+# file, let its SSH keys in as root, and start an unattended install if it asks
+# for one. Never fails the boot; problems go to the console and the journal.
+cmd_live_setup() {
+    local cfg_dev file
+
+    [[ -d /run/archiso ]] || return 0
+    mkdir -p "$RUN_DIR"
+
+    # A stick plugged in at boot can still be settling.
+    udevadm settle --timeout=15 2> /dev/null || true
+
+    if [[ ! -f "$BAKED_ANSWERS" ]]; then
+        cfg_dev="$(blkid -t LABEL="$CFG_LABEL" -o device 2> /dev/null | head -n1 || true)"
+        if [[ -n "$cfg_dev" ]]; then
+            mkdir -p "$RUN_DIR/cfg"
+            if mount -o ro "$cfg_dev" "$RUN_DIR/cfg" 2> /dev/null; then
+                for file in ionix-install.conf install.conf; do
+                    if [[ -f "$RUN_DIR/cfg/$file" ]]; then
+                        install -m600 "$RUN_DIR/cfg/$file" "$FOUND_ANSWERS"
+                        break
+                    fi
+                done
+                umount "$RUN_DIR/cfg" || true
+            fi
+        fi
+    fi
+
+    file="$(answers_default_file)"
+    [[ -n "$file" ]] || return 0
+    echo "Ionix Server: using answer file $file"
+
+    # A broken file must not stop the boot; the installer reports it again.
+    ( answers_load "$file" ) || return 0
+    answers_load "$file"
+
+    if [[ ${#SSH_KEYS[@]} -gt 0 ]]; then
+        install -d -m700 /root/.ssh
+        printf '%s\n' "${SSH_KEYS[@]}" > /root/.ssh/authorized_keys
+        chmod 600 /root/.ssh/authorized_keys
+        echo "Ionix Server: ${#SSH_KEYS[@]} SSH key(s) may now log in as root."
+    fi
+
+    [[ "$(get AUTO_INSTALL no)" == yes ]] || return 0
+
+    if installed_from_this_medium "$(get DISK)"; then
+        echo "Ionix Server: $(get DISK) was already installed from this medium; not installing again." \
+             "Remove the medium to boot it, or run ionix-server-install by hand to reinstall." | tee /dev/console
+        return 0
+    fi
+
+    # Its own unit, so the boot is not held up for the length of an install.
+    systemd-run --unit=ionix-autoinstall --no-block \
+        -p StandardOutput=journal+console -p StandardError=journal+console \
+        /usr/local/bin/ionix-server-install install --auto --config "$file"
+    echo "Ionix Server: unattended install started (journalctl -fu ionix-autoinstall)."
+}
+
+# Whether the disk holds an Ionix Server installed from the medium now running.
+installed_from_this_medium() {
+    local disk dev mnt id rc=1
+    disk="$(readlink -f "$1" 2> /dev/null)" || return 1
+    [[ -b "$disk" ]] || return 1
+    id="$(media_id)"
+    [[ -n "$id" ]] || return 1
+    mnt="$(mktemp -d)"
+    for dev in $(lsblk -nlpo NAME,FSTYPE "$disk" | awk '$2 == "btrfs" { print $1 }'); do
+        if mount -t btrfs -o ro,subvol=@ "$dev" "$mnt" 2> /dev/null; then
+            [[ "$(cat "$mnt/etc/ionix/installed-from" 2> /dev/null)" == "$id" ]] && rc=0
+            umount "$mnt" || true
+        fi
+    done
+    rmdir "$mnt" || true
+    return $rc
+}
+
+#endregion
+
+main() {
+    local cmd="${1:-install}"
+    [[ $# -gt 0 ]] && shift
+    case "$cmd" in
+        install) cmd_install "$@" ;;
+        -c|--config|-y|--yes|--auto|--trace) cmd_install "$cmd" "$@" ;;
+        disks|ls) cmd_disks ;;
+        example) cat "$EXAMPLE" ;;
+        live-setup) cmd_live_setup ;;
+        version|--version|-v) echo "ionix-server-install $VERSION" ;;
+        help|--help|-h)
+            case "${1:-}" in
+                install) usage_install ;;
+                "") usage ;;
+                *) usage; echo ""; echo "No further help for: $1" ;;
+            esac
+            ;;
+        *) usage >&2; die "Command not found: $cmd" 2 ;;
+    esac
+}
+
+main "$@"

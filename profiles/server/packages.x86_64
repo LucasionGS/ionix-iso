@@ -1,0 +1,32 @@
+# Server packages, on top of common/packages.x86_64. Networking is
+# systemd-networkd + systemd-resolved, both part of systemd.
+
+# --- Kernel ---
+linux-lts
+
+# --- Console ---
+# kmscon draws the VTs with the terminals' own font (ttf-jetbrains-mono-nerd,
+# common) through fontconfig; terminus is the kernel console's font for early
+# boot and for the plain getty kmscon falls back to.
+kmscon
+fontconfig
+terminus-font
+
+# --- Firewall ---
+ufw
+
+# --- Snapshots ---
+# A pre/post snapshot around every pacman transaction (snap-pac), each one
+# bootable from the GRUB menu (grub-btrfs; grub-btrfsd needs inotify-tools).
+snapper
+snap-pac
+grub-btrfs
+inotify-tools
+
+# --- Server tools ---
+docker-compose
+tmux
+smartmontools
+lm_sensors
+nvme-cli
+ethtool

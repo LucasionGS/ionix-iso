@@ -1,0 +1,16 @@
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="Ionix Server"
+# No `quiet`: on a server the boot log is worth seeing. ionix-server-install
+# adds console=ttyS0,... here when the install asked for a serial console.
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"
+GRUB_CMDLINE_LINUX=""
+
+# Disable os-prober: a server boots one system.
+GRUB_DISABLE_OS_PROBER=true
+
+GRUB_PRELOAD_MODULES="part_gpt part_msdos btrfs"
+GRUB_THEME="/boot/grub/themes/ionix/theme.txt"
+GRUB_BACKGROUND="/boot/grub/themes/ionix/background.png"
+GRUB_GFXMODE="1920x1080,auto"
+GRUB_GFXPAYLOAD_LINUX=keep

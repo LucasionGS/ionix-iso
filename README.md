@@ -152,6 +152,10 @@ reloads each of them in place - open terminals restyle without being restarted. 
 switcher lives in the start menu footer with live colour previews, and you can just type a theme
 name into search.
 
+It themes the terminal itself too: fish's syntax colours, the oh-my-posh prompt, `fzf`, `btop`,
+`bat`, and the 16 colours of the plain text consoles on Ctrl+Alt+F2 and up. New shells pick a
+switch up straight away.
+
 Three of the four shipped themes, on the same desktop:
 
 | `ionix` | `ionix-pro` | `winix` |
@@ -303,12 +307,13 @@ libraries games need. Audio is PipeWire with PulseAudio, ALSA and JACK compatibi
 **A second desktop:** a full GNOME session is installed alongside Hyprland. Pick **Ionix - GNOME**
 at the boot menu and GDM starts instead, with Ionix's GNOME defaults already applied.
 
-The authoritative list is [`profile/packages.x86_64`](profile/packages.x86_64).
+The authoritative lists are [`profiles/common/packages.x86_64`](profiles/common/packages.x86_64)
+and [`profiles/desktop/packages.x86_64`](profiles/desktop/packages.x86_64).
 
 ### Gaming tuning
 
 Ionix ships SteamOS-inspired kernel settings out of the box
-([`99-ionix-gaming.conf`](profile/airootfs/etc/sysctl.d/99-ionix-gaming.conf)):
+([`99-ionix-gaming.conf`](profiles/desktop/airootfs/etc/sysctl.d/99-ionix-gaming.conf)):
 
 - `vm.max_map_count = 2147483642` - required by many Proton and Wine titles
 - Split-lock mitigation disabled - older games trip it and get serialised by the kernel
@@ -353,6 +358,36 @@ keys after installation.
 The first Hyprland session clones the NvChad configuration for Neovim, creates the standard XDG
 user directories, and applies the dark GTK and icon themes. It runs once and then gets out of
 the way.
+
+---
+
+## Ionix Server
+
+The same Ionix, minus the desktop: a separate ISO for home servers and dedicated boxes, built with
+`./docker-build.sh --variant server`. You get the fish shell, prompt, themes and tools you already
+know, and nothing graphical.
+
+- **A CLI installer**: `ionix-server-install` asks a handful of questions at the console or over
+  SSH, or reads them all from an answer file and installs with no one at the keyboard.
+- **SSH from the first boot**: put your public keys in the answer file and you can log into the
+  *live medium* before anything is installed. The installed system takes keys only, by default.
+- **A firewall that's on**: ufw denies everything incoming except SSH and the ports you list.
+- **Undo for updates**: btrfs with snapper takes a snapshot before and after every `pacman`
+  transaction, and every snapshot is bootable from the GRUB menu. A bad update is one reboot
+  from gone.
+- **A console that looks like your terminal**: plug a screen in and the text console renders
+  JetBrainsMono Nerd Font in your theme's colours, prompt icons and all, courtesy of kmscon. If it
+  can't start, you get a plain console instead.
+- **LTS kernel, Docker, systemd-networkd**, serial console support for IPMI, and GRUB installed
+  for both BIOS and UEFI, so the disk boots wherever you move it.
+
+```bash
+ionix-server-install example > install.conf    # on the live medium: a commented answer file
+ionix-server-install disks                     # what it can install to
+ionix-server-install                           # install, asking for whatever's missing
+```
+
+Unattended installs are covered in [BUILDING.md](BUILDING.md#unattended-server-installs).
 
 ---
 

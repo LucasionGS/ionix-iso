@@ -1,0 +1,91 @@
+# Packages on every Ionix ISO. build.sh appends the variant's own list
+# (desktop/packages.x86_64 or server/packages.x86_64) to this one; the kernel is
+# in there, since the two variants boot different ones.
+
+# --- Base system ---
+base
+base-devel
+linux-firmware
+amd-ucode
+intel-ucode
+mkinitcpio
+mkinitcpio-archiso
+zram-generator
+
+# --- Boot ---
+grub
+efibootmgr
+sbctl
+shim-signed
+syslinux
+memtest86+
+memtest86+-efi
+edk2-shell
+mokutil
+
+# --- Filesystem tools ---
+btrfs-progs
+dosfstools
+e2fsprogs
+exfatprogs
+f2fs-tools
+ntfs-3g
+xfsprogs
+gptfdisk
+parted
+squashfs-tools
+mtools
+lsd
+
+# --- Networking ---
+iptables-nft
+iwd
+openssh
+bind
+socat
+
+# --- System utilities ---
+sudo
+which
+less
+man-db
+man-pages
+python
+git
+curl
+wget
+rsync
+unzip
+p7zip
+htop
+btop
+fastfetch
+bat
+ripgrep
+fd
+jq
+fzf
+docker
+zoxide
+fakeroot
+debugedit
+cronie
+net-tools
+
+# --- Arch tools ---
+arch-install-scripts
+reflector
+pacman-contrib
+
+# --- Terminal and Shell ---
+fish
+neovim
+tree-sitter-cli
+
+# --- Fonts ---
+# The terminals' font on the desktop, the console's on the server (kmscon).
+ttf-jetbrains-mono-nerd
+
+# --- AUR packages (from ionix local repo) ---
+yay
+oh-my-posh-bin
