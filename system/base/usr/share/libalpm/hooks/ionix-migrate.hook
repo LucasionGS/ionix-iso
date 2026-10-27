@@ -1,10 +1,12 @@
 # Runs ionix-migrate's pending system migrations whenever ionix-base is
-# installed or upgraded (ionix-migrate itself is part of every ionix-base).
+# installed or upgraded (ionix-migrate itself is part of every ionix-base), or
+# any package brings migrations of its own (ionix-desktop's need its files).
 [Trigger]
 Operation = Install
 Operation = Upgrade
 Type = Path
 Target = usr/bin/ionix-migrate
+Target = usr/share/ionix/migrations/system/*
 
 [Action]
 Description = Running Ionix system migrations...

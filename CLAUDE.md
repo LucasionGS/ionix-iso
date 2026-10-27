@@ -132,7 +132,9 @@ published by `aur-publish.sh`. Their version is `r<count>.<hash>` of the commits
   an update that must change it is a migration;
 - changes that are not files are **migrations**, `NNN-name` executables run once by
   `ionix-migrate`: `migrations/system/` from a pacman hook after every ionix-base install or
-  upgrade (an ISO build runs them all too, on a fresh root, so each must be a no-op there),
+  upgrade or any package that ships one (an ISO build runs them all too, on a fresh root, so each
+  must be a no-op there; a migration that needs a package's files ships in that package, like
+  ionix-desktop's `002-greeter-keyboard`),
   `migrations/user/` at login (fish's `ionix.fish` and the desktop's `init.sh`). `001-usr-local-to-usr`
   moves an older install's `/usr/local` copies aside to `/var/lib/ionix/pre-package/`, copying
   back any theme Ionix does not ship (hand-made, or since dropped, like `macix`) into
@@ -315,7 +317,8 @@ Things verified the hard way (in a nested Hyprland, `Hyprland -c <conf>` from in
 **The login greeter is the lock screen with a username field, run under cage by greetd.**
 `ionix-login-mode greeter|autologin|locked` picks how an *installed* machine starts (the live ISO
 always autologins as `liveuser`): `greeter` enables `greetd` (`/etc/greetd/config.toml` runs
-`cage -s -- ionix-greeter`), `autologin` and `locked` are the tty1 autologin flows, without and with
+`ionix-greeter-cage`: `cage -s -- ionix-greeter` with `XKB_DEFAULT_*` set from the system keyboard,
+the same files hyprland.lua reads, because cage ignores everything else and types US), `autologin` and `locked` are the tty1 autologin flows, without and with
 the session-start `ionix-lock`. `ionix-post-install` picks `autologin` when the users page box is
 ticked and `greeter` otherwise. Modes are recorded in `/etc/ionix/login-mode`; `skip-session-lock` stays
 what `init.sh` reads. GRUB has a single "Ionix" entry and the kernel
