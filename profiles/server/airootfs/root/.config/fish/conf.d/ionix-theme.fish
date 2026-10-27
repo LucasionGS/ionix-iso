@@ -1,0 +1,1 @@
+/usr/local/share/ionix/styler/themes/ionix/fish/theme.fish

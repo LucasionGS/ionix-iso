@@ -1,0 +1,11 @@
+
+  Ionix Server — live medium
+
+  Install to disk:      ionix-server-install
+  List disks:           ionix-server-install disks
+  Unattended installs:  ionix-server-install example > install.conf
+
+  Wi-Fi:                iwctl
+  SSH in as root:       set a password with `passwd`, or give SSH_KEY lines
+                        in an answer file (see the example above)
+

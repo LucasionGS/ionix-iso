@@ -1,0 +1,98 @@
+# Ionix Server answer file
+#
+# Answers for ionix-server-install, so that it can run with nobody at the
+# keyboard. Anything left out is asked for when the installer runs at a
+# terminal, or takes the default shown here.
+#
+# Where the live medium looks for it at boot, first match wins:
+#   1. baked into the ISO:  ./build.sh --variant server --answers install.conf
+#   2. ionix-install.conf at the top of a filesystem labelled IONIXCFG, such as
+#      a second USB stick:  mkfs.fat -n IONIXCFG /dev/sdX1
+# Or by hand from the live shell:  ionix-server-install --config FILE
+#
+# Format: KEY=value, one per line; quotes are optional; # starts a comment. It is
+# read as data, never run as shell. This file holds a password hash: keep the
+# media you put it on to yourself.
+
+# ── Live medium ──────────────────────────────────────────────
+
+# Public keys that may SSH in: as root into the live medium as soon as it has
+# booted, and as USERNAME into the installed system. One line per key.
+#SSH_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... you@laptop"
+
+# yes: install as soon as the live medium boots. It waits 15 seconds first (the
+# console says so), and needs DISK as a /dev/disk/by-id/ path, so an ISO booted
+# on the wrong machine finds no disk to erase. A disk this same ISO already
+# installed is left alone, so a stick left in after the reboot does not
+# reinstall in a loop.
+AUTO_INSTALL=no
+
+# What to do when an unattended install is done: reboot | poweroff | stay
+AFTER_INSTALL=reboot
+
+# ── Disk ─────────────────────────────────────────────────────
+
+# The disk to install to. ALL OF IT IS ERASED. `ionix-server-install disks`
+# lists the candidates with their /dev/disk/by-id/ names.
+#DISK=/dev/disk/by-id/nvme-Samsung_SSD_980_1TB_S000000000000
+
+# ── System ───────────────────────────────────────────────────
+
+HOSTNAME=ionix-server
+# A name from /usr/share/zoneinfo
+TIMEZONE=UTC
+LOCALE=en_US.UTF-8
+# Console keymap (localectl list-keymaps). XKB_LAYOUT is the same layout for
+# kmscon, which uses X keyboard names; it is worked out from KEYMAP if unset.
+KEYMAP=us
+#XKB_LAYOUT=us
+
+# A serial console for IPMI serial-over-LAN or a cable: kernel messages, a
+# login prompt and the GRUB menu on it as well as the screen. Empty for none;
+# the default is the one the live medium was booted with.
+#SERIAL_CONSOLE=ttyS0,115200
+
+# ── User ─────────────────────────────────────────────────────
+
+# The admin account (in wheel, so sudo works). root has no password and cannot
+# log in over SSH; use sudo.
+#USERNAME=ion
+
+# A crypt(3) hash, made with:  openssl passwd -6
+# PASSWORD= takes the plain password instead, but it then sits readable on the
+# media.
+#PASSWORD_HASH='$6$...'
+
+# Allow SSH logins by password as well as by key. Defaults to no when an
+# SSH_KEY is given and yes when none is, so the server stays reachable.
+#SSH_PASSWORD_AUTH=no
+
+# ── Network ──────────────────────────────────────────────────
+
+# dhcp, or static with the settings below. Wired interfaces not configured
+# statically use DHCP either way.
+NETWORK=dhcp
+# static only. INTERFACE defaults to the one the live medium's default route uses.
+#INTERFACE=enp3s0
+#ADDRESS=192.168.1.10/24
+#GATEWAY=192.168.1.1
+#DNS="1.1.1.1 9.9.9.9"
+
+# ── Firewall (ufw) ───────────────────────────────────────────
+
+# Incoming connections are refused except SSH and these: port/protocol, port
+# ranges (6000:6007/tcp) or ufw service names. 5353/udp answers mDNS, so the
+# server is reachable as HOSTNAME.local on the LAN.
+# Ports Docker publishes are NOT filtered by ufw: Docker writes its own iptables
+# rules ahead of ufw's. Bind containers to 127.0.0.1 behind a reverse proxy, or
+# see https://github.com/chaifeng/ufw-docker.
+FIREWALL_ALLOW=""
+
+# ── Software ─────────────────────────────────────────────────
+
+# Start Docker at boot and add USERNAME to the docker group.
+DOCKER=yes
+
+# Colours for the console, prompt, fish and btop: ionix, ionix-pro, winix, ...
+# (ionixtheme --list). Changeable later with ionixtheme.
+THEME=ionix

@@ -1,0 +1,15 @@
+[Unit]
+Description=Ionix Server live setup (answer file, SSH keys, unattended install)
+After=local-fs.target
+# Before the tty1 login, so an unattended install exists by the time root's
+# shell looks for it (root/.config/fish/conf.d/ionix-live.fish).
+Before=sshd.service getty@tty1.service
+ConditionPathExists=/run/archiso
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/ionix-server-install live-setup
+
+[Install]
+WantedBy=multi-user.target

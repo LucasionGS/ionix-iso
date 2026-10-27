@@ -4,25 +4,43 @@
 # Requires Docker with --privileged support (needed by mkarchiso for loop devices,
 # bind mounts, and chroot).
 #
-# Usage: ./docker-build.sh [--rebuild-image]
+# Usage: ./docker-build.sh [--rebuild-image] [--variant desktop|server] [--answers FILE]
+#
+# --variant and --answers are passed on to build.sh; see its header. An answer
+# file must live inside this checkout, the only host path the container sees.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE_NAME="ionix-builder"
 REBUILD_IMAGE=false
+BUILD_ARGS=()
+VARIANT="desktop"
 
-for arg in "$@"; do
-    case "$arg" in
-        --rebuild-image) REBUILD_IMAGE=true ;;
-        *) echo "Unknown argument: $arg"; exit 1 ;;
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --rebuild-image) REBUILD_IMAGE=true; shift ;;
+        -v|--variant) VARIANT="${2:-}"; BUILD_ARGS+=(--variant "$VARIANT"); shift 2 ;;
+        -a|--answers)
+            if [[ ! -f "${2:-}" ]]; then
+                echo "Answer file not found: ${2:-}"
+                exit 2
+            fi
+            if [[ "$(realpath "$2")" != "$SCRIPT_DIR"/* ]]; then
+                echo "The answer file must be inside $SCRIPT_DIR: the container sees nothing else."
+                exit 2
+            fi
+            BUILD_ARGS+=(--answers "$(realpath "$2")")
+            shift 2
+            ;;
+        *) echo "Unknown argument: $1"; exit 2 ;;
     esac
 done
 
 # Fetch git submodules before entering the container.
 # This has to happen on the host: build.sh runs as root inside the container,
 # where git refuses to operate on a tree owned by another user (safe.directory).
-if [[ ! -f "$SCRIPT_DIR/submodules/ionix-quickshell/PKGBUILD" ]]; then
+if [[ "$VARIANT" == desktop && ! -f "$SCRIPT_DIR/submodules/ionix-quickshell/PKGBUILD" ]]; then
     echo "==> Fetching git submodules..."
     git -C "$SCRIPT_DIR" submodule update --init --recursive
 fi
@@ -66,7 +84,7 @@ docker run --rm \
         echo "==> Refreshing container package databases..."
         pacman -Sy --noconfirm --needed archlinux-keyring
         pacman -Su --noconfirm
-        exec bash ./build.sh'
+        exec bash ./build.sh "$@"' _ "${BUILD_ARGS[@]}"
 
 echo ""
 echo "==> Build complete. ISO is in: $SCRIPT_DIR/out/"

@@ -1,0 +1,3 @@
+# Ionix: draw with the terminal's 16 colours, so bat follows whichever theme
+# ionixtheme (or the terminal itself) has set.
+--theme=ansi

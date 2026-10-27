@@ -1,0 +1,58 @@
+# Ionix theme for btop. ionixtheme links this file as
+# ~/.config/btop/themes/ionix-styler.theme and points btop.conf's color_theme
+# at it. An empty main_bg keeps the terminal's own background.
+
+theme[main_bg]=""
+theme[main_fg]="{{text}}"
+theme[title]="{{textBright}}"
+theme[hi_fg]="{{accentLight}}"
+theme[selected_bg]="{{hover}}"
+theme[selected_fg]="{{textBright}}"
+theme[inactive_fg]="{{muted}}"
+theme[graph_text]="{{text}}"
+theme[meter_bg]="{{bgCard}}"
+theme[proc_misc]="{{accentBright}}"
+
+# Box outlines and dividers
+theme[cpu_box]="{{accent}}"
+theme[mem_box]="{{accent}}"
+theme[net_box]="{{accent}}"
+theme[proc_box]="{{accent}}"
+theme[div_line]="{{border}}"
+
+# Gradients: start, middle, end
+theme[temp_start]="{{green}}"
+theme[temp_mid]="{{orange}}"
+theme[temp_end]="{{red}}"
+
+theme[cpu_start]="{{accentDeep}}"
+theme[cpu_mid]="{{accentBright}}"
+theme[cpu_end]="{{accentLight}}"
+
+theme[free_start]="{{accentDeep}}"
+theme[free_mid]="{{accent}}"
+theme[free_end]="{{accentLight}}"
+
+theme[cached_start]="{{accentDeep}}"
+theme[cached_mid]="{{cyan}}"
+theme[cached_end]="{{textBright}}"
+
+theme[available_start]="{{accentDeep}}"
+theme[available_mid]="{{green}}"
+theme[available_end]="{{textBright}}"
+
+theme[used_start]="{{green}}"
+theme[used_mid]="{{orange}}"
+theme[used_end]="{{red}}"
+
+theme[download_start]="{{accentDeep}}"
+theme[download_mid]="{{accent}}"
+theme[download_end]="{{accentLight}}"
+
+theme[upload_start]="{{accentDeep}}"
+theme[upload_mid]="{{cyan}}"
+theme[upload_end]="{{textBright}}"
+
+theme[process_start]="{{accentDeep}}"
+theme[process_mid]="{{accentBright}}"
+theme[process_end]="{{accentLight}}"

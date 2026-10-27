@@ -1,0 +1,176 @@
+# Desktop packages, on top of common/packages.x86_64.
+
+# --- Kernel ---
+linux
+sof-firmware
+
+# --- Networking ---
+networkmanager
+iw
+wpa_supplicant
+dhcpcd
+openconnect
+
+# --- Desktop utilities (CLI) ---
+chafa
+playerctl
+zenity
+cmark
+
+# --- Audio (PipeWire) ---
+pipewire
+pipewire-pulse
+pipewire-alsa
+pipewire-jack
+wireplumber
+alsa-utils
+lib32-pipewire
+
+# --- Bluetooth ---
+bluez
+bluez-utils
+blueman
+
+# --- Wayland / Hyprland ---
+xorg-xwayland
+hyprland
+hypridle
+hyprlock
+# Login greeter: greetd runs cage, and cage runs ionix-greeter.
+cage
+greetd
+hyprpolkitagent
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+qt5-wayland
+qt6-wayland
+# Video backgrounds on the Quickshell lock screen (ionix-lock); without the
+# FFmpeg backend QtMultimedia has nothing to decode with.
+qt6-multimedia
+qt6-multimedia-ffmpeg
+uwsm
+nwg-displays
+
+# --- UI Utilities ---
+quickshell
+# waybar is no longer autostarted (ionix-quickshell replaces it) but stays
+# installed as a manual fallback: run `waybar` from a terminal.
+waybar
+wlr-protocols
+swaync
+
+# --- Optional bundles ---
+# The gaming stack, OBS Studio and Tabby are not on the medium. The
+# installer's Software page offers them and /usr/local/bin/ionix-extras downloads
+# them at the end of the install (or any time later: `sudo ionix-extras install
+# <bundle>`). The package lists live in that script.
+
+# --- Terminals ---
+# ionterm (the default) is ionterm-git, in the AUR block below
+kitty
+foot
+
+# --- Wallpapers ---
+awww
+
+# --- Desktop support libraries (official repos) ---
+wl-clipboard
+upower
+gvfs
+libgtop
+gtksourceview3
+libsoup3
+brightnessctl
+power-profiles-daemon
+matugen
+
+# --- Calamares dependencies ---
+python-toml
+
+# --- Desktop apps ---
+nemo
+copyq
+pavucontrol
+nm-connection-editor
+
+# --- Screenshot / Utilities ---
+# grim
+slurp
+wf-recorder
+hyprpicker
+hyprshot
+scdoc
+
+# --- Fonts ---
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+ttf-font-awesome
+
+# --- Theming ---
+gtk3
+gtk4
+gtk4-layer-shell
+gnome-themes-extra
+papirus-icon-theme
+
+# --- Desktop utilities ---
+xdg-utils
+xdg-user-dirs
+polkit
+gnome-keyring
+
+# --- Misc hardware support ---
+b43-fwcutter
+# Fingerprint readers. Always shipped, never assumed: fprintd is D-Bus
+# activated rather than a service, so on a machine with no sensor it just sits
+# there. ionix-post-install decides per machine whether to wire it into PAM,
+# and `ionix-fingerprint` can do the same later for a USB reader.
+fprintd
+
+# --- GPU Drivers (AMD/Intel) ---
+mesa
+vulkan-radeon
+vulkan-intel
+vulkan-icd-loader
+lib32-mesa
+lib32-vulkan-radeon
+lib32-vulkan-intel
+lib32-vulkan-icd-loader
+mesa-utils
+vulkan-tools
+libva
+libva-mesa-driver
+lib32-libva
+lib32-libva-mesa-driver
+
+# --- GPU Drivers (NVIDIA) ---
+nvidia-open
+nvidia-utils
+lib32-nvidia-utils
+egl-wayland
+libva-nvidia-driver
+
+# --- Performance ---
+# Not gaming-specific: ionix-post-install enables its service on every install.
+ananicy-cpp
+
+# --- Other libraries ---
+libportal
+libportal-gtk4
+# libsoup (2.x) was dropped from the Arch repos; libsoup3 above is the replacement
+libnotify
+libsecret
+
+# --- AUR packages (from ionix local repo) ---
+google-chrome
+calamares
+python-gevent-eventemitter
+python-vcrpy
+openconnect-sso-git
+ionix-openconnect-tools
+ionix-file-manager-git
+ioexplorer-git
+ionterm-git
+ionix-quickshell-git
+grim-hyprland-git

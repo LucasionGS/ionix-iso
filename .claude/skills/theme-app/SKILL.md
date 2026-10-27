@@ -10,9 +10,9 @@ There is **no shared palette file** — every consumer re-declares the palette i
 ## Recipe
 
 1. Copy the role→hex table from `CLAUDE.md` §Visual Theme into the app's syntax.
-2. Open the config with a header comment naming the roles next to the hexes (see `profile/airootfs/etc/skel/.config/waybar/themes/ionix/style.css` for the pattern) — future edits then map colors back to roles.
-3. Place the config under `profile/airootfs/etc/skel/.config/<app>/` (skel is copied wholesale; no manifest). If the app also reads a system-wide config under `etc/xdg/`, prefer skel — the kitty precedent shows the two locations fully diverge over time.
-4. Any executable helper needs a `file_permissions` entry in `profile/profiledef.sh`.
+2. Open the config with a header comment naming the roles next to the hexes (see `profiles/desktop/airootfs/etc/skel/.config/waybar/themes/ionix/style.css` for the pattern) — future edits then map colors back to roles.
+3. Place the config under `profiles/<desktop|common>/airootfs/etc/skel/.config/<app>/` (common only for something the server has too) (skel is copied wholesale; no manifest). If the app also reads a system-wide config under `etc/xdg/`, prefer skel — the kitty precedent shows the two locations fully diverge over time.
+4. Any executable helper needs a `file_permissions` entry in the `profiledef.sh` of the layer it lives in (`profiles/common/` or a variant's).
 
 ## Glass convention (floating surfaces)
 
@@ -28,12 +28,13 @@ Surfaces floating over the wallpaper (drawers, launchers, overlays, tooltips) us
 - **kitty**: `colorN` slots plus `background`/`foreground`/`selection_*`; reference `etc/skel/.config/kitty/kitty.conf`.
 - **Hyprland Lua/conf**: `rgb(9b59b6)` / `rgba(...)` — no `#` prefix. The active-border gradient is `rgb(9b59b6)` → `rgb(7c3aed)`.
 - **Quickshell**: never hardcode — go through `config/Theme.qml` tokens or a styler `theme.json`.
-- **GRUB/syslinux**: `boot/grub/themes/ionix/theme.txt` keys and `profile/syslinux/archiso_head.cfg` menu colors.
+- **GRUB/syslinux**: `profiles/common/airootfs/usr/local/share/ionix/grub-theme/theme.txt` keys (installed to `/boot/grub/themes/ionix` by `ionix-post-install`) and `profiles/common/syslinux/archiso_head.cfg` menu colors.
 
 ## Making it switchable (styler integration)
 
-The styler lives at `profile/airootfs/usr/local/share/ionix/styler/`. `ionixtheme <theme>` sources `install-default`, then runs each `ionix_install_<section>` function **only if `themes/<theme>/<section>/` exists** — the function name must match the directory name. To add an app:
+The styler lives at `profiles/common/airootfs/usr/local/share/ionix/styler/` — common, because the server ISO uses it too. `ionixtheme <theme>` sources `install-default`, then runs each `ionix_install_<section>` function **only if `themes/<theme>/<section>/` exists** — the function name must match the directory name — **and `ionix_available_<section>` (when defined) succeeds**. To add an app:
 
-1. Add `themes/<theme>/<app>/` with the themed files for **all three** themes: `ionix`, `ionix-pro`, `winix`. A theme missing the directory simply skips that section.
-2. Add `ionix_install_<app>` and `ionix_uninstall_<app>` to `styler/install-default`, following the existing functions: symlink theme files into `~/.config/...`, then nudge a live reload (precedents: `killall -SIGUSR2 waybar`, `qs -c ionix ipc call theme reload`, `hyprctl reload`).
-3. `ionixtheme` uninstalls the previous theme before installing, so the uninstall function must remove exactly what install created.
+1. Add `themes/<theme>/<app>/` with the themed files for **every** theme: `ionix`, `ionix-pro`, `winix`, and `ionix-adaptive` (template under `adaptive/<app>/` plus its static counterpart). A theme missing the directory simply skips that section.
+2. Add `ionix_available_<app>` (usually `command -v <app>`) so a machine without the app — the server, for anything graphical — gets no config for it. The terminal sections (`fish`, `prompt`, `btop`, `tty`) are the ones the server actually uses.
+3. Add `ionix_install_<app>` and `ionix_uninstall_<app>` to `styler/install-default`, following the existing functions: symlink theme files into `~/.config/...`, then nudge a live reload (precedents: `killall -SIGUSR2 waybar`, `qs -c ionix ipc call theme reload`, `hyprctl reload`).
+4. `ionixtheme` uninstalls the previous theme before installing, so the uninstall function must remove exactly what install created.

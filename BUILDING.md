@@ -3,8 +3,9 @@
 Everything here is for people who want to compile the ISO themselves. If you just want to
 *use* Ionix, the [README](README.md) is the file you want.
 
-Ionix is an [archiso](https://wiki.archlinux.org/title/Archiso) profile. The build produces a
-single hybrid ISO in `out/` that boots as both a live environment and an installer.
+Ionix is an [archiso](https://wiki.archlinux.org/title/Archiso) profile, in two variants: the
+**desktop** (Hyprland, Calamares) and the **server** (headless, CLI installer). Each build produces
+one hybrid ISO in `out/` that boots as both a live environment and an installer.
 
 ---
 
@@ -55,31 +56,41 @@ sudo python -m pip install meson setuptools
 ### With Docker (recommended, even on Arch too)
 
 ```bash
-./docker-build.sh                  # builds the ionix-builder image on first run
-./docker-build.sh --rebuild-image  # force the image to rebuild
+./docker-build.sh                    # the desktop ISO; builds the ionix-builder image on first run
+./docker-build.sh --variant server   # the server ISO
+./docker-build.sh --rebuild-image    # force the image to rebuild
 ```
 
 ### Natively on Arch
 
 ```bash
 sudo ./build.sh
+sudo ./build.sh --variant server
 ```
 
-Either way the ISO lands in `out/` as `ionix-<YYYY.MM.DD>-x86_64.iso`.
+Either way the ISO lands in `out/` as `ionix-<YYYY.MM.DD>-x86_64.iso`, or
+`ionix-server-<YYYY.MM.DD>-x86_64.iso` for the server.
+
+`--answers FILE` (server only) bakes an answer file into the ISO, so that it installs with nobody at
+the keyboard; see [Unattended server installs](#unattended-server-installs).
 
 ### What the build actually does
 
-1. **AUR packages.** 15 AUR packages (Calamares, Google Chrome, `yay`, the Ionix tooling,
+1. **Profile staging.** `profiles/common/` is copied to `staging/<variant>/` with the variant's
+   directory laid over it; their `packages.x86_64` and `profiledef.sh` are concatenated instead.
+   Everything below happens in that copy, so a build never modifies the source tree.
+2. **AUR packages.** 15 AUR packages (Calamares, Google Chrome, `yay`, the Ionix tooling,
    ProtonUp-Qt and friends) are compiled in dependency order into a local pacman repository at
    `localrepo/`, alongside 2 packages built from sources inside this repo — the
    `ionix-quickshell` submodule and `aur/local/shim-signed`. Already-built AUR packages are
    skipped via sentinel files; the local ones are always rebuilt, because their sources change
-   with your working tree.
-2. **Repo staging.** `localrepo/` is copied to `/tmp/ionix-localrepo` so `mkarchiso` can read it
-   as the `[ionix]` repository declared in `profile/pacman.conf`.
-3. **Branding.** The SVGs in `assets/` are rasterised to PNG with `rsvg-convert`, or ImageMagick
-   as a fallback. The generated PNGs are gitignored.
-4. **ISO assembly.** `mkarchiso` builds the squashfs and the final hybrid ISO into `out/`.
+   with your working tree. Only the ones the staged package list names are built, so the server
+   build needs just `yay`, `oh-my-posh-bin` and `shim-signed`.
+3. **Repo staging.** `localrepo/` is copied to `/tmp/ionix-localrepo` so `mkarchiso` can read it
+   as the `[ionix]` repository declared in `profiles/common/pacman.conf`.
+4. **Branding.** The SVGs in `assets/` are rasterised to PNG with `rsvg-convert`, or ImageMagick
+   as a fallback, into the staged profile.
+5. **ISO assembly.** `mkarchiso` builds the squashfs and the final hybrid ISO into `out/`.
 
 The `[ionix]` repository exists only during the build and on the live medium.
 `ionix-post-install` strips it from the installed system, which is what lets `yay` treat
@@ -90,11 +101,14 @@ The `[ionix]` repository exists only during the build and on the live medium.
 ## Testing
 
 Both scripts create `ionix-test.qcow2` (64 GB) and `ionix-test-efivars.fd` on first run, and boot
-QEMU with KVM, OVMF UEFI firmware and `virtio-vga-gl`:
+QEMU with KVM, OVMF UEFI firmware and `virtio-vga-gl`. A server ISO gets its own
+`ionix-server-test.*` pair, so it never installs over the desktop test disk:
 
 ```bash
-./test.sh          # boot the newest out/ionix-*.iso as a live environment
-./test-distro.sh   # boot the installed system off the virtual disk, no ISO attached
+./test.sh                              # boot the newest desktop ISO as a live environment
+./test.sh out/ionix-server-*.iso       # boot a server ISO
+./test-distro.sh                       # boot the installed desktop off the virtual disk
+./test-distro.sh server                # boot the installed server
 ```
 
 These open an interactive QEMU window. Note that `virtio-vga-gl` gives you working GPU
@@ -102,6 +116,27 @@ acceleration but breaks QEMU's `screendump`, so neither script can be driven hea
 scripted runs — installing unattended, taking screenshots, CI-style validation — use the
 `vmctl.py` harness under `.claude/skills/full-pipeline-test/scripts/`, which starts QEMU with
 `-display none`, a QMP socket and plain `virtio-vga`.
+
+---
+
+## Unattended server installs
+
+The server ISO installs from its console (`ionix-server-install`), over SSH, or with nobody there.
+Every question the installer asks can be answered in a file; print a commented example with
+`ionix-server-install example`, or read it at
+`profiles/server/airootfs/usr/local/share/ionix/server/install.conf.example`.
+
+The live medium looks for one at boot:
+
+1. baked into the ISO with `./build.sh --variant server --answers install.conf` (with Docker the file
+   must be inside the checkout); it then sits on the medium, password hash included, so keep that
+   ISO to yourself
+2. as `ionix-install.conf` at the top of any filesystem labelled `IONIXCFG`, such as a second USB
+   stick formatted with `mkfs.fat -n IONIXCFG`
+
+Its `SSH_KEY` lines may log in as root straight away. With `AUTO_INSTALL=yes` it installs to `DISK`,
+which must then be a `/dev/disk/by-id/` path, after a 15-second warning on the console, and reboots.
+It will not reinstall a disk the same medium already installed, so a stick left in does not loop.
 
 ---
 
@@ -122,8 +157,9 @@ percentage reflects bytes actually on the stick rather than bytes sitting in the
 
 ## Patching an already-installed system
 
-`patch-os.sh` rsyncs changed files from `profile/airootfs/` onto a running Ionix install, so you
-can pull configuration changes across without rebuilding and reinstalling:
+`patch-os.sh` copies changed files from `profiles/common/airootfs/` and the installed variant's
+`airootfs/` (read from `/etc/ionix/variant`, desktop when missing) onto a running Ionix install, so
+you can pull configuration changes across without rebuilding and reinstalling:
 
 ```bash
 sudo ./patch-os.sh
@@ -142,15 +178,15 @@ as a package (the shell included) still comes from `pacman`/`yay`.
 ./clean.sh
 ```
 
-Removes `work/`, `out/`, `localrepo/`, the `/tmp/ionix-*` staging directories, makepkg leftovers
-in the submodules, and the generated branding PNGs.
+Removes `work/`, `staging/`, `out/`, `localrepo/`, the `/tmp/ionix-*` staging directories and
+makepkg leftovers in the submodules.
 
 ---
 
 ## Continuous integration
 
-`.github/workflows/build-iso.yml` builds the ISO on `workflow_dispatch` or on any pushed `v*`
-tag. It runs on `ubuntu-latest` with a 360-minute timeout, checks out submodules recursively,
+`.github/workflows/build-iso.yml` builds both ISOs, one job per variant, on `workflow_dispatch`
+or on any pushed `v*` tag. It runs on `ubuntu-latest` with a 360-minute timeout, checks out submodules recursively,
 frees runner disk space, and then runs the same Docker build you would run locally.
 
 ---
@@ -159,8 +195,9 @@ frees runner disk space, and then runs the same Docker build you would run local
 
 Packages are registered in two places, and both matter:
 
-- **`profile/packages.x86_64`** — the list `mkarchiso` installs into the ISO. Every package, from
-  the official repos or from `[ionix]`, needs a line here.
+- **`profiles/<layer>/packages.x86_64`** — the lists `mkarchiso` installs into the ISO: `common/`
+  for both variants, `desktop/` or `server/` for one. Every package, from the official repos or
+  from `[ionix]`, needs a line in one of them.
 - **`aur/build-aur.sh`** — only for AUR packages, which additionally have to be *built* into
   `localrepo/` first. Order matters: the `AUR_PACKAGES` array is built top to bottom, so a
   package must appear after anything it depends on.
@@ -180,16 +217,14 @@ ionix-iso/
 │   └── local/              # PKGBUILDs maintained here rather than pulled from the AUR
 ├── docs/                   # README screenshots and the logo
 ├── includes/               # Pre-built package cache
-├── profile/                # The archiso profile
-│   ├── airootfs/           # Root filesystem overlay — becomes the live ISO's filesystem
-│   │   ├── etc/            # System config: hypr, calamares, fish, grub.d, sysctl.d …
-│   │   └── usr/local/      # Ionix scripts, the styler and its themes
-│   ├── efiboot/            # UEFI boot configuration
-│   ├── grub/               # GRUB configuration for the ISO
-│   ├── syslinux/           # BIOS boot configuration
-│   ├── packages.x86_64     # Full package list (official repos + local [ionix] repo)
-│   ├── pacman.conf         # pacman config referencing the local [ionix] repo
-│   └── profiledef.sh       # archiso profile definition, including file permissions
+├── profiles/               # The archiso profile, in layers build.sh merges
+│   ├── common/             # Both variants: fish, the styler and its themes, boot, pacman
+│   │   ├── airootfs/       # Root filesystem overlay — becomes the live ISO's filesystem
+│   │   ├── packages.x86_64 # Packages on both ISOs
+│   │   ├── pacman.conf     # pacman config referencing the local [ionix] repo
+│   │   └── profiledef.sh   # Shared archiso settings and file permissions
+│   ├── desktop/            # Hyprland, Calamares, the desktop's scripts and boot entries
+│   └── server/             # ionix-server-install, kmscon, ufw, snapper, LTS boot entries
 ├── submodules/
 │   └── ionix-quickshell/   # The desktop shell (its own repo, built into the ISO)
 ├── .github/workflows/      # CI: build-iso.yml

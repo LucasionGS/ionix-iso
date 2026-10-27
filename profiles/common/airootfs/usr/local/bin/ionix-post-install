@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# Ionix Post-Install Script
+# Runs inside the installed system's chroot, after the user has been created and
+# the live root filesystem unpacked: Calamares' shellprocess calls it on the
+# desktop, ionix-server-install on the server.
+#
+# This file is what every variant needs — turning a copy of the live medium into
+# an installed system. Each variant adds its own configuration as an executable
+# in /usr/local/share/ionix/post-install.d/, run in name order between the live
+# cleanup below and the initramfs build at the end (so a hook may change
+# mkinitcpio.conf). Hooks inherit this environment: the installer's IONIX_*
+# choices, plus NEWUSER.
+
+set -euo pipefail
+
+POST_INSTALL_D=/usr/local/share/ionix/post-install.d
+
+# Find the first non-root user with UID >= 1000
+NEWUSER=$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "liveuser" {print $1; exit}' /etc/passwd)
+export NEWUSER
+
+if [[ -n "$NEWUSER" ]]; then
+    # Set fish as default shell
+    chsh -s /usr/bin/fish "$NEWUSER" 2>/dev/null || true
+
+    # Ensure user home has correct ownership
+    if [[ -d "/home/$NEWUSER" ]]; then
+        chown -R "$NEWUSER:$NEWUSER" "/home/$NEWUSER"
+    fi
+fi
+
+# Set fish as root shell too
+chsh -s /usr/bin/fish root 2>/dev/null || true
+
+# Remove live-session-only artifacts
+rm -f /etc/sudoers.d/10-ionix
+rm -f /etc/motd
+# A baked-in server answer file holds a password hash; it was for the live
+# medium's installer only.
+rm -f /etc/ionix/install.conf
+
+# Remove live-session systemd services
+# systemd-firstboot is masked on the live medium so it never prompts for a
+# timezone on the console; the installed system gets locale/timezone/hostname
+# from the installer, so unmask it rather than leaving the live mask behind.
+rm -f /etc/systemd/system/systemd-firstboot.service
+rm -f /etc/systemd/system/choose-mirror.service
+rm -f /etc/systemd/system/etc-pacman.d-gnupg.mount
+rm -f /etc/systemd/system/pacman-init.service
+rm -f /etc/systemd/system/multi-user.target.wants/choose-mirror.service
+rm -f /etc/systemd/system/multi-user.target.wants/etc-pacman.d-gnupg.mount
+rm -f /etc/systemd/system/multi-user.target.wants/pacman-init.service
+
+# Remove archiso-specific hooks
+rm -f /etc/pacman.d/hooks/uncomment-mirrors.hook
+rm -f /etc/pacman.d/hooks/zzzz99-remove-custom-hooks-from-airootfs.hook
+
+# The live ISO keeps its journal in RAM (archiso's volatile-storage.conf), and
+# the unpacked squashfs carried that onto the target too, so an installed
+# system lost every log on reboot. Without it journald's default Storage=auto
+# persists to /var/log/journal, which the systemd package ships.
+rm -f /etc/systemd/journald.conf.d/volatile-storage.conf
+
+# Every kernel on the medium (linux on the desktop, linux-lts on the server):
+# put its image in /boot, which the squashfs does not include, and replace
+# archiso's preset with a standard one. Without the preset rewrite mkinitcpio -P
+# would have no presets to build and leave the archiso initramfs (with
+# memdisk/archiso hooks) on the installed system, preventing boot.
+rm -f /etc/mkinitcpio.conf.d/archiso.conf
+for moddir in /usr/lib/modules/*/; do
+    [[ -f "${moddir}pkgbase" && -f "${moddir}vmlinuz" ]] || continue
+    kernel="$(<"${moddir}pkgbase")"
+    if [[ ! -f "/boot/vmlinuz-$kernel" ]]; then
+        install -Dm644 "${moddir}vmlinuz" "/boot/vmlinuz-$kernel"
+    fi
+    cat > "/etc/mkinitcpio.d/$kernel.preset" << PRESET
+PRESETS=('default' 'fallback')
+ALL_kver='/boot/vmlinuz-$kernel'
+default_config='/etc/mkinitcpio.conf'
+default_image='/boot/initramfs-$kernel.img'
+fallback_config='/etc/mkinitcpio.conf'
+fallback_image='/boot/initramfs-$kernel-fallback.img'
+fallback_options='-S autodetect'
+PRESET
+done
+
+# The GRUB theme /etc/default/grub names. It travels outside /boot because
+# mkarchiso deletes everything under the image's /boot; the installer's
+# grub-mkconfig runs after this script.
+if [[ -d /usr/local/share/ionix/grub-theme ]]; then
+    rm -rf /boot/grub/themes/ionix
+    mkdir -p /boot/grub/themes
+    cp -r /usr/local/share/ionix/grub-theme /boot/grub/themes/ionix
+fi
+
+# The variant's own configuration.
+for hook in "$POST_INSTALL_D"/*; do
+    [[ -f "$hook" && -x "$hook" ]] || continue
+    echo "==> Post-install: $(basename "$hook")"
+    "$hook"
+done
+
+# Regenerate initramfs with default config
+mkinitcpio -P
+
+# Remove ionix local repo from pacman.conf (no longer needed after install)
+sed -i '/^\[ionix\]/,/^Server/d' /etc/pacman.conf 2>/dev/null || true
+
+# Initialize and populate the pacman keyring so the system is ready for updates
+pacman-key --init
+pacman-key --populate archlinux
+pacman -Sy --noconfirm archlinux-keyring 2>/dev/null || true
+
+# Set proper sudo (wheel group requires password)
+cat > /etc/sudoers.d/10-wheel <<'SUDOERS'
+%wheel ALL=(ALL:ALL) ALL
+SUDOERS
+chmod 440 /etc/sudoers.d/10-wheel
+
+# Remove bin files we added to /usr/local/bin during the live session
+rm -f /usr/local/bin/grub-install
+rm -f /usr/local/bin/ionix-post-install
+rm -rf "$POST_INSTALL_D"
+
+echo "Ionix post-install completed."

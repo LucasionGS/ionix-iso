@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Ionix Server first boot, run once by ionix-server-firstboot.service on the
+# installed system. ionix-server-install leaves /etc/ionix/firstboot behind,
+# holding the answers this needs:
+#   FIREWALL_ALLOW="80/tcp 443/tcp"   ports to open besides SSH
+#
+# Things done here rather than in the installer's chroot are the ones that would
+# otherwise act on the live medium's running kernel.
+
+set -euo pipefail
+
+STATE=/etc/ionix/firstboot
+
+FIREWALL_ALLOW=""
+if [[ -f "$STATE" ]]; then
+    FIREWALL_ALLOW="$(sed -n 's/^FIREWALL_ALLOW="\(.*\)"$/\1/p' "$STATE")"
+fi
+
+# Firewall: deny incoming but SSH and whatever the install asked for. This runs
+# before sshd and the network come up, so nothing is ever reachable without it.
+if command -v ufw &>/dev/null; then
+    ufw --force reset > /dev/null
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw allow ssh
+    for rule in $FIREWALL_ALLOW; do
+        ufw allow "$rule" || echo "Ignoring firewall rule that ufw rejected: $rule" >&2
+    done
+    ufw --force enable
+fi
+
+# The snapshot every later one is compared with. --no-dbus: snapperd is
+# D-Bus activated and the bus may not be up this early.
+if command -v snapper &>/dev/null && [[ -f /etc/snapper/configs/root ]]; then
+    snapper --no-dbus -c root create --description "Fresh install" --cleanup-algorithm number \
+        || echo "Could not create the first snapshot." >&2
+    # grub-btrfs only adds its snapshots submenu to grub.cfg when a snapshot
+    # exists at grub-mkconfig time, and the install had none yet.
+    grub-mkconfig -o /boot/grub/grub.cfg > /dev/null 2>&1 \
+        || echo "Could not regenerate grub.cfg; run grub-mkconfig -o /boot/grub/grub.cfg." >&2
+fi
+
+rm -f "$STATE"
+systemctl disable ionix-server-firstboot.service 2>/dev/null || true
+
+echo "Ionix Server first boot completed."

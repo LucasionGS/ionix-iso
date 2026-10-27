@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# The live medium's tty1, run by getty@tty1 in place of agetty: kmscon, logged
+# in as root, so the prompt's Nerd Font icons draw. The kernel console cannot:
+# its bitmap fonts hold at most 512 glyphs.
+#
+# kmscon has a unit of its own (kmsconvt@), but on the live medium getty@tty1
+# is already enabled by systemd's install script and the two conflict, so it
+# runs from getty's unit instead, keeping getty's Restart=always. If kmscon
+# dies within seconds (no usable display), this falls back to the plain
+# autologin getty, so there is always a console.
+
+start=$SECONDS
+kmscon --vt=tty1 --no-switchvt --login -- /bin/login -p -f root
+(( SECONDS - start > 5 )) && exit 0
+exec /sbin/agetty -o '-p -f -- \u' --noclear --autologin root tty1 linux
