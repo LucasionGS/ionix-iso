@@ -190,7 +190,10 @@ bind_exec("CTRL + ALT + T", "tabby")
 bind_exec(mainMod .. " + W", "google-chrome-stable")
 bind_exec(mainMod .. " + E", "ioexplorer")
 bind_exec(mainMod .. " + B", "ionterm -e btop")
-bind_exec(mainMod .. " + SUPER_L", "qs -c ionix ipc call start toggle || ioexplorer-spotlight")
+-- On release, so Super held for another bind never opens the menu: Hyprland
+-- 0.57 matches a bare-modifier press bind the moment Super goes down, and a
+-- release bind is dropped when any other key was pressed in between.
+bind_exec(mainMod .. " + SUPER_L", "qs -c ionix ipc call start toggle || ioexplorer-spotlight", { release = true })
 bind_exec("ALT + Space", "ioexplorer-spotlight")
 bind_exec(mainMod .. " + R", "ioexplorer-spotlight")
 -- bind_exec(mainMod .. " + V", "copyq toggle")
