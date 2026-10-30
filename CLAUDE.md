@@ -675,7 +675,7 @@ Windows 11 one; `winix` stays a recolour of the stock layout.
 - **Task View** is standard rather than a block: `TaskViewButton` is in the default bar and `winix`'s lists, opens
   `osd/TaskViewOverlay` (also `Super+Tab`, `qs ipc call taskview toggle`), and `taskView.enabled` hides it. A theme
   that writes its own `modules` must list the button. The overlay uses `ExclusionMode.Normal`, so it stops at the bar
-  on any edge and the button still closes it.
+  on any edge and the button still closes it. A new desktop's number must be free on *every* screen and past this screen's last, because focusing a number that exists elsewhere jumps there. Changing workspace also takes the keyboard from even an exclusive layer, so the overlay lets go and grabs it again after each switch, or Escape reaches the window underneath.
 - **Choices a theme makes separately**: `theme.flat` (colour instead of size on hover, neutral fills, thin
   sliders; `Theme.flat`), `theme.flyoutGap` (panels stand off the bar and screen edge), the `subtleHover`,
   `controlFill`, `fieldFill`, `closeHover`, `footerFill`… tokens, `start.layout: "sections"`, `start.align`,
