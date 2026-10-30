@@ -1,0 +1,336 @@
+#!/usr/bin/env bash
+###############################################
+# ionix-sounds — sounds for desktop events    #
+###############################################
+#
+# Plays ~/.config/hypr/sounds/NAME.<any audio extension> when event NAME happens.
+# No sound ships with Ionix. ionix-sounds.path starts the daemon the moment that
+# directory holds a file, so a machine without sounds runs none of this, and
+# every lookup happens when the event fires, so adding, swapping or removing a
+# file takes effect right away.
+#
+# NAME is any event Hyprland writes to its socket2, as it spells it, or one of
+# the session events below, which socket2 does not have. Sounds overlap, and
+# none of them holds up another.
+
+IONIX_SOUNDS_VERSION="1.0.0"
+SOUNDS_DIR="${IONIX_SOUNDS_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/hypr/sounds}"
+BOOT_ID_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/ionix/sounds-boot-id"
+RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp}/ionix-sounds"
+# Set while the machine is going down: its sound has played, so logout's must not.
+LEAVING_FILE="$RUNTIME_DIR/leaving"
+# The same event again within this many microseconds makes no sound. A burst of
+# windows, or an app rewriting its title, would otherwise stack one loud sound.
+REPEAT_GAP=50000
+# A session older than this many seconds was not just started: the daemon came
+# up because the first sound file was dropped in, which is no reason to play it.
+SESSION_START_WINDOW=60
+
+SESSION_EVENTS=(
+  "boot:The first session after the machine starts (instead of login)"
+  "login:Every other session start"
+  "logout:The session ends"
+  "shutdown:The machine powers off, and reboots if there is no reboot sound"
+  "reboot:The machine reboots"
+  "suspend:The machine goes to sleep"
+  "resume:The machine wakes up"
+  "lock:The screen locks"
+  "unlock:The screen unlocks"
+  "notification:A notification arrives, unless Do Not Disturb is on"
+)
+HYPRLAND_EVENTS=(
+  "openwindow:A window opens"
+  "closewindow:A window closes"
+  "movewindow:A window moves to another workspace"
+  "activewindow:The focused window changes"
+  "windowtitle:A window changes its title"
+  "urgent:A window asks for attention"
+  "bell:An app rings the bell"
+  "fullscreen:A window enters or leaves fullscreen"
+  "changefloatingmode:A window starts or stops floating"
+  "pin:A window is pinned or unpinned"
+  "workspace:The active workspace changes"
+  "createworkspace:A workspace is created"
+  "destroyworkspace:A workspace is destroyed"
+  "moveworkspace:A workspace moves to another monitor"
+  "activespecial:A special workspace opens or closes"
+  "focusedmon:The focused monitor changes"
+  "monitoradded:A monitor is plugged in"
+  "monitorremoved:A monitor is unplugged"
+  "activelayout:The keyboard layout changes"
+  "submap:The keybind submap changes"
+  "openlayer:A layer surface (launcher, bar, OSD) opens"
+  "closelayer:A layer surface closes"
+  "togglegroup:A window group is created or dissolved"
+  "screencast:Screen sharing starts or stops"
+  "configreloaded:The Hyprland config is reloaded"
+)
+
+# Print usage
+usage() {
+  cat <<EOF
+Usage: ionix-sounds [command]
+
+  list          Show every event and the sound set for it (the default)
+  play <NAME>   Play the sound for event NAME now
+  help          Show this help
+  version       Show the version
+
+Add a sound by dropping a file named after its event into
+$SOUNDS_DIR, such as openwindow.wav or shutdown.mp3.
+
+Run "ionix-sounds help <command>" for more information on a command.
+EOF
+}
+
+# Print usage for one command
+usage_command() {
+  case "$1" in
+    list|ls)
+      cat <<EOF
+Show every event and the sound set for it.
+
+Usage: ionix-sounds list
+EOF
+      ;;
+    play)
+      cat <<EOF
+Play the sound for an event now, and wait for it to finish. Exits with 1 if
+that event has no sound.
+
+Usage: ionix-sounds play <NAME>
+EOF
+      ;;
+    *)
+      usage
+      ;;
+  esac
+}
+
+# Set FOUND to the sound file for event $1. Not a $(...) function, because the
+# daemon asks this for every line of socket2 and must not fork for each.
+find_sound() {
+  local candidate
+  FOUND=""
+  for candidate in "$SOUNDS_DIR/$1".*; do
+    if [[ -f "$candidate" ]]; then
+      FOUND="$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Play file $1 and wait for it. pw-play comes with pipewire and reads what
+# libsndfile does (wav, flac, ogg, opus, mp3); ffplay covers the rest (m4a, aac)
+# where ffmpeg is installed.
+play_file() {
+  pw-play "$1" &>/dev/null && return 0
+  ffplay -nodisp -autoexit -loglevel quiet "$1" &>/dev/null
+}
+
+# Play the sound for event $1, if it has one, and wait for it.
+play_event() {
+  find_sound "$1" && play_file "$FOUND"
+}
+
+# Play the sound for event $1, or for $2 if $1 has none, and wait for it.
+play_event_or() {
+  find_sound "$1" || find_sound "$2" || return 1
+  play_file "$FOUND"
+}
+
+# Play boot or login when this session has just started. A restarted daemon is
+# in a session it has already greeted.
+greet_session() {
+  local SIGNATURE="$1" LOCK BOOT_ID NAME="login" STARTED NOW
+  LOCK="$XDG_RUNTIME_DIR/hypr/$SIGNATURE/hyprland.lock"
+
+  [[ "$(cat "$RUNTIME_DIR/session" 2>/dev/null)" == "$SIGNATURE" ]] && return 0
+  printf '%s\n' "$SIGNATURE" > "$RUNTIME_DIR/session"
+
+  BOOT_ID="$(cat /proc/sys/kernel/random/boot_id)"
+  if [[ "$(cat "$BOOT_ID_FILE" 2>/dev/null)" != "$BOOT_ID" ]]; then
+    mkdir -p "$(dirname "$BOOT_ID_FILE")"
+    printf '%s\n' "$BOOT_ID" > "$BOOT_ID_FILE"
+    NAME="boot"
+  fi
+
+  STARTED="$(stat -c %Y "$LOCK" 2>/dev/null)" || return 0
+  printf -v NOW '%(%s)T' -1
+  (( NOW - STARTED > SESSION_START_WINDOW )) && return 0
+
+  if [[ "$NAME" == "boot" ]]; then
+    play_event_or boot login &
+  else
+    play_event login &
+  fi
+}
+
+# Hold back shutdown and sleep until their sound has played. This is logind's
+# delay lock, so it covers every way of getting there: the power menu, the power
+# button, a `poweroff` in a terminal. logind only waits InhibitDelayMaxSec (5 s
+# by default), which is what cuts off a longer sound.
+hold_inhibitor() {
+  systemd-inhibit --what=shutdown:sleep --mode=delay --who="Ionix sounds" \
+    --why="Playing the shutdown or sleep sound" sleep infinity &
+  INHIBITOR=$!
+}
+
+# Let shutdown or sleep go ahead. Ending the child makes systemd-inhibit exit,
+# which closes the lock.
+release_inhibitor() {
+  pkill -P "$INHIBITOR" 2>/dev/null
+  wait "$INHIBITOR" 2>/dev/null
+}
+
+# Follow logind for shutdown and sleep, for as long as the daemon runs.
+watch_logind() {
+  local line
+  hold_inhibitor
+  # Example:
+  # /org/freedesktop/login1: org.freedesktop.login1.Manager.PrepareForShutdownWithMetadata (true, {'type': <'reboot'>})
+  # /org/freedesktop/login1: org.freedesktop.login1.Manager.PrepareForSleep (false,)
+  gdbus monitor --system --dest org.freedesktop.login1 --object-path /org/freedesktop/login1 | while IFS= read -r line; do
+    case "$line" in
+      *.PrepareForShutdownWithMetadata\ \(true*reboot*|*.PrepareForShutdownWithMetadata\ \(true*kexec*)
+        : > "$LEAVING_FILE"
+        play_event_or reboot shutdown
+        release_inhibitor
+        ;;
+      *.PrepareForShutdownWithMetadata\ \(true*)
+        : > "$LEAVING_FILE"
+        play_event shutdown
+        release_inhibitor
+        ;;
+      *.PrepareForShutdownWithMetadata\ \(false*) # Cancelled
+        rm -f "$LEAVING_FILE"
+        hold_inhibitor
+        ;;
+      *.PrepareForSleep\ \(true*)
+        play_event suspend
+        release_inhibitor
+        ;;
+      *.PrepareForSleep\ \(false*)
+        hold_inhibitor
+        play_event resume &
+        ;;
+    esac
+  done
+}
+
+# The daemon: ionix-sounds.service runs this.
+cmd_run() {
+  local SIGNATURE="${HYPRLAND_INSTANCE_SIGNATURE:-}" SOCKET line event now
+  local -A LAST_PLAYED=()
+
+  if [[ -z "$SIGNATURE" ]]; then
+    echo "HYPRLAND_INSTANCE_SIGNATURE is not set. Run this inside a Hyprland session." >&2
+    return 1
+  fi
+  SOCKET="$XDG_RUNTIME_DIR/hypr/$SIGNATURE/.socket2.sock"
+  mkdir -p "$RUNTIME_DIR"
+  rm -f "$LEAVING_FILE"
+
+  greet_session "$SIGNATURE"
+  watch_logind &
+
+  # Example:
+  # openwindow>>55d5e0a1b2c0,1,kitty,~
+  socat -u "UNIX-CONNECT:$SOCKET" - | while IFS= read -r line; do
+    event="${line%%>>*}"
+    find_sound "$event" || continue
+    now="${EPOCHREALTIME/[.,]/}"
+    (( now - ${LAST_PLAYED[$event]:-0} < REPEAT_GAP )) && continue
+    LAST_PLAYED[$event]="$now"
+    play_file "$FOUND" &
+  done
+  (( PIPESTATUS[0] == 0 )) || return 1
+
+  # The compositor is gone but the machine is not going down yet. Stay for the
+  # shutdown sound: exiting would only have the path unit start this again.
+  wait
+}
+
+# ExecStop of the service. It runs before the compositor and pipewire stop, and
+# on any stop of the unit, so a restart must not sound like leaving: only a stop
+# of the session target itself is a logout.
+cmd_session_end() {
+  [[ -e "$LEAVING_FILE" ]] && return 0
+  systemctl --user list-jobs graphical-session.target --no-legend 2>/dev/null | grep -q "\bstop\b" || return 0
+  play_event logout
+  return 0
+}
+
+# Print one section of `list`
+#   $1 = heading, rest = "name:description" entries
+list_section() {
+  local HEADING="$1" entry name
+  shift
+  printf '%s\n' "$HEADING"
+  for entry in "$@"; do
+    name="${entry%%:*}"
+    if find_sound "$name"; then
+      printf '  %-20s %-62s %s\n' "$name" "${entry#*:}" "${FOUND##*/}"
+    else
+      printf '  %-20s %s\n' "$name" "${entry#*:}"
+    fi
+  done
+}
+
+# Show every event and its sound
+cmd_list() {
+  printf 'Sounds are read from %s\n\n' "$SOUNDS_DIR"
+  list_section "Session" "${SESSION_EVENTS[@]}"
+  echo
+  list_section "Hyprland" "${HYPRLAND_EVENTS[@]}"
+  echo
+  echo "Any other event Hyprland reports works the same way, under its own name."
+}
+
+# Play one event's sound on request
+cmd_play() {
+  local NAME="${1:-}"
+  if [[ -z "$NAME" ]]; then
+    usage_command play
+    return 2
+  fi
+  if [[ ! "$NAME" =~ ^[A-Za-z0-9_-]+$ ]]; then
+    echo "Invalid sound name: $NAME. Must match the regex: ^[A-Za-z0-9_-]+\$" >&2
+    return 2
+  fi
+  if ! find_sound "$NAME"; then
+    echo "No sound for $NAME. Add one as $SOUNDS_DIR/$NAME.wav" >&2
+    return 1
+  fi
+  if ! play_file "$FOUND"; then
+    echo "Failed to play $FOUND. pw-play could not read it, and neither could ffplay if ffmpeg is installed." >&2
+    return 1
+  fi
+}
+
+case "${1:-list}" in
+  list|ls)
+    cmd_list
+    ;;
+  play)
+    cmd_play "${2:-}"
+    ;;
+  run)
+    cmd_run
+    ;;
+  session-end)
+    cmd_session_end
+    ;;
+  help|-h|--help)
+    if [[ -n "${2:-}" ]]; then usage_command "$2"; else usage; fi
+    ;;
+  version|-v|--version)
+    printf 'ionix-sounds %s\n' "$IONIX_SOUNDS_VERSION"
+    ;;
+  *)
+    echo "Command not found: $1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

@@ -1,0 +1,8 @@
+[Unit]
+Description=Start Ionix event sounds once a sound file exists
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Path]
+PathExistsGlob=%E/hypr/sounds/*
+Unit=ionix-sounds.service

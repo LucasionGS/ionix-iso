@@ -1,0 +1,15 @@
+[Unit]
+Description=Ionix desktop event sounds
+PartOf=graphical-session.target
+# Stops before these, so the logout sound still has a session and an audio server.
+After=graphical-session.target pipewire.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ionix-sounds run
+ExecStop=/usr/bin/ionix-sounds session-end
+# The same limit logind puts on a shutdown sound, so a long file cannot hold up logging out.
+TimeoutStopSec=6
+Restart=on-failure
+RestartSec=5
+Slice=session.slice

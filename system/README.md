@@ -6,7 +6,7 @@ pacman instead of being frozen at the ISO it was installed from.
 | Package             | Contents                                                                             |
 |---------------------|--------------------------------------------------------------------------------------|
 | `ionix-base-git`    | `base/`: the styler and every theme, fish config and the skel shell setup, the GRUB theme, `ionix-console-theme`, `ionix-migrate` |
-| `ionix-desktop-git` | `desktop/`: Hyprland's system config, the session scripts, login modes, fingerprint support, `ionix-extras`, `ionix-project`, the wallpaper |
+| `ionix-desktop-git` | `desktop/`: Hyprland's system config, the session scripts, login modes, fingerprint support, `ionix-extras`, `ionix-project`, `ionix-sounds`, the wallpaper |
 | `ionix-server-git`  | `server/`: `ionix-server-firstboot` and its unit                                     |
 
 Each directory is laid out exactly as it is installed: `base/usr/bin/ionix-migrate` becomes
