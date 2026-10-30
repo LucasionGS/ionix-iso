@@ -38,8 +38,8 @@ hl.notification.create({
 -- Change keyboard layout (the default is the system's: `localectl set-x11-keymap`):
 --   hl.config({ input = { kb_layout = "de" } })
 --
--- Add new keybindings:
---   hl.bind(mainMod .. " + code:60", hl.dsp.exec_cmd("yourapp"))
+-- Add new keybindings. The description is what the shortcut list (Super+F1) shows:
+--   hl.bind(mainMod .. " + code:60", hl.dsp.exec_cmd("yourapp"), { description = "Apps: Your app" })
 --
 -- Override gaps:
 --   hl.config({ general = { gaps_in = 3, gaps_out = 6 } })
