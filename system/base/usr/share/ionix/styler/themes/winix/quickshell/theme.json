@@ -13,7 +13,7 @@
   "modules": {
     "_comment": "Arrays replace wholesale in Config.deepMerge, so each list is written out in full. Bar.qml anchors the centre section to the window's horizontalCenter, which is exactly what Windows 11 does with start + Task View + pinned apps. Left is the widgets slot. Right keeps the shipped order — tray chevron first, clock then the action-centre bell last — because that already matches Windows. Launcher stays in the list whatever else changes: Launcher.qml is where PowerPopout lives, so dropping it would take the right-click power menu with it. Because these arrays replace rather than extend, any module the shipped defaults gain has to be added here too, or it simply never loads under this theme — modules gated by their own enabled flag (HueIndicator) are the trap, since the settings-page switch then flips a value with nothing in the bar to read it.",
     "left": ["MediaWidget"],
-    "center": ["Launcher", "Workspaces", "Taskbar"],
+    "center": ["Launcher", "TaskViewButton", "Workspaces", "Taskbar"],
     "right": ["Tray", "AudioIndicator", "NetworkIndicator", "BluetoothIndicator", "HueIndicator", "BatteryIndicator", "Clock", "NotificationBell"]
   },
 
@@ -27,7 +27,7 @@
       "default": false,
       "on": {
         "modules": {
-          "left": ["Launcher", "Workspaces", "Taskbar"],
+          "left": ["Launcher", "TaskViewButton", "Workspaces", "Taskbar"],
           "center": ["MediaWidget"]
         }
       }

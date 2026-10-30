@@ -34,7 +34,7 @@ Surfaces floating over the wallpaper (drawers, launchers, overlays, tooltips) us
 
 The styler lives at `system/base/usr/share/ionix/styler/` (installed to `/usr/share/ionix/styler`) — in base, because the server ISO uses it too. `ionixtheme <theme>` sources `install-default`, then runs each `ionix_install_<section>` function **only if `themes/<theme>/<section>/` exists** — the function name must match the directory name — **and `ionix_available_<section>` (when defined) succeeds**. To add an app:
 
-1. Add `themes/<theme>/<app>/` with the themed files for **every** theme: `ionix`, `ionix-pro`, `winix`, and `ionix-adaptive` (template under `adaptive/<app>/` plus its static counterpart). A theme missing the directory simply skips that section.
+1. Add `themes/<theme>/<app>/` with the themed files for **every** theme: `ionix`, `ionix-pro`, `winix`, `winix-experimental`, and `ionix-adaptive` (template under `adaptive/<app>/` plus its static counterpart). A theme missing the directory simply skips that section.
 2. Add `ionix_available_<app>` (usually `command -v <app>`) so a machine without the app — the server, for anything graphical — gets no config for it. The terminal sections (`fish`, `prompt`, `btop`, `tty`) are the ones the server actually uses.
 3. Add `ionix_install_<app>` and `ionix_uninstall_<app>` to `styler/install-default`, following the existing functions: symlink theme files into `~/.config/...`, then nudge a live reload (precedents: `killall -SIGUSR2 waybar`, `qs -c ionix ipc call theme reload`, `hyprctl reload`).
 4. `ionixtheme` uninstalls the previous theme before installing, so the uninstall function must remove exactly what install created.

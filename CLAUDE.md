@@ -660,6 +660,58 @@ with each colour turned into a slot and every Go action written `{{ if`, never `
 `command -v` for the desktop apps, `/etc/kmscon/kmscon.conf` for `tty` — and
 `ionix-adaptive-colors`' re-link loop asks the same, so one theme tree serves both variants.
 
+### Flat building blocks, and `winix-experimental`
+
+A theme can do more than recolour. The shell has a set of flat bar modules any theme can list in `modules`,
+plus independent design choices in its `theme.json`. `winix-experimental` is one arrangement of them, the
+Windows 11 one; `winix` stays a recolour of the stock layout.
+
+- **Modules** (`submodules/ionix-quickshell/ionix/modules`), each hosting the popouts it opens and working on
+  all four bar edges under any palette: `StartButton` (for `Launcher`), `SearchBox`, `AppTaskbar` (pinned and running per app,
+  `StartState.taskbarPins`; `Taskbar` is the per-window one), `TrayOverflow` (for `Tray`), `StatusCluster` +
+  `QuickSettings` (for the indicators), `ClockCluster` + `NotificationCentre` (for `Clock`, `NotificationBell`),
+  all on `BarTile`. `Config.isModuleInBar` knows which stands in for which plain one. Nothing in them may name a
+  theme or hardcode a colour: a new look is a token.
+- **Task View** is standard rather than a block: `TaskViewButton` is in the default bar and `winix`'s lists, opens
+  `osd/TaskViewOverlay` (also `Super+Tab`, `qs ipc call taskview toggle`), and `taskView.enabled` hides it. A theme
+  that writes its own `modules` must list the button. The overlay uses `ExclusionMode.Normal`, so it stops at the bar
+  on any edge and the button still closes it.
+- **Choices a theme makes separately**: `theme.flat` (colour instead of size on hover, neutral fills, thin
+  sliders; `Theme.flat`), `theme.flyoutGap` (panels stand off the bar and screen edge), the `subtleHover`,
+  `controlFill`, `fieldFill`, `closeHover`, `footerFill`… tokens, `start.layout: "sections"`, `start.align`,
+  `lock.layout: "bare"`.
+- **`Popout.screenAlign`** (`center`/`right`) places a panel from a horizontal bar on the screen rather than
+  under its anchor. It goes through `anchor.rect` with a 1px width, so the rect's edge is the point the panel
+  hangs from.
+- **Margins of a mapped layer surface do not update.** `theme.json` is read after the bar exists, so a
+  bar that started with the defaults' margins kept them. `Bar.qml` remaps itself when its gaps change.
+- **Its font**: Winix UI (`system/desktop/usr/share/fonts/winix/`) is Selawik with Fluent System Icons merged
+  in on the codepoints `Icons.qml` uses, so every panel gets Fluent glyphs with no shell change. Qt takes
+  `font.family` as one name, not a list, which is why it is one merged family. Regenerate with
+  `system/assets/winix/build-icon-font.py`. It must not be called Selawik: that is the OFL Reserved Font
+  Name, and the merged font is a Modified Version.
+- **`winix-experimental` must never ship**: the Windows logo (Start uses the Ionix logo), Segoe UI, Segoe Fluent Icons, Microsoft's
+  wallpapers or cursors. Selawik (OFL) and Fluent System Icons (MIT) keep their licences beside the fonts.
+  The wallpaper is `system/assets/winix/make-wallpaper.py`'s, rendered by `system/Makefile` into
+  ionix-desktop, so the theme's `wallpaper/` only exists where a desktop does.
+- **Its `install`**: the wallpaper section backs up `.wallpapers_active` and the GTK section
+  moves skel's real `gtk.css` aside, and both restore on the way out. GTK needs direct widget rules as
+  well as colours: `GTK_THEME=Adwaita:dark` compiles its palette into literals.
+- **hyprbars** is configured by `winix-experimental` (title left, flat glyphs) through the new `ionix_bars.text_align` and `.icons`
+  keys, but has not been seen rendered: the plugin's cached build does not load on Hyprland 0.57. It only
+  draws round buttons with a fill, so Close has no red hover without changing the plugin.
+
+**Testing without touching the running session.** `HOME`, every `XDG_*_HOME`, a short `XDG_RUNTIME_DIR`
+(the 108-byte socket path limit rules out deep paths) and a private `dbus-run-session`, with cage on
+`WLR_BACKENDS=headless` hosting a nested Hyprland, then `hyprctl output create headless` for a virtual
+monitor. Hyprland alone cannot run headless (aquamarine needs a DRM fd for its allocator) and cannot nest in
+cage as is: it binds `xdg_wm_base` v6 and wlroots offers v5, so a small `LD_PRELOAD` lowers that one bind.
+Input needs one long-lived `zwlr_virtual_pointer_v1`; one device per click loses button events. Isolating
+the environment is not enough, because some commands reach outside it: shim `ionix-greeter-sync` (it writes
+`/var/lib/ionix-greeter`, so a test theme becomes the real login screen), `brightnessctl set`, `ionix-lock`,
+`pkill`/`killall`, `crontab`, `sudo`, and point `power.*` in the test `config.json` at `true`. System-bus
+state (Wi-Fi, Bluetooth, power profile) is the real machine's, so don't click those toggles.
+
 ### Thunderbird
 
 Themed through `userChrome.css`, which reaches the whole window — `about:3pane` and `about:message`
