@@ -90,6 +90,24 @@ window.background,
   color: #ffffff;
 }
 
+/* Surfaces drawn over the desktop paint their own shape: the rule above would fill the
+   whole screen behind them. */
+window.spotlight-window,
+window.background.spotlight-window,
+window.start-menu-window,
+window.background.start-menu-window,
+window.desktop-window,
+window.background.desktop-window,
+window.selector-window,
+window.background.selector-window,
+window.shot-window,
+window.background.shot-window,
+window.shot-indicator-window,
+window.background.shot-indicator-window {
+  background: transparent;
+  background-color: transparent;
+}
+
 headerbar,
 .titlebar {
   background: #202020;

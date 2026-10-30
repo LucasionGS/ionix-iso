@@ -1,0 +1,311 @@
+/* ============================================================
+   IoExplorer — dockix — neutral dark, blue folders
+     #1e1e1e the pane files sit on
+     #2c2c2e toolbar, popovers
+     #262628 the sidebar, set a shade off the files
+   ============================================================ */
+
+window,
+tooltip {
+  --io-window-bg: rgb(36, 36, 38);
+  --io-panel-bg: rgb(30, 30, 30);
+  --io-muted-bg: rgba(255, 255, 255, 0.04);
+  --io-accent: rgb(10, 132, 255);
+  --io-selection: rgb(10, 132, 255);
+  --io-text: rgb(255, 255, 255);
+  --io-border: rgba(255, 255, 255, 0.08);
+  --io-radius: 6px;
+
+  --io-view-bg: rgb(30, 30, 30);
+  --io-popover-bg: rgb(44, 44, 46);
+  --io-card-bg: rgba(255, 255, 255, 0.05);
+  --io-control-bg: rgba(255, 255, 255, 0.06);
+  --io-hover-bg: rgba(255, 255, 255, 0.06);
+  --io-active-bg: rgba(255, 255, 255, 0.09);
+  --io-separator: rgba(255, 255, 255, 0.08);
+
+  --io-accent-fg: rgb(255, 255, 255);
+  --io-accent-soft: rgba(255, 255, 255, 0.09);
+  --io-accent-text: rgb(100, 168, 255);
+  --io-selection-hover: rgba(255, 255, 255, 0.14);
+
+  --io-text-dim: rgba(255, 255, 255, 0.77);
+  --io-text-faint: rgba(255, 255, 255, 0.53);
+
+  --io-radius-sm: 5px;
+  --io-radius-lg: 11px;
+
+  /* Folders are the one strong colour in the window. */
+  --io-ft-folder: rgb(100, 186, 255);
+
+  font-family: "Dockix UI", sans-serif;
+}
+
+/* ── Command bar ─────────────────────────────────────────── */
+
+.topbar {
+  padding: 6px 8px;
+  background: rgb(44, 44, 46);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Toggled toolbar buttons stay neutral: accent is for selection and focus. */
+.toolbar-group.view-switcher {
+  background: transparent;
+  padding: 0;
+}
+
+.toolbar-group.view-switcher > button:checked,
+.toolbar-group > button:checked {
+  background: rgba(255, 255, 255, 0.09);
+  color: rgb(255, 255, 255);
+  box-shadow: none;
+}
+
+.toolbar-group > button,
+.toolbar-group > menubutton > button {
+  color: rgb(255, 255, 255);
+}
+
+.address-bar {
+  min-height: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Focus is a soft ring round the whole field. */
+.address-bar:focus-within {
+  border-color: rgb(10, 132, 255);
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.35);
+}
+
+button.breadcrumb-button,
+button.breadcrumb-button.breadcrumb-current {
+  color: rgb(255, 255, 255);
+  font-weight: 400;
+}
+
+/* ── Panes ───────────────────────────────────────────────── */
+
+/* One flat surface edge to edge: the stock card floats, these panes meet. */
+.main-card {
+  margin: 0;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  background: rgb(30, 30, 30);
+  box-shadow: none;
+}
+
+.sidebar {
+  background: rgb(38, 38, 40);
+}
+
+button.sidebar-nav-button,
+.sidebar-list row {
+  border-radius: 6px;
+  color: rgb(255, 255, 255);
+}
+
+button.sidebar-nav-button:checked,
+.sidebar-list row:selected {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+button.sidebar-nav-button:checked .sidebar-row-icon,
+.sidebar-list row:selected .sidebar-row-icon {
+  color: rgb(255, 255, 255);
+}
+
+.details-panel {
+  background: rgb(30, 30, 30);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+
+.tab-strip {
+  min-height: 40px;
+  padding: 6px 8px 0;
+  background: rgb(36, 36, 38);
+  border-bottom: none;
+}
+
+/* A browser-style tab joined to what is under it, instead of a pill with a rule. */
+.file-tab {
+  border-radius: 8px 8px 0 0;
+}
+
+.file-tab.file-tab-active {
+  background: rgb(30, 30, 30);
+  box-shadow: none;
+}
+
+.file-tab-active .file-tab-icon {
+  color: rgb(100, 186, 255);
+}
+
+button.file-tab-close {
+  border-radius: 4px;
+}
+
+/* ── Files ───────────────────────────────────────────────── */
+
+/* Icons sit on the surface directly; the stock view frames each in a card. */
+.file-glyph-tile {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.content-list row.entry-selected,
+.content-grid flowboxchild.entry-selected {
+  background: rgba(10, 132, 255, 0.85);
+  box-shadow: none;
+}
+
+.content-list row.entry-selected:hover,
+.content-grid flowboxchild.entry-selected:hover {
+  background: rgb(10, 132, 255);
+}
+
+.rubberband-selection {
+  background: rgba(10, 132, 255, 0.20);
+  border: 1px solid rgba(10, 132, 255, 0.70);
+}
+
+.status-bar {
+  background: rgb(30, 30, 30);
+}
+
+/* ── Menus ───────────────────────────────────────────────── */
+
+.context-menu {
+  background: rgba(44, 44, 46, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 11px;
+}
+
+.context-menu-item {
+  border-radius: 6px;
+}
+
+/* A menu row lights up in the accent, not a grey. */
+.context-menu-item:hover {
+  background: rgb(10, 132, 255);
+  color: rgb(255, 255, 255);
+}
+
+/* ── Search ──────────────────────────────────────────────────
+   One big rounded slab: the field is just large type on it, with no box of its own,
+   and the selected row is solid accent. */
+
+.spotlight-backdrop {
+  background: transparent;
+}
+
+.spotlight-surface,
+.spotlight-preview {
+  /* Nearly solid: this surface gets no blur, so what is behind it would show sharp. */
+  background: rgba(40, 40, 42, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.spotlight-header {
+  margin: 4px 8px;
+  padding: 0 8px;
+  min-height: 48px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+}
+
+.spotlight-entry,
+.spotlight-entry:focus,
+.spotlight-entry:focus-within {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  outline: none;
+}
+
+.spotlight-entry {
+  font-size: 22px;
+  font-weight: 300;
+  color: rgb(255, 255, 255);
+}
+
+.spotlight-row {
+  border-radius: 8px;
+  color: rgb(255, 255, 255);
+}
+
+.spotlight-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.spotlight-row:selected {
+  background: rgb(10, 132, 255);
+  box-shadow: none;
+}
+
+.spotlight-section-label {
+  color: rgb(255, 255, 255);
+  font-weight: 600;
+}
+
+.spotlight-row-subtitle,
+.spotlight-hint {
+  color: rgba(255, 255, 255, 0.77);
+}
+
+.spotlight-prefix-badge {
+  background: rgb(10, 132, 255);
+  color: rgb(255, 255, 255);
+  border-radius: 5px;
+}
+
+.spotlight-footer {
+  background: transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── App launcher (the ioexplorer-start build of it) ────────── */
+
+.start-menu-surface {
+  background: rgba(44, 44, 46, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+}
+
+.start-menu-backdrop {
+  background: transparent;
+}
+
+.start-menu-search {
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.start-menu-launcher,
+.start-menu-result {
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+}
+
+.start-menu-launcher:hover,
+.start-menu-result:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Desktop ─────────────────────────────────────────────── */
+
+.desktop-tile.entry-selected {
+  background: rgba(10, 132, 255, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(10, 132, 255, 0.8);
+}
