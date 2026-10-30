@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  dockix — menu bar and dock                       ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# What this theme needs beyond install-default. Sourced after it, by ionixtheme, for
+# installing this theme and for uninstalling it again, so these only ever run
+# against this theme's own files.
+
+# ── Wallpaper ───────────────────────────────────────────────
+#
+# ionix-wallpaper replaces the whole cycling set, so a stock install of this section
+# would lose the wallpapers someone chose. They wait in a folder of their own and go
+# back when the theme is switched away.
+IONIX_WX_WP_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ionix/.wallpapers_active"
+IONIX_WX_WP_KEEP="${XDG_CONFIG_HOME:-$HOME/.config}/ionix/.wallpapers_before_dockix"
+
+ionix_install_wallpaper() {
+  if [[ -d "$IONIX_WX_WP_DIR" && ! -e "$IONIX_WX_WP_KEEP" ]]; then
+    cp -a "$IONIX_WX_WP_DIR" "$IONIX_WX_WP_KEEP"
+  fi
+  "$IONIX_BIN/ionix-wallpaper" "$THEME_DIR"/wallpaper/*
+}
+
+ionix_uninstall_wallpaper() {
+  [[ -d "$IONIX_WX_WP_KEEP" ]] || return 0
+  rm -rf "$IONIX_WX_WP_DIR"
+  mv "$IONIX_WX_WP_KEEP" "$IONIX_WX_WP_DIR"
+  [[ -x "$IONIX_BIN/ionix-cycle-wallpaper" ]] && "$IONIX_BIN/ionix-cycle-wallpaper" || true
+}
+
+# ── GTK ─────────────────────────────────────────────────────
+#
+# Skel gives every account a real gtk.css, so it cannot be treated as untouchable or
+# this would never apply. It waits under another name and comes back on the way out.
+ionix_available_gtk() { command -v Hyprland &>/dev/null; }
+
+ionix_install_gtk() {
+  local version dest css
+  for version in 3 4; do
+    dest="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-$version.0"
+    css="$dest/gtk.css"
+    mkdir -p "$dest"
+    if [[ -e "$css" && ! -L "$css" ]]; then
+      msg "gtk: keeping your $css as gtk.css.before-dockix until the theme is switched away"
+      mv "$css" "$css.before-dockix"
+    fi
+    ln -sf "$THEME_DIR/gtk/gtk-$version.css" "$css"
+  done
+}
+
+ionix_uninstall_gtk() {
+  local version css
+  for version in 3 4; do
+    css="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-$version.0/gtk.css"
+    # Only ever this theme's link, not a link of the user's own to somewhere else.
+    [[ -L "$css" && "$(readlink "$css")" == "$THEME_DIR/gtk/"* ]] && rm -f "$css"
+    [[ -e "$css.before-dockix" && ! -e "$css" ]] && mv "$css.before-dockix" "$css"
+  done
+  return 0
+}

@@ -1,0 +1,58 @@
+# Ionix theme for btop. ionixtheme links this file as
+# ~/.config/btop/themes/ionix-styler.theme and points btop.conf's color_theme
+# at it. An empty main_bg keeps the terminal's own background.
+
+theme[main_bg]=""
+theme[main_fg]="#e5e5ea"
+theme[title]="#ffffff"
+theme[hi_fg]="#64a8ff"
+theme[selected_bg]="#3a3a3c"
+theme[selected_fg]="#ffffff"
+theme[inactive_fg]="#98989d"
+theme[graph_text]="#e5e5ea"
+theme[meter_bg]="#2c2c2e"
+theme[proc_misc]="#64a8ff"
+
+# Box outlines and dividers
+theme[cpu_box]="#0a84ff"
+theme[mem_box]="#0a84ff"
+theme[net_box]="#0a84ff"
+theme[proc_box]="#0a84ff"
+theme[div_line]="#48484a"
+
+# Gradients: start, middle, end
+theme[temp_start]="#30d158"
+theme[temp_mid]="#ff9f0a"
+theme[temp_end]="#ff453a"
+
+theme[cpu_start]="#0060df"
+theme[cpu_mid]="#64a8ff"
+theme[cpu_end]="#64a8ff"
+
+theme[free_start]="#0060df"
+theme[free_mid]="#0a84ff"
+theme[free_end]="#64a8ff"
+
+theme[cached_start]="#0060df"
+theme[cached_mid]="#64d2ff"
+theme[cached_end]="#ffffff"
+
+theme[available_start]="#0060df"
+theme[available_mid]="#30d158"
+theme[available_end]="#ffffff"
+
+theme[used_start]="#30d158"
+theme[used_mid]="#ff9f0a"
+theme[used_end]="#ff453a"
+
+theme[download_start]="#0060df"
+theme[download_mid]="#0a84ff"
+theme[download_end]="#64a8ff"
+
+theme[upload_start]="#0060df"
+theme[upload_mid]="#64d2ff"
+theme[upload_end]="#ffffff"
+
+theme[process_start]="#0060df"
+theme[process_mid]="#64a8ff"
+theme[process_end]="#64a8ff"

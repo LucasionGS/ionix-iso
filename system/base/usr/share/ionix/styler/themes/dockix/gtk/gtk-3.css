@@ -1,0 +1,125 @@
+/* dockix: GTK3, neutral dark. Linked to ~/.config/gtk-3.0/gtk.css by
+   the theme's install file. Colours only, on top of Adwaita:dark: a widget theme
+   would fight the apps that style themselves. */
+@define-color theme_bg_color #1e1e1e;
+@define-color theme_fg_color #ffffff;
+@define-color theme_base_color #1e1e1e;
+@define-color theme_text_color #ffffff;
+@define-color theme_selected_bg_color #0a84ff;
+@define-color theme_selected_fg_color #ffffff;
+@define-color theme_unfocused_bg_color #1e1e1e;
+@define-color theme_unfocused_fg_color #aeaeb2;
+@define-color theme_unfocused_base_color #1e1e1e;
+@define-color theme_unfocused_text_color #aeaeb2;
+@define-color theme_unfocused_selected_bg_color #3a3a3c;
+@define-color theme_unfocused_selected_fg_color #ffffff;
+@define-color borders #3a3a3c;
+@define-color unfocused_borders #2c2c2e;
+@define-color wm_title #ffffff;
+@define-color wm_unfocused_title #aeaeb2;
+@define-color accent_color #64a8ff;
+@define-color accent_bg_color #0a84ff;
+@define-color accent_fg_color #ffffff;
+
+* {
+  font-family: "Dockix UI", sans-serif;
+}
+
+button,
+entry,
+combobox button {
+  border-radius: 4px;
+}
+
+window.csd,
+decoration {
+  border-radius: 8px;
+}
+
+menu,
+.menu,
+popover.background > contents {
+  border-radius: 8px;
+}
+
+/* GTK_THEME=Adwaita:dark is set for the session, and that plain theme compiles its
+   palette into literal values, so naming colours alone does not reach its widgets. */
+window,
+window.background,
+.background {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+headerbar,
+.titlebar {
+  background: #1e1e1e;
+  color: #ffffff;
+  box-shadow: inset 0 -1px rgba(255, 255, 255, 0.08);
+}
+
+.view,
+textview text,
+treeview.view,
+list,
+listview {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+button {
+  background: rgba(255, 255, 255, 0.06);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: none;
+  color: #ffffff;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+button:active,
+button:checked {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+button.suggested-action {
+  background: #64a8ff;
+  color: #000000;
+  border-color: transparent;
+}
+
+button.destructive-action {
+  background: #ff5f57;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+entry {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+}
+
+entry:focus-within,
+entry:focus {
+  border-bottom-color: #64a8ff;
+  box-shadow: inset 0 -1px #64a8ff;
+}
+
+popover > contents,
+popover.background > contents,
+menu,
+.menu {
+  background: #2c2c2e;
+  color: #ffffff;
+  border: 1px solid rgba(117, 117, 117, 0.4);
+}
+
+selection,
+*:selected {
+  background-color: #0a84ff;
+  color: #ffffff;
+}

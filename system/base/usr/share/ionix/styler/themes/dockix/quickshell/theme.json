@@ -1,0 +1,183 @@
+{
+  "bar": {
+    "_comment": "A thin strip across the top: 28px, edge to edge, translucent over the wallpaper.",
+    "height": 28,
+    "position": "top",
+    "floating": false,
+    "radius": 0,
+    "opacity": 0.4,
+    "nativeBlur": true,
+    "margin": {
+      "top": 0,
+      "left": 0,
+      "right": 0
+    }
+  },
+  "modules": {
+    "_comment": "Logo menu and the focused app's menus on the left; status, search, Quick Settings and the clock on the right. The apps themselves live in the dock below. Each hosts the popouts it opens.",
+    "left": [
+      "LogoMenu",
+      "AppMenu"
+    ],
+    "center": [],
+    "right": [
+      "Tray",
+      "BatteryIndicator",
+      "NetworkIndicator",
+      "SearchButton",
+      "QuickSettingsButton",
+      "ClockCluster"
+    ]
+  },
+  "dock": {
+    "_comment": "The dock: the shell's own items, then pinned and running apps, then Trash past a divider. Trash opens the freedesktop trash folder through the file-manager D-Bus interface, so it works with whichever file manager owns that name.",
+    "enabled": true,
+    "position": "bottom",
+    "iconSize": 48,
+    "magnification": 1.6,
+    "margin": 6,
+    "radius": 18,
+    "autoHide": false,
+    "leading": [
+      "appgrid",
+      "taskview"
+    ],
+    "trailing": [
+      {
+        "title": "Trash",
+        "glyph": "󰆴",
+        "command": [
+          "sh",
+          "-c",
+          "mkdir -p \"$HOME/.local/share/Trash/files\" && gdbus call --session --dest org.freedesktop.FileManager1 --object-path /org/freedesktop/FileManager1 --method org.freedesktop.FileManager1.ShowFolders \"['file://$HOME/.local/share/Trash/files']\" ''"
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "_comment": "Off is a dock that keeps its size under the pointer.",
+      "key": "dockMagnify",
+      "title": "Magnify dock icons",
+      "subtitle": "Icons grow as the pointer passes over them",
+      "glyph": "󰁌",
+      "default": true,
+      "off": {
+        "dock": {
+          "magnification": 1
+        }
+      }
+    }
+  ],
+  "start": {
+    "_comment": "The bare Super key opens the all-apps overlay. The menu itself still hosts Settings, opened from the logo menu.",
+    "opens": "appgrid",
+    "align": "center",
+    "width": 620,
+    "maxHeightFraction": 0.72,
+    "iconSize": 40,
+    "columns": 6
+  },
+  "appGrid": {
+    "columns": 7,
+    "rows": 5,
+    "iconSize": 72
+  },
+  "clock": {
+    "_comment": "On one line beside the status icons; notifications live behind a click on it, so no bell.",
+    "format": "HH:mm",
+    "dateFormat": "ddd d MMM",
+    "showDate": true,
+    "inline": true,
+    "bell": false
+  },
+  "taskbar": {
+    "iconSize": 24,
+    "currentWorkspaceOnly": false,
+    "defaultPins": [
+      "io.github.ionix.IoExplorer",
+      "ionterm",
+      "firefox",
+      "google-chrome",
+      "code",
+      "org.gnome.Calculator",
+      "thunderbird"
+    ]
+  },
+  "osd": {
+    "margin": 110
+  },
+  "windowSwitcher": {
+    "currentWorkspaceOnly": false,
+    "cardWidth": 240,
+    "cardHeight": 170
+  },
+  "notifications": {
+    "width": 344
+  },
+  "theme": {
+    "_comment": "Neutral greys that lean slightly blue, one blue accent, translucency everywhere something floats. Dockix UI is Inter with Phosphor icons on the codepoints Icons.qml uses; see system/assets/dockix/build-icon-font.py. Alpha colours are #AARRGGBB.",
+    "bgDeep": "#1e1e1e",
+    "bgWindow": "#2c2c2e",
+    "bgCard": "#3a3a3c",
+    "hover": "#48484a",
+    "border": "#48484a",
+    "muted": "#98989d",
+    "text": "#f5f5f7",
+    "textBright": "#ffffff",
+    "accent": "#0a84ff",
+    "accentBright": "#409cff",
+    "accentLight": "#64a8ff",
+    "green": "#30d158",
+    "orange": "#ff9f0a",
+    "red": "#ff453a",
+    "cyan": "#64d2ff",
+    "link": "#409cff",
+    "onAccent": "#ffffff",
+    "barFill": "#661e1e1e",
+    "panelFill": "#c82a2a2c",
+    "dockFill": "#5c2e2e32",
+    "tooltipFill": "#f02c2c2e",
+    "pillFill": "#00000000",
+    "pillBorder": "#00000000",
+    "barBorder": "#1fffffff",
+    "panelBorder": "#30ffffff",
+    "divider": "#26ffffff",
+    "subtleHover": "#26ffffff",
+    "subtlePressed": "#1affffff",
+    "controlFill": "#1affffff",
+    "controlStroke": "#14ffffff",
+    "fieldFill": "#33000000",
+    "footerFill": "#00000000",
+    "closeHover": "#ff5f57",
+    "rSm": 6,
+    "rPill": 6,
+    "rPanel": 12,
+    "pillHeight": 24,
+    "fsXs": 10,
+    "fsSm": 11,
+    "fsMd": 13,
+    "fsBase": 13,
+    "fsLg": 14,
+    "fsXl": 17,
+    "fsIcon": 15,
+    "fsIconLg": 18,
+    "fsTitle": 22,
+    "durFast": 100,
+    "durNormal": 150,
+    "durSlide": 220,
+    "durSlow": 300,
+    "fontFamily": "Dockix UI",
+    "fontMono": "Dockix UI",
+    "flat": true,
+    "flyoutGap": 5
+  },
+  "lock": {
+    "_comment": "The date over a big light clock up high, and the picture, name and field along the foot, on the wallpaper with no card. The Ion logo sits in its usual corner.",
+    "layout": "bare",
+    "cardAlign": "bottom",
+    "dateFirst": true,
+    "clockFormat": "HH:mm",
+    "dateFormat": "dddd d MMMM"
+  }
+}

@@ -701,6 +701,21 @@ Windows 11 one; `winix` stays a recolour of the stock layout.
   keys, but has not been seen rendered: the plugin's cached build does not load on Hyprland 0.57. It only
   draws round buttons with a fill, so Close has no red hover without changing the plugin.
 
+### The dock and menu bar, and `dockix`
+
+More building blocks of the same kind, any theme can use them. `dockix` is the arrangement that puts them all together: a menu bar along the top and a dock along the bottom.
+
+- **`dock`** (`osd/DockWindow.qml`, off by default, also a switch on the settings page): pinned and running apps on a floating plate on any edge, with the same pins as `AppTaskbar` (both draw `services/AppGroups.qml`). The surface spans the whole edge and never changes size, and an input mask makes all but the plate click through: magnifying must not resize or re-centre a layer surface. Zoom is worked out from where each icon *rests*, or the icons moving under the pointer would feed back into their own size; which name to show comes from the slot really under it. Art is rendered once at full size and scaled, so zoom asks for no new raster. `dock.leading` adds shell items (`appgrid`, `taskview`), `dock.trailing` adds `{ title, icon, glyph, command }` past a divider.
+- **`appGrid`** (`osd/AppGridOverlay.qml`, `qs ipc call appgrid toggle`): all apps as pages over the blurred desktop, filtered as you type. `start.opens: "appgrid"` sends the bare Super key here instead of the start menu.
+- **Bar modules**: `LogoMenu` (stands in for `Launcher`, hosts the start menu and power panel, so Settings stays reachable), `AppMenu` (the focused app's name and menus), `SearchButton`, `QuickSettingsButton` (for a bar keeping separate status modules; hosts only the detail flyouts no listed module does). `ContextMenu` gained `hint`, `minWidth`, and `grabWindows`, which keeps the bar live under an open menu so hovering across titles can switch. `clock.inline`/`clock.bell`, `lock.cardAlign`/`lock.dateFirst`, and `ionix_bars.buttons_align`/`button_order` are the matching choices.
+- **`AppMenu` holds what the shell can do to any window.** A Wayland window publishes no menu of its own, so there is no File/Edit from the app itself: new windows and desktop actions from its `.desktop` file, close, minimize, zoom, fullscreen, float, pin and moving desktops. Don't add entries that do nothing.
+- **Minimize is the unnamed special workspace, and `Windows.activate` undoes it**, so every taskbar, dock, preview, Alt+Tab and search route restores under any theme. A named special workspace is a scratchpad and is left alone. `Compositor.restoreWindow` moves and focuses in one `hyprctl eval` chunk: as two separate requests the focus could land first (4 of 12 tries), which opens the special workspace and leaves it open.
+- **`TaskPreview`** is shared by `AppTaskbar` and the dock, which passes `edge` and `extraGap`. Its gap goes through `anchor.rect`, because a margin on the far side of the rect does not move the edge an upward panel hangs from. The dock keeps its icons still while thumbnails are up, or the anchor would move under them. It tracks whether they have the pointer, because that can reach them before the dock's own leave delay fires, and the strip between the icons and the thumbnails starts no countdown. Test this by moving the pointer in small steps: a single jump onto a card passes even when a real hand cannot reach it.
+- **GTK4's blanket `window` rule paints overlays black.** `GTK_THEME=Adwaita:dark` needs literal colours, but `window { background-color }` also fills ioexplorer's spotlight, start menu, desktop and screenshot windows, which are transparent full-screen surfaces. A theme's `gtk-4.css` must exempt `.spotlight-window`, `.start-menu-window`, `.desktop-window`, `.selector-window`, `.shot-window` and `.shot-indicator-window`, with `window.background.<class>` so it wins.
+- **Its font**: Dockix UI (`system/desktop/usr/share/fonts/dockix/`) is Inter (OFL) with Phosphor Icons (MIT) merged in on the codepoints `Icons.qml` uses, by `system/assets/dockix/build-icon-font.py`. A new glyph needs adding to its `MAP`, as `Icons.tune` was.
+- **`dockix` must never ship or mention** another vendor's logo, name, fonts, icons, wallpapers or cursors, including in comments and option text. The logo corner, the dock's all-apps item and the lock screen use the Ion logo. The wallpaper is `system/assets/dockix/make-wallpaper.py`'s, rendered by `system/Makefile` into ionix-desktop. Names stay generic: All Apps, Task View, Quick Settings, Dock. `spotlight` in its CSS is ioexplorer's own class name.
+- **Trash** is a dock item that calls `org.freedesktop.FileManager1.ShowFolders` on the freedesktop trash folder: `ioexplorer` ignores a path on its command line, and it has no trash view of its own.
+
 **Testing without touching the running session.** `HOME`, every `XDG_*_HOME`, a short `XDG_RUNTIME_DIR`
 (the 108-byte socket path limit rules out deep paths) and a private `dbus-run-session`, with cage on
 `WLR_BACKENDS=headless` hosting a nested Hyprland, then `hyprctl output create headless` for a virtual
@@ -709,7 +724,7 @@ cage as is: it binds `xdg_wm_base` v6 and wlroots offers v5, so a small `LD_PREL
 Input needs one long-lived `zwlr_virtual_pointer_v1`; one device per click loses button events. Isolating
 the environment is not enough, because some commands reach outside it: shim `ionix-greeter-sync` (it writes
 `/var/lib/ionix-greeter`, so a test theme becomes the real login screen), `brightnessctl set`, `ionix-lock`,
-`pkill`/`killall`, `crontab`, `sudo`, and point `power.*` in the test `config.json` at `true`. System-bus
+`pkill`/`killall`, `crontab`, `sudo`, and point `power.*` in the test `config.json` at `true`. Stop it by finding processes whose environ holds the rig's `XDG_RUNTIME_DIR`: `kill`ing cage alone leaves the compositor and its session helpers running. Killing a test `lock.qml` leaves the compositor on its crashed-lock page; `hyprctl eval 'hl.clear_crashed_lockscreen()'` clears it. System-bus
 state (Wi-Fi, Bluetooth, power profile) is the real machine's, so don't click those toggles.
 
 ### Thunderbird

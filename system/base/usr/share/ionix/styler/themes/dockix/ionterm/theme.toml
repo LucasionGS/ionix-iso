@@ -1,0 +1,36 @@
+# ionterm theme, generated from kitty/kitty.conf
+foreground = "#e5e5ea"
+background = "#1e1e1e"
+background_opacity = 0.94
+cursor = "#ffffff"
+cursor_text = "#1e1e1e"
+selection_foreground = "#ffffff"
+selection_background = "#0a84ff"
+url = "#64a8ff"
+
+[tab_bar]
+background = "#1e1e1e"
+active_foreground = "#ffffff"
+active_background = "#0a84ff"
+inactive_foreground = "#e5e5ea"
+inactive_background = "#1c1c1e"
+
+[palette]
+colors = [
+  "#1e1e1e",
+  "#ff453a",
+  "#30d158",
+  "#ffd60a",
+  "#0a84ff",
+  "#bf5af2",
+  "#64d2ff",
+  "#e5e5ea",
+  "#6e6e73",
+  "#ff453a",
+  "#30d158",
+  "#ffe066",
+  "#409cff",
+  "#da8fff",
+  "#70d7ff",
+  "#ffffff",
+]

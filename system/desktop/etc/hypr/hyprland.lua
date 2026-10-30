@@ -590,46 +590,39 @@ function ionix_bars_apply()
         bar_text_align    = b.text_align,
         ["col.text"]      = c.text,
 
-        bar_buttons_alignment = "right",
+        bar_buttons_alignment = b.buttons_align,
         inactive_button_color = c.inactive_button,
         on_double_click       = [[hyprctl dispatch "hl.dsp.window.fullscreen({ mode = 'maximized', action = 'toggle' })"]],
       },
     },
   })
 
-  -- Declared right-to-left: close ends up at the right edge.
-  --
   -- `action` is spawned through a shell, so it re-enters Hyprland via hyprctl.
   -- This build's dispatch takes Lua, not legacy dispatcher names -- "hyprctl
   -- dispatch killactive" is a parse error, not a close. Clicking a bar focuses
   -- its window first, so these active-window dispatchers land on the window
   -- that was clicked even when it was not focused.
-  hl.plugin.hyprbars.add_button({
-    size     = b.button_size,
-    bg_color = c.close,
-    fg_color = c.icon,
-    icon     = b.icons.close,
-    action   = [[hyprctl dispatch "hl.dsp.window.close()"]],
-  })
-  hl.plugin.hyprbars.add_button({
-    size     = b.button_size,
-    bg_color = c.maximize,
-    fg_color = c.icon,
-    icon     = b.icons.maximize,
+  local actions = {
+    close = [[hyprctl dispatch "hl.dsp.window.close()"]],
     -- "maximized", not "fullscreen": real fullscreen hides the bar, which
     -- would leave no button to click to undo it.
-    action   = [[hyprctl dispatch "hl.dsp.window.fullscreen({ mode = 'maximized', action = 'toggle' })"]],
-  })
-  hl.plugin.hyprbars.add_button({
-    size     = b.button_size,
-    bg_color = c.minimize,
-    fg_color = c.icon,
-    icon     = b.icons.minimize,
+    maximize = [[hyprctl dispatch "hl.dsp.window.fullscreen({ mode = 'maximized', action = 'toggle' })"]],
     -- Closest thing to minimise: park it on the special workspace, which
     -- SUPER+S toggles back into view. Pressing it again from there restores
     -- the window to the workspace underneath.
-    action   = [[hyprctl eval "ionix_bars_toggle_minimize()"]],
-  })
+    minimize = [[hyprctl eval "ionix_bars_toggle_minimize()"]],
+  }
+
+  -- Each button is laid out from the aligned edge, so the first named is outermost.
+  for _, name in ipairs(b.button_order) do
+    hl.plugin.hyprbars.add_button({
+      size     = b.button_size,
+      bg_color = c[name],
+      fg_color = c.icon,
+      icon     = b.icons[name],
+      action   = actions[name],
+    })
+  end
 end
 
 -- Applied from the event rather than inline, because this file is parsed
