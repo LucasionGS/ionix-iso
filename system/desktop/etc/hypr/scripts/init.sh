@@ -4,7 +4,7 @@
 # The session is reached by tty autologin, so this lock is the password prompt;
 # ionix-post-install drops skip-session-lock when "Log in automatically" was
 # ticked in the installer.
-[[ ! -d /run/archiso && ! -e /etc/ionix/skip-session-lock ]] && ionix-lock &
+[[ ! -d /run/archiso && ! -e /etc/ionix/skip-session-lock ]] && IONIX_LOCK_SILENT=1 ionix-lock &
 # Set the wallpaper on first login. hyprland.lua starts awww-daemon alongside
 # this script, so wait until it answers rather than for a fixed time: under
 # software rendering (a VM, no GPU driver yet) it takes longer than a second,

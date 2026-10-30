@@ -79,6 +79,8 @@ package_ionix-desktop-git() {
         'fprintd: fingerprint login (ionix-fingerprint)'
         'yay: optional software bundles from the AUR (ionix-extras)'
         'matugen: wallpaper-adaptive themes'
+        'socat: Hyprland event sounds (ionix-sounds)'
+        'ffmpeg: m4a and aac event sounds (ionix-sounds)'
     )
     provides=('ionix-desktop')
     conflicts=('ionix-desktop' 'ionix-server')

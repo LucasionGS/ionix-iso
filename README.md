@@ -414,6 +414,22 @@ hl.bind(mainMod .. " + code:60", hl.dsp.exec_cmd("yourapp"))
 hl.monitor({ output = "DP-1", mode = "2560x1440@144", position = "0x0", scale = 1 })
 ```
 
+**Sounds.** Ionix ships silent, but any desktop event can make a noise: drop an audio file named
+after the event into `~/.config/hypr/sounds/`, such as `openwindow.wav` or `shutdown.mp3`. It
+works from the next time that event happens, and sounds overlap rather than wait for each other.
+`ionix-sounds` lists every event and what is set.
+
+| Event | Plays when |
+|---|---|
+| `boot`, `login` | The first session after the machine starts; every session after that (`login` also stands in for a missing `boot`) |
+| `logout`, `shutdown`, `reboot` | The session ends; the machine powers off; it reboots (`shutdown` stands in for a missing `reboot`) |
+| `suspend`, `resume` | The machine goes to sleep; it wakes up |
+| `lock`, `unlock`, `notification` | The screen locks; it unlocks; a notification arrives outside Do Not Disturb |
+| `openwindow`, `closewindow`, `urgent`, `workspace`, `monitoradded`... | Anything else Hyprland reports, under its own name |
+
+WAV, FLAC, OGG, Opus and MP3 just work; M4A and AAC need `ffmpeg`. Keep a shutdown sound under five
+seconds, because that is how long the system waits for it, and the same goes for logout.
+
 **Themes.** `ionixtheme --list` shows what is available and `ionixtheme <name>` switches. To make
 your own, copy a shipped theme out of `/usr/share/ionix/styler/themes/` and edit it.
 

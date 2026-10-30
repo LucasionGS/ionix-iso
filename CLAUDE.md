@@ -381,6 +381,36 @@ is not user-consentable in most tenants — an admin grants it once). Tokens go 
 (hence `libnotify` in `packages.x86_64`): the shell is the notification server, so the toast lands
 in its own centre and the blocked `notify-send` printing `join` is the cue to open the link.
 
+**Event sounds are a daemon that only exists once there is a sound.** `/usr/bin/ionix-sounds` plays
+`~/.config/hypr/sounds/NAME.<ext>` on event NAME; nothing ships in that directory. `ionix-sounds.path`
+(`PathExistsGlob`, enabled for everyone by a `graphical-session.target.wants` link in `/usr/lib`, so no
+skel link or user migration) starts `ionix-sounds.service` when the first file appears, and every lookup
+happens when the event fires. To turn it off, empty the directory and log out; while the path unit
+is up, stopping only the service just starts it again. All of this was verified in a live VM:
+
+- Hyprland events are not a list: the name before `>>` in socket2 is looked up as is. The list in the
+  script is only what `ionix-sounds list` shows. The same event within 50 ms is dropped, so a burst of
+  windows is one sound rather than one loud one.
+- **Shutdown, reboot and sleep use a logind delay lock**, so they cover the power menu, the power button
+  and a `poweroff` in a terminal alike. `systemd-inhibit` holds it around `sleep infinity`; killing the
+  `sleep` releases it, and it is taken again on resume or a cancelled shutdown. logind waits
+  `InhibitDelayMaxSec` (5 s): a 9 s sound had the VM off in 6 s. The reboot/poweroff difference comes from
+  `PrepareForShutdownWithMetadata`.
+- **Logout is `ExecStop`.** The unit is ordered `After=graphical-session.target pipewire.service`, so under
+  `uwsm stop` it stops while the compositor and audio are still up. `ExecStop` also runs on a restart or a
+  crash, so it plays only when `list-jobs` shows a stop job on the target, and not once a shutdown sound
+  has played (`$XDG_RUNTIME_DIR/ionix-sounds/leaving`). `TimeoutStopSec=6` caps it.
+- `boot` vs `login` is the kernel's `boot_id` against `~/.local/state/ionix/sounds-boot-id`. A daemon that
+  restarts in a session it has greeted stays quiet, as does one the first file started late in a session
+  (`hyprland.lock` older than 60 s).
+- `lock`/`unlock` come from `bin/ionix-lock`; `init.sh` sets `IONIX_LOCK_SILENT` because its lock is the
+  login prompt, not something locking. `notification` comes from `services/Notifications.qml`. Both
+  call `ionix-sounds play` and must not care if it is missing, since the shell's AUR package also runs
+  off Ionix.
+- `pw-play` is tried first and reads what libsndfile does; m4a/aac fall through to `ffplay`. **Don't test
+  suspend followed by reboot in QEMU**: the VM comes back to a blank "Display output is not active" with
+  or without this feature.
+
 **Project workspaces are a CLI, a Lua function and a label.** `/usr/bin/ionix-project`
 (stdlib Python) saves one workspace to `~/.config/ionix/projects/<slug>.json`: per window its class,
 how to start it again (the desktop entry's `Exec` matched by `StartupWMClass`/id, else
@@ -555,6 +585,7 @@ QEMU no longer takes `serial=` on `-drive`; a by-id name needs `-device virtio-b
   from inside the Calamares chroot does not fail trying to write EFI NVRAM
 - `ionix-arrange-workspace` — workspace helper
 - `ionix-project` — save/load labeled project workspaces (see "Project workspaces" above)
+- `ionix-sounds` — plays `~/.config/hypr/sounds/` on desktop events (see "Event sounds" above)
 - `ionix-login-mode` — greeter / autologin / locked; survives onto the installed system
 - `ionix-fingerprint` — fingerprint reader support; survives onto the installed system
 - `ionix-extras` — installs the optional bundles; survives onto the installed system
