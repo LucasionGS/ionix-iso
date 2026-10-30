@@ -172,12 +172,34 @@ local function bind_exec(keys, command, options)
   hl.bind(keys, hl.dsp.exec_cmd(command), options)
 end
 
+-- Hyprland 0.57 resolves r-N past a monitor's lowest workspace to workspace 1,
+-- wherever that lives, so going back jumped to another monitor. Takes the
+-- furthest step that stays on this one; nil when there is none.
+local function workspace_back_on_monitor(steps)
+  local monitor = hl.get_active_monitor()
+  for step = steps, 1, -1 do
+    local selector = "r-" .. step
+    local target = hl.get_workspace(selector)
+    if not target or target.monitor.id == monitor.id then return selector end
+  end
+end
+
+-- dispatcher(workspace) builds what the bind does. Returns the bind's action.
+local function workspace_action(workspace, dispatcher)
+  local steps = type(workspace) == "string" and tonumber(workspace:match("^r%-(%d+)$"))
+  if not steps then return dispatcher(workspace) end
+  return function()
+    local target = workspace_back_on_monitor(steps)
+    if target then hl.dispatch(dispatcher(target)) end
+  end
+end
+
 local function bind_workspace(keys, workspace)
-  hl.bind(keys, hl.dsp.focus({ workspace = workspace }))
+  hl.bind(keys, workspace_action(workspace, function(target) return hl.dsp.focus({ workspace = target }) end))
 end
 
 local function bind_move_to_workspace(keys, workspace, follow)
-  hl.bind(keys, hl.dsp.window.move({ workspace = workspace, follow = follow }))
+  hl.bind(keys, workspace_action(workspace, function(target) return hl.dsp.window.move({ workspace = target, follow = follow }) end))
 end
 
 local function bind_resize_active(keys, x_delta, y_delta)
@@ -192,8 +214,13 @@ bind_exec(mainMod .. " + E", "ioexplorer")
 bind_exec(mainMod .. " + B", "ionterm -e btop")
 -- On release, so Super held for another bind never opens the menu: Hyprland
 -- 0.57 matches a bare-modifier press bind the moment Super goes down, and a
--- release bind is dropped when any other key was pressed in between.
-bind_exec(mainMod .. " + SUPER_L", "qs -c ionix ipc call start toggle || ioexplorer-spotlight", { release = true })
+-- release bind is dropped when any other key was pressed in between. A scroll
+-- does not count as a key there, so Super + scroll marks itself in super_scrolled.
+local super_scrolled = false
+hl.bind(mainMod .. " + SUPER_L", function() super_scrolled = false end, { non_consuming = true })
+hl.bind(mainMod .. " + SUPER_L", function()
+  if not super_scrolled then hl.dispatch(hl.dsp.exec_cmd("qs -c ionix ipc call start toggle || ioexplorer-spotlight")) end
+end, { release = true })
 bind_exec("ALT + Space", "ioexplorer-spotlight")
 bind_exec(mainMod .. " + R", "ioexplorer-spotlight")
 -- bind_exec(mainMod .. " + V", "copyq toggle")
@@ -292,8 +319,14 @@ bind_workspace(mainMod .. " + Page_Down", "r-1")
 bind_workspace(mainMod .. " + Page_Up", "r+1")
 bind_workspace("CTRL + " .. mainMod .. " + Page_Down", "r-5")
 bind_workspace("CTRL + " .. mainMod .. " + Page_Up", "r+5")
-bind_workspace(mainMod .. " + mouse_up", "r-1")
-bind_workspace(mainMod .. " + mouse_down", "r+1")
+hl.bind(mainMod .. " + mouse_up", function()
+  super_scrolled = true
+  workspace_action("r-1", function(target) return hl.dsp.focus({ workspace = target }) end)()
+end)
+hl.bind(mainMod .. " + mouse_down", function()
+  super_scrolled = true
+  hl.dispatch(hl.dsp.focus({ workspace = "r+1" }))
+end)
 
 -- ── Move to Workspace ─────────────────────────────────────────
 bind_move_to_workspace(mainMod .. " + ALT + 1", 1, false)
