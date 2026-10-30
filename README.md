@@ -188,11 +188,14 @@ deals a different random wallpaper to each monitor.
 All of these live in `/etc/hypr/hyprland.lua`. Override any of them in
 `~/.config/hypr/hyprland.lua`. `Super` is the modifier throughout.
 
+Forgot one? `Super+F1` lists every shortcut Hyprland actually has, searchable, your own included.
+
 ### Essentials
 
 | Shortcut | Action |
 |---|---|
 | Tap `Super` | Toggle the start menu |
+| `Super+F1` | List every shortcut |
 | `Super+R` / `Alt+Space` | Spotlight launcher |
 | `Super+T` | Terminal (kitty) |
 | `Super+E` | File manager (IoExplorer) |
@@ -407,8 +410,8 @@ installer; `sudo localectl set-x11-keymap de` changes it for the whole system fr
 -- Use a different keyboard layout in Hyprland only
 hl.config({ input = { kb_layout = "us" } })
 
--- Add your own keybinding
-hl.bind(mainMod .. " + code:60", hl.dsp.exec_cmd("yourapp"))
+-- Add your own keybinding. Its description is what Super+F1 shows: "Section: what it does"
+hl.bind(mainMod .. " + code:60", hl.dsp.exec_cmd("yourapp"), { description = "Apps: Your app" })
 
 -- Pin a monitor layout
 hl.monitor({ output = "DP-1", mode = "2560x1440@144", position = "0x0", scale = 1 })

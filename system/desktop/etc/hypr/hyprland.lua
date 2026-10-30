@@ -168,6 +168,17 @@ hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 -- Keep this global so user overrides can reuse the old $mainMod equivalent.
 mainMod = "SUPER"
 
+-- The shortcut menu (Super+F1) lists what `hyprctl binds` reports, so a bind's
+-- description is the only place its entry lives: "Section: what it does". Binds
+-- with the same description share a row. Give every new bind one, under the
+-- `section` it belongs to; one without lands in the menu's Other section.
+local section = "Apps"
+local function desc(description, options)
+  options = options or {}
+  options.description = section .. ": " .. description
+  return options
+end
+
 local function bind_exec(keys, command, options)
   hl.bind(keys, hl.dsp.exec_cmd(command), options)
 end
@@ -194,24 +205,24 @@ local function workspace_action(workspace, dispatcher)
   end
 end
 
-local function bind_workspace(keys, workspace)
-  hl.bind(keys, workspace_action(workspace, function(target) return hl.dsp.focus({ workspace = target }) end))
+local function bind_workspace(keys, workspace, options)
+  hl.bind(keys, workspace_action(workspace, function(target) return hl.dsp.focus({ workspace = target }) end), options)
 end
 
-local function bind_move_to_workspace(keys, workspace, follow)
-  hl.bind(keys, workspace_action(workspace, function(target) return hl.dsp.window.move({ workspace = target, follow = follow }) end))
+local function bind_move_to_workspace(keys, workspace, follow, options)
+  hl.bind(keys, workspace_action(workspace, function(target) return hl.dsp.window.move({ workspace = target, follow = follow }) end), options)
 end
 
-local function bind_resize_active(keys, x_delta, y_delta)
-  hl.bind(keys, hl.dsp.window.resize({ x = x_delta, y = y_delta, relative = true }), { repeating = true })
+local function bind_resize_active(keys, x_delta, y_delta, description)
+  hl.bind(keys, hl.dsp.window.resize({ x = x_delta, y = y_delta, relative = true }), desc(description, { repeating = true }))
 end
 
 -- ── Applications ──────────────────────────────────────────────
-bind_exec(mainMod .. " + T", "ionterm")
-bind_exec("CTRL + ALT + T", "tabby")
-bind_exec(mainMod .. " + W", "google-chrome-stable")
-bind_exec(mainMod .. " + E", "ioexplorer")
-bind_exec(mainMod .. " + B", "ionterm -e btop")
+bind_exec(mainMod .. " + T", "ionterm", desc("Terminal"))
+bind_exec("CTRL + ALT + T", "tabby", desc("Tabby terminal"))
+bind_exec(mainMod .. " + W", "google-chrome-stable", desc("Web browser"))
+bind_exec(mainMod .. " + E", "ioexplorer", desc("File manager"))
+bind_exec(mainMod .. " + B", "ionterm -e btop", desc("Task monitor (btop)"))
 -- On release, so Super held for another bind never opens the menu: Hyprland
 -- 0.57 matches a bare-modifier press bind the moment Super goes down, and a
 -- release bind is dropped when any other key was pressed in between. A scroll
@@ -220,154 +231,163 @@ local super_scrolled = false
 hl.bind(mainMod .. " + SUPER_L", function() super_scrolled = false end, { non_consuming = true })
 hl.bind(mainMod .. " + SUPER_L", function()
   if not super_scrolled then hl.dispatch(hl.dsp.exec_cmd("qs -c ionix ipc call start toggle || ioexplorer-spotlight")) end
-end, { release = true })
-bind_exec("ALT + Space", "ioexplorer-spotlight")
-bind_exec(mainMod .. " + R", "ioexplorer-spotlight")
+end, desc("Start menu", { release = true }))
+bind_exec("ALT + Space", "ioexplorer-spotlight", desc("Search and launch"))
+bind_exec(mainMod .. " + R", "ioexplorer-spotlight", desc("Search and launch"))
 -- bind_exec(mainMod .. " + V", "copyq toggle")
-bind_exec(mainMod .. " + V", "ioexplorer-quick -t clipboard")
-bind_exec(mainMod .. " + period", "ioexplorer-quick")
-bind_exec(mainMod .. " + L", "ionix-lock")
-bind_exec("CTRL + " .. mainMod .. " + R", "hyprctl reload")
+bind_exec(mainMod .. " + V", "ioexplorer-quick -t clipboard", desc("Clipboard history"))
+bind_exec(mainMod .. " + period", "ioexplorer-quick", desc("Emoji and symbols"))
+bind_exec(mainMod .. " + L", "ionix-lock", desc("Lock the screen"))
+bind_exec("CTRL + " .. mainMod .. " + R", "hyprctl reload", desc("Reload the Hyprland config"))
 
 -- ── Shell ─────────────────────────────────────────────────────
-bind_exec(mainMod .. " + SHIFT + B", "systemctl --user restart ionix-quickshell")
+section = "Desktop"
+bind_exec(mainMod .. " + SHIFT + B", "systemctl --user restart ionix-quickshell", desc("Restart the shell"))
 -- Escape hatch: bring up waybar if the Quickshell bar is misbehaving.
-bind_exec("CTRL + " .. mainMod .. " + SHIFT + B", "waybar")
+bind_exec("CTRL + " .. mainMod .. " + SHIFT + B", "waybar", desc("Waybar, if the shell misbehaves"))
 
 -- # ── Notifications ─────────────────────────────────────────────────
 -- The notification server is ionix-quickshell itself; swaync is still installed
 -- but must not run, because only one process can own org.freedesktop.Notifications.
-bind_exec(mainMod .. " + N", "qs -c ionix ipc call notifications toggle")
-bind_exec(mainMod .. " + SHIFT + N", "qs -c ionix ipc call notifications dnd")
+bind_exec(mainMod .. " + F1", "qs -c ionix ipc call shortcuts toggle", desc("This shortcut list"))
+bind_exec(mainMod .. " + N", "qs -c ionix ipc call notifications toggle", desc("Notification centre"))
+bind_exec(mainMod .. " + SHIFT + N", "qs -c ionix ipc call notifications dnd", desc("Do not disturb"))
 
 -- ── Wallpaper ─────────────────────────────────────────────────
-bind_exec("CTRL + " .. mainMod .. " + W", "bash /usr/share/ionix/bin/ionix-wallpaper")
-bind_exec(mainMod .. " + ALT + W", "bash /usr/share/ionix/bin/ionix-cycle-wallpaper")
+bind_exec("CTRL + " .. mainMod .. " + W", "bash /usr/share/ionix/bin/ionix-wallpaper", desc("Wallpaper picker"))
+bind_exec(mainMod .. " + ALT + W", "bash /usr/share/ionix/bin/ionix-cycle-wallpaper", desc("Shuffle wallpapers"))
 
 -- ── Window Management ─────────────────────────────────────────
-hl.bind(mainMod .. " + Q", hl.dsp.window.close())
-hl.bind(mainMod .. " + Space", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
-hl.bind(mainMod .. " + D", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
-hl.bind(mainMod .. " + ALT + F", hl.dsp.window.fullscreen_state({ internal = 0, client = 3, action = "toggle" }))
-hl.bind(mainMod .. " + P", hl.dsp.window.pin())
+section = "Windows"
+hl.bind(mainMod .. " + Q", hl.dsp.window.close(), desc("Close the window"))
+hl.bind(mainMod .. " + Space", hl.dsp.window.float({ action = "toggle" }), desc("Float or tile the window"))
+hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }), desc("Fullscreen"))
+hl.bind(mainMod .. " + D", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }), desc("Maximize"))
+hl.bind(mainMod .. " + ALT + F", hl.dsp.window.fullscreen_state({ internal = 0, client = 3, action = "toggle" }), desc("Fake fullscreen, inside its tile"))
+hl.bind(mainMod .. " + P", hl.dsp.window.pin(), desc("Pin to every workspace"))
 
 -- ── Window Groups ─────────────────────────────────────────────
-hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
-hl.bind(mainMod .. " + SHIFT + G", hl.dsp.group.lock_active({ action = "toggle" }))
-hl.bind(mainMod .. " + SHIFT + mouse_up", hl.dsp.group.next())
-hl.bind(mainMod .. " + SHIFT + mouse_down", hl.dsp.group.prev())
-hl.bind(mainMod .. " + CTRL + Tab", hl.dsp.group.next())
-hl.bind(mainMod .. " + SHIFT + CTRL + Tab", hl.dsp.group.prev())
+section = "Window groups"
+hl.bind(mainMod .. " + G", hl.dsp.group.toggle(), desc("Group or ungroup the window"))
+hl.bind(mainMod .. " + SHIFT + G", hl.dsp.group.lock_active({ action = "toggle" }), desc("Lock the group"))
+hl.bind(mainMod .. " + SHIFT + mouse_up", hl.dsp.group.next(), desc("Next window in the group"))
+hl.bind(mainMod .. " + SHIFT + mouse_down", hl.dsp.group.prev(), desc("Previous window in the group"))
+hl.bind(mainMod .. " + CTRL + Tab", hl.dsp.group.next(), desc("Next window in the group"))
+hl.bind(mainMod .. " + SHIFT + CTRL + Tab", hl.dsp.group.prev(), desc("Previous window in the group"))
 
 -- ── Focus ─────────────────────────────────────────────────────
-hl.bind(mainMod .. " + Left", hl.dsp.focus({ direction = "l" }))
-hl.bind(mainMod .. " + Right", hl.dsp.focus({ direction = "r" }))
-hl.bind(mainMod .. " + Up", hl.dsp.focus({ direction = "u" }))
-hl.bind(mainMod .. " + Down", hl.dsp.focus({ direction = "d" }))
-hl.bind(mainMod .. " + BracketLeft", hl.dsp.focus({ direction = "l" }))
-hl.bind(mainMod .. " + BracketRight", hl.dsp.focus({ direction = "r" }))
-hl.bind(mainMod .. " + SHIFT + U", hl.dsp.focus({ urgent_or_last = true }))
+section = "Windows"
+hl.bind(mainMod .. " + Left", hl.dsp.focus({ direction = "l" }), desc("Move focus"))
+hl.bind(mainMod .. " + Right", hl.dsp.focus({ direction = "r" }), desc("Move focus"))
+hl.bind(mainMod .. " + Up", hl.dsp.focus({ direction = "u" }), desc("Move focus"))
+hl.bind(mainMod .. " + Down", hl.dsp.focus({ direction = "d" }), desc("Move focus"))
+hl.bind(mainMod .. " + BracketLeft", hl.dsp.focus({ direction = "l" }), desc("Move focus"))
+hl.bind(mainMod .. " + BracketRight", hl.dsp.focus({ direction = "r" }), desc("Move focus"))
+hl.bind(mainMod .. " + SHIFT + U", hl.dsp.focus({ urgent_or_last = true }), desc("Urgent or last window"))
 
 -- ── Move Windows ──────────────────────────────────────────────
-hl.bind(mainMod .. " + SHIFT + Left", hl.dsp.window.move({ direction = "l" }))
-hl.bind(mainMod .. " + SHIFT + Right", hl.dsp.window.move({ direction = "r" }))
-hl.bind(mainMod .. " + SHIFT + Up", hl.dsp.window.move({ direction = "u" }))
-hl.bind(mainMod .. " + SHIFT + Down", hl.dsp.window.move({ direction = "d" }))
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+hl.bind(mainMod .. " + SHIFT + Left", hl.dsp.window.move({ direction = "l" }), desc("Move the window"))
+hl.bind(mainMod .. " + SHIFT + Right", hl.dsp.window.move({ direction = "r" }), desc("Move the window"))
+hl.bind(mainMod .. " + SHIFT + Up", hl.dsp.window.move({ direction = "u" }), desc("Move the window"))
+hl.bind(mainMod .. " + SHIFT + Down", hl.dsp.window.move({ direction = "d" }), desc("Move the window"))
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), desc("Drag the window", { mouse = true }))
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), desc("Resize the window", { mouse = true }))
 
 -- ── Resize Windows ────────────────────────────────────────────
-bind_resize_active(mainMod .. " + ALT + Left", -20, 0)
-bind_resize_active(mainMod .. " + ALT + Right", 20, 0)
-bind_resize_active(mainMod .. " + ALT + Up", 0, -20)
-bind_resize_active(mainMod .. " + ALT + Down", 0, 20)
-bind_resize_active(mainMod .. " + ALT + SHIFT + Left", -2, 0)
-bind_resize_active(mainMod .. " + ALT + SHIFT + Right", 2, 0)
-bind_resize_active(mainMod .. " + ALT + SHIFT + Up", 0, -2)
-bind_resize_active(mainMod .. " + ALT + SHIFT + Down", 0, 2)
+bind_resize_active(mainMod .. " + ALT + Left", -20, 0, "Resize the window")
+bind_resize_active(mainMod .. " + ALT + Right", 20, 0, "Resize the window")
+bind_resize_active(mainMod .. " + ALT + Up", 0, -20, "Resize the window")
+bind_resize_active(mainMod .. " + ALT + Down", 0, 20, "Resize the window")
+bind_resize_active(mainMod .. " + ALT + SHIFT + Left", -2, 0, "Resize in fine steps")
+bind_resize_active(mainMod .. " + ALT + SHIFT + Right", 2, 0, "Resize in fine steps")
+bind_resize_active(mainMod .. " + ALT + SHIFT + Up", 0, -2, "Resize in fine steps")
+bind_resize_active(mainMod .. " + ALT + SHIFT + Down", 0, 2, "Resize in fine steps")
 
 -- ── Workspace Layouts ─────────────────────────────────────────
-bind_exec(mainMod .. " + code:90", "ionix-arrange-workspace 0")
-bind_exec(mainMod .. " + code:87", "ionix-arrange-workspace 1")
-bind_exec(mainMod .. " + code:88", "ionix-arrange-workspace 2")
-bind_exec(mainMod .. " + code:89", "ionix-arrange-workspace 3")
-bind_exec(mainMod .. " + code:83", "ionix-arrange-workspace 4")
-bind_exec(mainMod .. " + code:84", "ionix-arrange-workspace 5")
-bind_exec(mainMod .. " + code:85", "ionix-arrange-workspace 6")
-bind_exec(mainMod .. " + code:79", "ionix-arrange-workspace 7")
-bind_exec(mainMod .. " + code:80", "ionix-arrange-workspace 8")
-bind_exec(mainMod .. " + code:81", "ionix-arrange-workspace 9")
+section = "Layouts"
+bind_exec(mainMod .. " + code:90", "ionix-arrange-workspace 0", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:87", "ionix-arrange-workspace 1", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:88", "ionix-arrange-workspace 2", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:89", "ionix-arrange-workspace 3", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:83", "ionix-arrange-workspace 4", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:84", "ionix-arrange-workspace 5", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:85", "ionix-arrange-workspace 6", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:79", "ionix-arrange-workspace 7", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:80", "ionix-arrange-workspace 8", desc("Arrange the workspace"))
+bind_exec(mainMod .. " + code:81", "ionix-arrange-workspace 9", desc("Arrange the workspace"))
 
 -- ── Workspaces ────────────────────────────────────────────────
-bind_workspace(mainMod .. " + 1", 1)
-bind_workspace(mainMod .. " + 2", 2)
-bind_workspace(mainMod .. " + 3", 3)
-bind_workspace(mainMod .. " + 4", 4)
-bind_workspace(mainMod .. " + 5", 5)
-bind_workspace(mainMod .. " + 6", 6)
-bind_workspace(mainMod .. " + 7", 7)
-bind_workspace(mainMod .. " + 8", 8)
-bind_workspace(mainMod .. " + 9", 9)
-bind_workspace(mainMod .. " + 0", 10)
+section = "Workspaces"
+bind_workspace(mainMod .. " + 1", 1, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 2", 2, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 3", 3, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 4", 4, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 5", 5, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 6", 6, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 7", 7, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 8", 8, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 9", 9, desc("Go to workspace 1 to 10"))
+bind_workspace(mainMod .. " + 0", 10, desc("Go to workspace 1 to 10"))
 
-bind_workspace("CTRL + " .. mainMod .. " + Right", "r+1")
-bind_workspace("CTRL + " .. mainMod .. " + Left", "r-1")
-bind_workspace("CTRL + " .. mainMod .. " + ALT + Right", "m+1")
-bind_workspace("CTRL + " .. mainMod .. " + ALT + Left", "m-1")
-bind_workspace(mainMod .. " + Page_Down", "r-1")
-bind_workspace(mainMod .. " + Page_Up", "r+1")
-bind_workspace("CTRL + " .. mainMod .. " + Page_Down", "r-5")
-bind_workspace("CTRL + " .. mainMod .. " + Page_Up", "r+5")
+bind_workspace("CTRL + " .. mainMod .. " + Right", "r+1", desc("Next workspace"))
+bind_workspace("CTRL + " .. mainMod .. " + Left", "r-1", desc("Previous workspace"))
+bind_workspace("CTRL + " .. mainMod .. " + ALT + Right", "m+1", desc("Next workspace in use"))
+bind_workspace("CTRL + " .. mainMod .. " + ALT + Left", "m-1", desc("Previous workspace in use"))
+bind_workspace(mainMod .. " + Page_Down", "r-1", desc("Previous workspace"))
+bind_workspace(mainMod .. " + Page_Up", "r+1", desc("Next workspace"))
+bind_workspace("CTRL + " .. mainMod .. " + Page_Down", "r-5", desc("Back five workspaces"))
+bind_workspace("CTRL + " .. mainMod .. " + Page_Up", "r+5", desc("Forward five workspaces"))
 hl.bind(mainMod .. " + mouse_up", function()
   super_scrolled = true
   workspace_action("r-1", function(target) return hl.dsp.focus({ workspace = target }) end)()
-end)
+end, desc("Previous workspace"))
 hl.bind(mainMod .. " + mouse_down", function()
   super_scrolled = true
   hl.dispatch(hl.dsp.focus({ workspace = "r+1" }))
-end)
+end, desc("Next workspace"))
 
 -- ── Move to Workspace ─────────────────────────────────────────
-bind_move_to_workspace(mainMod .. " + ALT + 1", 1, false)
-bind_move_to_workspace(mainMod .. " + ALT + 2", 2, false)
-bind_move_to_workspace(mainMod .. " + ALT + 3", 3, false)
-bind_move_to_workspace(mainMod .. " + ALT + 4", 4, false)
-bind_move_to_workspace(mainMod .. " + ALT + 5", 5, false)
-bind_move_to_workspace(mainMod .. " + ALT + 6", 6, false)
-bind_move_to_workspace(mainMod .. " + ALT + 7", 7, false)
-bind_move_to_workspace(mainMod .. " + ALT + 8", 8, false)
-bind_move_to_workspace(mainMod .. " + ALT + 9", 9, false)
-bind_move_to_workspace(mainMod .. " + ALT + 0", 10, false)
+bind_move_to_workspace(mainMod .. " + ALT + 1", 1, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 2", 2, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 3", 3, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 4", 4, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 5", 5, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 6", 6, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 7", 7, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 8", 8, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 9", 9, false, desc("Send the window to workspace 1 to 10"))
+bind_move_to_workspace(mainMod .. " + ALT + 0", 10, false, desc("Send the window to workspace 1 to 10"))
 
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 1", 1, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 2", 2, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 3", 3, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 4", 4, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 5", 5, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 6", 6, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 7", 7, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 8", 8, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 9", 9, true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 0", 10, true)
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 1", 1, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 2", 2, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 3", 3, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 4", 4, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 5", 5, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 6", 6, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 7", 7, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 8", 8, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 9", 9, true, desc("Take the window to workspace 1 to 10"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + 0", 10, true, desc("Take the window to workspace 1 to 10"))
 
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + Right", "r+1", true)
-bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + Left", "r-1", true)
-bind_move_to_workspace(mainMod .. " + SHIFT + Page_Down", "r-1", true)
-bind_move_to_workspace(mainMod .. " + SHIFT + Page_Up", "r+1", true)
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + Right", "r+1", true, desc("Take the window to the next workspace"))
+bind_move_to_workspace("CTRL + " .. mainMod .. " + SHIFT + Left", "r-1", true, desc("Take the window to the previous workspace"))
+bind_move_to_workspace(mainMod .. " + SHIFT + Page_Down", "r-1", true, desc("Take the window to the previous workspace"))
+bind_move_to_workspace(mainMod .. " + SHIFT + Page_Up", "r+1", true, desc("Take the window to the next workspace"))
 
 -- ── Special Workspace ─────────────────────────────────────────
-hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special(""))
-bind_move_to_workspace(mainMod .. " + SHIFT + S", "special", true)
+hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special(""), desc("Special workspace"))
+bind_move_to_workspace(mainMod .. " + SHIFT + S", "special", false, desc("Send the window to the special workspace"))
 
 -- ── Overview ──────────────────────────────────────────────────
-bind_exec(mainMod .. " + Tab", "qs -c ionix ipc call taskview toggle")
+bind_exec(mainMod .. " + Tab", "qs -c ionix ipc call taskview toggle", desc("Task View"))
 
 -- ── Navigation ────────────────────────────────────────────────
-hl.bind("ALT + Left", hl.dsp.send_shortcut({ mods = "", key = "XF86Back", window = "activewindow" }))
-hl.bind("ALT + Right", hl.dsp.send_shortcut({ mods = "", key = "XF86Forward", window = "activewindow" }))
+section = "Windows"
+hl.bind("ALT + Left", hl.dsp.send_shortcut({ mods = "", key = "XF86Back", window = "activewindow" }), desc("Back, in the focused window"))
+hl.bind("ALT + Right", hl.dsp.send_shortcut({ mods = "", key = "XF86Forward", window = "activewindow" }), desc("Forward, in the focused window"))
 
 -- ── Zoom ──────────────────────────────────────────────────────
+section = "Zoom"
 -- CTRL + SUPER + scroll zooms the screen around the cursor. Multiplicative so
 -- each tick feels the same at any zoom level, and clamped at 1 so scrolling out
 -- past "no zoom" cannot leave the screen shrunk inside the monitor.
@@ -390,31 +410,33 @@ local function zoom_by(factor)
   hl.config({ cursor = { zoom_factor = target } })
 end
 
-hl.bind("CTRL + " .. mainMod .. " + mouse_up", function() zoom_by(ionix_zoom.step) end)
-hl.bind("CTRL + " .. mainMod .. " + mouse_down", function() zoom_by(1 / ionix_zoom.step) end)
-hl.bind("CTRL + " .. mainMod .. " + ALT + 0", function() hl.config({ cursor = { zoom_factor = 1.0 } }) end)
+hl.bind("CTRL + " .. mainMod .. " + mouse_up", function() zoom_by(ionix_zoom.step) end, desc("Zoom in"))
+hl.bind("CTRL + " .. mainMod .. " + mouse_down", function() zoom_by(1 / ionix_zoom.step) end, desc("Zoom out"))
+hl.bind("CTRL + " .. mainMod .. " + ALT + 0", function() hl.config({ cursor = { zoom_factor = 1.0 } }) end, desc("Reset the zoom"))
 
 -- ── Media Keys ────────────────────────────────────────────────
+section = "Media"
 -- Volume and brightness go through the shell's IPC so the on-screen display gets
 -- the exact new value instead of polling for it. Each falls back to the original
 -- command with `||`, so the keys still work when the shell isn't running.
-bind_exec("XF86AudioRaiseVolume", "qs -c ionix ipc call audio increase || wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+", { locked = true, repeating = true })
-bind_exec("XF86AudioLowerVolume", "qs -c ionix ipc call audio decrease || wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-", { locked = true, repeating = true })
-bind_exec("XF86AudioMute", "qs -c ionix ipc call audio mute || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
-bind_exec("XF86AudioMicMute", "qs -c ionix ipc call audio micMute || wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle")
-bind_exec("XF86AudioPlay", "playerctl play-pause")
-bind_exec("XF86AudioNext", "playerctl next")
-bind_exec("XF86AudioPrev", "playerctl previous")
-bind_exec("XF86AudioStop", "playerctl stop")
-bind_exec("XF86MonBrightnessUp", "qs -c ionix ipc call brightness increase || brightnessctl set '12.75+'", { locked = true, repeating = true })
-bind_exec("XF86MonBrightnessDown", "qs -c ionix ipc call brightness decrease || brightnessctl set '12.75-'", { locked = true, repeating = true })
+bind_exec("XF86AudioRaiseVolume", "qs -c ionix ipc call audio increase || wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+", desc("Volume up", { locked = true, repeating = true }))
+bind_exec("XF86AudioLowerVolume", "qs -c ionix ipc call audio decrease || wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-", desc("Volume down", { locked = true, repeating = true }))
+bind_exec("XF86AudioMute", "qs -c ionix ipc call audio mute || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle", desc("Mute"))
+bind_exec("XF86AudioMicMute", "qs -c ionix ipc call audio micMute || wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle", desc("Mute the microphone"))
+bind_exec("XF86AudioPlay", "playerctl play-pause", desc("Play or pause"))
+bind_exec("XF86AudioNext", "playerctl next", desc("Next track"))
+bind_exec("XF86AudioPrev", "playerctl previous", desc("Previous track"))
+bind_exec("XF86AudioStop", "playerctl stop", desc("Stop playback"))
+bind_exec("XF86MonBrightnessUp", "qs -c ionix ipc call brightness increase || brightnessctl set '12.75+'", desc("Brightness up", { locked = true, repeating = true }))
+bind_exec("XF86MonBrightnessDown", "qs -c ionix ipc call brightness decrease || brightnessctl set '12.75-'", desc("Brightness down", { locked = true, repeating = true }))
 
 -- ── Screenshot ────────────────────────────────────────────────
-bind_exec("Print", "ioexplorer-shot region && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
-bind_exec("CTRL + Print", "ioexplorer-shot window && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
-bind_exec(mainMod .. " + Print", "ioexplorer-shot screen && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
-bind_exec("CTRL + " .. mainMod .. " + Print", "ioexplorer-shot all && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768")
-bind_exec("CTRL + SHIFT + " .. mainMod .. " + Print", "ioexplorer-shot stop &>2 || ioexplorer-shot record --mic &>2 &")
+section = "Screenshots"
+bind_exec("Print", "ioexplorer-shot region && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768", desc("Screenshot a region"))
+bind_exec("CTRL + Print", "ioexplorer-shot window && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768", desc("Screenshot a window"))
+bind_exec(mainMod .. " + Print", "ioexplorer-shot screen && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768", desc("Screenshot this monitor"))
+bind_exec("CTRL + " .. mainMod .. " + Print", "ioexplorer-shot all && paplay /usr/share/sounds/freedesktop/stereo/bell.oga --volume 32768", desc("Screenshot all monitors"))
+bind_exec("CTRL + SHIFT + " .. mainMod .. " + Print", "ioexplorer-shot stop &>2 || ioexplorer-shot record --mic &>2 &", desc("Start or stop recording"))
 
 
 -- ══════════════════════════════════════════════════════════════
@@ -648,8 +670,9 @@ hl.on("config.reloaded", ionix_bars_apply)
 -- The fallbacks keep the keystroke alive when the shell is down, and must use
 -- the Lua dispatcher form: under this config the dispatch IPC evaluates its
 -- argument as `return hl.dispatch(<arg>)`, so legacy strings fail to parse.
-bind_exec("ALT + Tab", "qs -c ionix ipc call switcher next || hyprctl dispatch 'hl.dsp.focus({ urgent_or_last = true })'", { repeating = true })
-bind_exec("SHIFT + ALT + Tab", "qs -c ionix ipc call switcher prev || hyprctl dispatch 'hl.dsp.window.cycle_next({})'", { repeating = true })
+section = "Windows"
+bind_exec("ALT + Tab", "qs -c ionix ipc call switcher next || hyprctl dispatch 'hl.dsp.focus({ urgent_or_last = true })'", desc("Switch windows", { repeating = true }))
+bind_exec("SHIFT + ALT + Tab", "qs -c ionix ipc call switcher prev || hyprctl dispatch 'hl.dsp.window.cycle_next({})'", desc("Switch windows, backwards", { repeating = true }))
 
 -- Commit on the physical Alt release even when the release beats the overlay's
 -- keyboard-focus handshake (the quick-tap race). The shell no-ops instantly
@@ -718,7 +741,7 @@ local function cycle_layout()
     target.title, target.body))
 end
 
-hl.bind(mainMod .. " + J", cycle_layout)
+hl.bind(mainMod .. " + J", cycle_layout, desc("Cycle the layout"))
 
 -- ══════════════════════════════════════════════════════════════
 -- ║  Grid arrange                                              ║
@@ -888,7 +911,7 @@ local function arrange_grid()
   end
 end
 
-hl.bind(mainMod .. " + SHIFT + J", arrange_grid)
+hl.bind(mainMod .. " + SHIFT + J", arrange_grid, desc("Arrange windows in a grid"))
 
 
 -- ══════════════════════════════════════════════════════════════
@@ -972,8 +995,9 @@ function ionix_project_apply(spec)
 end
 
 -- The shell's Projects view (start menu), and straight to its save field.
-bind_exec("CTRL + " .. mainMod .. " + P", "qs -c ionix ipc call projects open")
-bind_exec("CTRL + " .. mainMod .. " + SHIFT + P", "qs -c ionix ipc call projects saveDialog")
+section = "Projects"
+bind_exec("CTRL + " .. mainMod .. " + P", "qs -c ionix ipc call projects open", desc("Open a project"))
+bind_exec("CTRL + " .. mainMod .. " + SHIFT + P", "qs -c ionix ipc call projects saveDialog", desc("Save this workspace as a project"))
 
 
 -- ══════════════════════════════════════════════════════════════

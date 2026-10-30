@@ -381,6 +381,20 @@ is not user-consentable in most tenants — an admin grants it once). Tokens go 
 (hence `libnotify` in `packages.x86_64`): the shell is the notification server, so the toast lands
 in its own centre and the blocked `notify-send` printing `join` is the cue to open the link.
 
+**The shortcut list reads Hyprland, not a file of its own.** `Super+F1`, the start menu's keyboard
+button, `LogoMenu` or `qs -c ionix ipc call shortcuts toggle` open `osd/ShortcutsOverlay.qml`, and
+`services/Shortcuts.qml` runs `hyprctl binds -j` every time, so a changed key or a user's own bind is
+simply there. A bind's text is its `description` option, written `"Section: what it does"`, which
+`desc()` in `hyprland.lua` builds; the same text on several binds makes one row. Rules:
+
+- A bind with no description is listed under *Other* as `No description (dispatcher)`, because the JSON
+  does not say what a Lua bind runs (`arg` is a number). Only an undescribed bind on a bare modifier
+  key is hidden: those are the helpers of Super's tap and Alt-Tab's release.
+- Only binds outside a submap are listed.
+- Hyprland 0.56 reports `keycode: 0` for `code:N` binds in JSON, so the ISO built before 0.57 labels
+  the numpad row `Key 0`; 0.57 reports the real code and it reads `Num 0 ... Num 9`.
+- Over SSH, `qs -c ionix ipc` says no instance is running until `WAYLAND_DISPLAY` is set: it filters by display.
+
 **Event sounds are a daemon that only exists once there is a sound.** `/usr/bin/ionix-sounds` plays
 `~/.config/hypr/sounds/NAME.<ext>` on event NAME; nothing ships in that directory. `ionix-sounds.path`
 (`PathExistsGlob`, enabled for everyone by a `graphical-session.target.wants` link in `/usr/lib`, so no
@@ -791,6 +805,11 @@ appears without matugen.
 
 ## Working with This Repo
 
+- **When adding or changing a keybind, keep the shortcut list right.** Every bind in `hyprland.lua`
+  must carry a description (`desc("What it does")`, under the right `section = "..."`), because that is
+  the only place its entry in the shortcut menu lives (see "The shortcut list" above). Give binds that
+  are one idea the same text, and update the tables under "Keyboard shortcuts" in `README.md`
+  and the `hint` in `modules/LogoMenu.qml` if the menu's own key changes.
 - When adding new packages: edit `profiles/common/packages.x86_64` (both ISOs) or a variant's. AUR packages must also be added to `aur/build-aur.sh` with correct dependency ordering, and an AUR package another one depends on must be listed too: `build-aur.sh` builds only what the staged list names.
 - When changing the desktop shell: edit `submodules/ionix-quickshell/ionix/**`. Iterate without
   rebuilding the ISO — `make -C submodules/ionix-quickshell dev` symlinks the tree into
