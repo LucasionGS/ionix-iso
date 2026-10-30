@@ -9,9 +9,13 @@ BUILDDIR ?= build
 
 .PHONY: build install-base install-desktop install-server clean
 
-build: $(BUILDDIR)/wallpaper.png $(BUILDDIR)/grub-logo.png
+build: $(BUILDDIR)/wallpaper.png $(BUILDDIR)/grub-logo.png $(BUILDDIR)/winix-wallpaper.png
 
 $(BUILDDIR)/wallpaper.png: assets/wallpaper.svg
+	@mkdir -p $(BUILDDIR)
+	rsvg-convert -w 3840 -h 2160 $< -o $@
+
+$(BUILDDIR)/winix-wallpaper.png: assets/winix/wallpaper.svg
 	@mkdir -p $(BUILDDIR)
 	rsvg-convert -w 3840 -h 2160 $< -o $@
 
@@ -27,6 +31,9 @@ install-base: build
 install-desktop: build
 	./install-tree.sh desktop "$(DESTDIR)"
 	install -Dm644 $(BUILDDIR)/wallpaper.png "$(DESTDIR)/usr/share/ionix/wallpaper.png"
+	# In ionix-desktop rather than with the theme, so the server, which has no use for
+	# a picture, does not carry one and its styler skips the section.
+	install -Dm644 $(BUILDDIR)/winix-wallpaper.png "$(DESTDIR)/usr/share/ionix/styler/themes/winix-experimental/wallpaper/winix-bloom.png"
 
 install-server:
 	./install-tree.sh server "$(DESTDIR)"

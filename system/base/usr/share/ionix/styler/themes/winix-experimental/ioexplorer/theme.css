@@ -1,0 +1,301 @@
+/* ============================================================
+   IoExplorer — winix-experimental — Windows 11 Explorer, dark
+   Values are WinUI's dark brushes:
+     #202020 SolidBackgroundFillColorBase   tab row and desktop surfaces
+     #2c2c2c SolidBackgroundFillColorQuarternary  command bar, flyouts
+     #191919 the pane Explorer's content and navigation sit on
+   ============================================================ */
+
+window,
+tooltip {
+  --io-window-bg: rgb(32, 32, 32);
+  --io-panel-bg: rgb(25, 25, 25);
+  --io-muted-bg: rgba(255, 255, 255, 0.04);
+  --io-accent: rgb(96, 205, 255);
+  --io-selection: rgba(255, 255, 255, 0.10);
+  --io-text: rgb(255, 255, 255);
+  --io-border: rgba(255, 255, 255, 0.08);
+  --io-radius: 4px;
+
+  --io-view-bg: rgb(25, 25, 25);
+  --io-popover-bg: rgb(44, 44, 44);
+  --io-card-bg: rgba(255, 255, 255, 0.05);
+  --io-control-bg: rgba(255, 255, 255, 0.06);
+  --io-hover-bg: rgba(255, 255, 255, 0.06);
+  --io-active-bg: rgba(255, 255, 255, 0.09);
+  --io-separator: rgba(255, 255, 255, 0.08);
+
+  --io-accent-fg: rgb(0, 0, 0);
+  --io-accent-soft: rgba(255, 255, 255, 0.09);
+  --io-accent-text: rgb(96, 205, 255);
+  --io-selection-hover: rgba(255, 255, 255, 0.14);
+
+  --io-text-dim: rgba(255, 255, 255, 0.77);
+  --io-text-faint: rgba(255, 255, 255, 0.53);
+
+  --io-radius-sm: 4px;
+  --io-radius-lg: 8px;
+
+  /* The manila folder, which is the one colour Explorer is known for. */
+  --io-ft-folder: rgb(248, 200, 76);
+
+  font-family: "Winix UI", "Segoe UI Variable", "Segoe UI", sans-serif;
+}
+
+/* ── Command bar ─────────────────────────────────────────── */
+
+.topbar {
+  padding: 6px 8px;
+  background: rgb(44, 44, 44);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Windows leaves toggled toolbar buttons neutral; accent is for the current
+   location and focus, never for "this switch is on". */
+.toolbar-group.view-switcher {
+  background: transparent;
+  padding: 0;
+}
+
+.toolbar-group.view-switcher > button:checked,
+.toolbar-group > button:checked {
+  background: rgba(255, 255, 255, 0.09);
+  color: rgb(255, 255, 255);
+  box-shadow: none;
+}
+
+.toolbar-group > button,
+.toolbar-group > menubutton > button {
+  color: rgb(255, 255, 255);
+}
+
+.address-bar {
+  min-height: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgba(255, 255, 255, 0.45);
+}
+
+/* Focus is the accent underline every Fluent text box has, not a ring. */
+.address-bar:focus-within {
+  border-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgb(96, 205, 255);
+  box-shadow: inset 0 -1px rgb(96, 205, 255);
+}
+
+button.breadcrumb-button,
+button.breadcrumb-button.breadcrumb-current {
+  color: rgb(255, 255, 255);
+  font-weight: 400;
+}
+
+/* ── Panes ───────────────────────────────────────────────── */
+
+/* One flat surface edge to edge. The stock card floats; Explorer's panes meet. */
+.main-card {
+  margin: 0;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  background: rgb(25, 25, 25);
+  box-shadow: none;
+}
+
+.sidebar {
+  background: rgb(25, 25, 25);
+}
+
+button.sidebar-nav-button,
+.sidebar-list row {
+  border-radius: 4px;
+  color: rgb(255, 255, 255);
+}
+
+button.sidebar-nav-button:checked,
+.sidebar-list row:selected {
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: inset 3px 0 rgb(96, 205, 255);
+}
+
+button.sidebar-nav-button:checked .sidebar-row-icon,
+.sidebar-list row:selected .sidebar-row-icon {
+  color: rgb(255, 255, 255);
+}
+
+.details-panel {
+  background: rgb(25, 25, 25);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+
+.tab-strip {
+  min-height: 40px;
+  padding: 6px 8px 0;
+  background: rgb(32, 32, 32);
+  border-bottom: none;
+}
+
+/* A browser-style tab joined to what is under it, instead of a pill with a rule. */
+.file-tab {
+  border-radius: 8px 8px 0 0;
+}
+
+.file-tab.file-tab-active {
+  background: rgb(25, 25, 25);
+  box-shadow: none;
+}
+
+.file-tab-active .file-tab-icon {
+  color: rgb(248, 200, 76);
+}
+
+button.file-tab-close {
+  border-radius: 4px;
+}
+
+/* ── Files ───────────────────────────────────────────────── */
+
+/* Icons sit on the surface directly; the stock view frames each in a card. */
+.file-glyph-tile {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.content-list row.entry-selected,
+.content-grid flowboxchild.entry-selected {
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.content-list row.entry-selected:hover,
+.content-grid flowboxchild.entry-selected:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.rubberband-selection {
+  background: rgba(96, 205, 255, 0.20);
+  border: 1px solid rgba(96, 205, 255, 0.70);
+}
+
+.status-bar {
+  background: rgb(25, 25, 25);
+}
+
+/* ── Menus ───────────────────────────────────────────────── */
+
+.context-menu {
+  background: rgb(44, 44, 44);
+  border: 1px solid rgba(117, 117, 117, 0.4);
+  border-radius: 8px;
+}
+
+.context-menu-item {
+  border-radius: 4px;
+}
+
+.context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Search ──────────────────────────────────────────────────
+   The Windows search flyout: acrylic, 8px corners, a pill field on top and
+   square-cornered list rows, selection neutral with an accent bar. */
+
+.spotlight-backdrop {
+  background: transparent;
+}
+
+.spotlight-surface,
+.spotlight-preview {
+  background: rgba(44, 44, 44, 0.96);
+  border: 1px solid rgba(117, 117, 117, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.spotlight-header {
+  margin: 12px 12px 4px;
+  padding: 0 12px;
+  min-height: 36px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spotlight-entry {
+  font-size: 14px;
+  color: rgb(255, 255, 255);
+}
+
+.spotlight-row {
+  border-radius: 4px;
+  color: rgb(255, 255, 255);
+}
+
+.spotlight-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.spotlight-row:selected {
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: inset 3px 0 rgb(96, 205, 255);
+}
+
+.spotlight-section-label {
+  color: rgb(255, 255, 255);
+  font-weight: 600;
+}
+
+.spotlight-row-subtitle,
+.spotlight-hint {
+  color: rgba(255, 255, 255, 0.77);
+}
+
+.spotlight-prefix-badge {
+  background: rgb(96, 205, 255);
+  color: rgb(0, 0, 0);
+  border-radius: 4px;
+}
+
+.spotlight-footer {
+  background: transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Start menu (the ioexplorer-start build of it) ─────────── */
+
+.start-menu-surface {
+  background: rgba(44, 44, 44, 0.96);
+  border: 1px solid rgba(117, 117, 117, 0.4);
+  border-radius: 8px;
+}
+
+.start-menu-backdrop {
+  background: transparent;
+}
+
+.start-menu-search {
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.start-menu-launcher,
+.start-menu-result {
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+}
+
+.start-menu-launcher:hover,
+.start-menu-result:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Desktop ─────────────────────────────────────────────── */
+
+.desktop-tile.entry-selected {
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}

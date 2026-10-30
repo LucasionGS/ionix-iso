@@ -328,7 +328,7 @@ hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special(""))
 bind_move_to_workspace(mainMod .. " + SHIFT + S", "special", true)
 
 -- ── Overview ──────────────────────────────────────────────────
--- hl.bind(mainMod .. " + Tab", ...)
+bind_exec(mainMod .. " + Tab", "qs -c ionix ipc call taskview toggle")
 
 -- ── Navigation ────────────────────────────────────────────────
 hl.bind("ALT + Left", hl.dsp.send_shortcut({ mods = "", key = "XF86Back", window = "activewindow" }))
@@ -452,6 +452,7 @@ hl.layer_rule({ match = { namespace = "ionix-osd" }, animation = "fade" })
 -- which sits below ignore_alpha so the compositor blurs the panel, not the
 -- whole screen.
 hl.layer_rule({ match = { namespace = "ionix-switcher" }, animation = "fade" })
+hl.layer_rule({ match = { namespace = "ionix-taskview" }, animation = "fade" })
 
 
 -- ══════════════════════════════════════════════════════════════
@@ -474,6 +475,10 @@ ionix_bars = {
   text_font   = "JetBrainsMono Nerd Font",
   text_size   = 11,
   text_weight = 500,
+  text_align  = "center",
+
+  -- Button glyphs; a theme may swap them, as it does the colours.
+  icons = { close = "", maximize = "", minimize = "" },
 
   colors = {
     -- Heavy glass (~90%) over the window background, per the Ionix surface
@@ -549,7 +554,7 @@ function ionix_bars_apply()
         bar_text_font     = b.text_font,
         bar_text_size     = b.text_size,
         bar_text_weight   = b.text_weight,
-        bar_text_align    = "center",
+        bar_text_align    = b.text_align,
         ["col.text"]      = c.text,
 
         bar_buttons_alignment = "right",
@@ -570,14 +575,14 @@ function ionix_bars_apply()
     size     = b.button_size,
     bg_color = c.close,
     fg_color = c.icon,
-    icon     = "",
+    icon     = b.icons.close,
     action   = [[hyprctl dispatch "hl.dsp.window.close()"]],
   })
   hl.plugin.hyprbars.add_button({
     size     = b.button_size,
     bg_color = c.maximize,
     fg_color = c.icon,
-    icon     = "",
+    icon     = b.icons.maximize,
     -- "maximized", not "fullscreen": real fullscreen hides the bar, which
     -- would leave no button to click to undo it.
     action   = [[hyprctl dispatch "hl.dsp.window.fullscreen({ mode = 'maximized', action = 'toggle' })"]],
@@ -586,7 +591,7 @@ function ionix_bars_apply()
     size     = b.button_size,
     bg_color = c.minimize,
     fg_color = c.icon,
-    icon     = "",
+    icon     = b.icons.minimize,
     -- Closest thing to minimise: park it on the special workspace, which
     -- SUPER+S toggles back into view. Pressing it again from there restores
     -- the window to the workspace underneath.

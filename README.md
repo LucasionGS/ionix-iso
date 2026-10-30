@@ -64,7 +64,7 @@ reasonable thing to want - and Ionix is the opposite of it. Install plain Arch i
 ### The bar
 
 The bar floats, blurs what is behind it, and rounds its corners. Left to right it carries the
-launcher button, workspaces, a window taskbar, now-playing media, the system tray, and
+launcher button, Task View, workspaces, a window taskbar, now-playing media, the system tray, and
 indicators for audio, network, bluetooth, Philips Hue and battery, then the clock and the
 notification bell. There is one bar per monitor.
 

@@ -1,0 +1,164 @@
+/* winix-experimental: libadwaita on Fluent dark. Linked to ~/.config/gtk-4.0/gtk.css
+   by the theme's install file. libadwaita takes its palette from these names. */
+@define-color accent_color #60cdff;
+@define-color accent_bg_color #0078d4;
+@define-color accent_fg_color #ffffff;
+@define-color destructive_color #ff99a4;
+@define-color destructive_bg_color #c42b1c;
+@define-color destructive_fg_color #ffffff;
+@define-color success_color #6ccb5f;
+@define-color warning_color #fce100;
+@define-color error_color #ff99a4;
+@define-color window_bg_color #202020;
+@define-color window_fg_color #ffffff;
+@define-color view_bg_color #1c1c1c;
+@define-color view_fg_color #ffffff;
+@define-color headerbar_bg_color #202020;
+@define-color headerbar_fg_color #ffffff;
+@define-color headerbar_border_color #3a3a3a;
+@define-color headerbar_backdrop_color #202020;
+@define-color headerbar_shade_color rgba(0, 0, 0, 0.36);
+@define-color sidebar_bg_color #1c1c1c;
+@define-color sidebar_fg_color #ffffff;
+@define-color sidebar_backdrop_color #202020;
+@define-color sidebar_shade_color rgba(0, 0, 0, 0.36);
+@define-color card_bg_color rgba(255, 255, 255, 0.05);
+@define-color card_fg_color #ffffff;
+@define-color card_shade_color rgba(0, 0, 0, 0.36);
+@define-color dialog_bg_color #2c2c2c;
+@define-color dialog_fg_color #ffffff;
+@define-color popover_bg_color #2c2c2c;
+@define-color popover_fg_color #ffffff;
+@define-color popover_shade_color rgba(0, 0, 0, 0.36);
+@define-color shade_color rgba(0, 0, 0, 0.36);
+@define-color scrollbar_outline_color rgba(0, 0, 0, 0.5);
+
+:root {
+  /* Current libadwaita reads these; the @define-colors above are for older apps. */
+  --accent-color: #60cdff;
+  --accent-bg-color: #0078d4;
+  --accent-fg-color: #ffffff;
+  --destructive-color: #ff99a4;
+  --destructive-bg-color: #c42b1c;
+  --destructive-fg-color: #ffffff;
+  --success-color: #6ccb5f;
+  --warning-color: #fce100;
+  --error-color: #ff99a4;
+  --window-bg-color: #202020;
+  --window-fg-color: #ffffff;
+  --view-bg-color: #1c1c1c;
+  --view-fg-color: #ffffff;
+  --headerbar-bg-color: #202020;
+  --headerbar-fg-color: #ffffff;
+  --headerbar-backdrop-color: #202020;
+  --headerbar-border-color: #3a3a3a;
+  --headerbar-shade-color: rgba(0, 0, 0, 0.36);
+  --sidebar-bg-color: #1c1c1c;
+  --sidebar-fg-color: #ffffff;
+  --sidebar-backdrop-color: #202020;
+  --card-bg-color: rgba(255, 255, 255, 0.05);
+  --card-fg-color: #ffffff;
+  --dialog-bg-color: #2c2c2c;
+  --dialog-fg-color: #ffffff;
+  --popover-bg-color: #2c2c2c;
+  --popover-fg-color: #ffffff;
+  --window-radius: 8px;
+  --button-radius: 4px;
+  --popover-radius: 8px;
+}
+
+* {
+  font-family: "Winix UI", "Segoe UI Variable", "Segoe UI", sans-serif;
+}
+
+button,
+entry {
+  border-radius: 4px;
+}
+
+popover > contents,
+window.csd {
+  border-radius: 8px;
+}
+
+/* GTK_THEME=Adwaita:dark is set for the session, and that plain theme compiles its
+   palette into literal values, so naming colours alone does not reach its widgets. */
+window,
+window.background,
+.background {
+  background-color: #202020;
+  color: #ffffff;
+}
+
+headerbar,
+.titlebar {
+  background: #202020;
+  color: #ffffff;
+  box-shadow: inset 0 -1px rgba(255, 255, 255, 0.08);
+}
+
+.view,
+textview text,
+treeview.view,
+list,
+listview {
+  background-color: #1c1c1c;
+  color: #ffffff;
+}
+
+button {
+  background: rgba(255, 255, 255, 0.06);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: none;
+  color: #ffffff;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+button:active,
+button:checked {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+button.suggested-action {
+  background: #60cdff;
+  color: #000000;
+  border-color: transparent;
+}
+
+button.destructive-action {
+  background: #c42b1c;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+entry {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+}
+
+entry:focus-within,
+entry:focus {
+  border-bottom-color: #60cdff;
+  box-shadow: inset 0 -1px #60cdff;
+}
+
+popover > contents,
+popover.background > contents,
+menu,
+.menu {
+  background: #2c2c2c;
+  color: #ffffff;
+  border: 1px solid rgba(117, 117, 117, 0.4);
+}
+
+selection,
+*:selected {
+  background-color: #0078d4;
+  color: #ffffff;
+}

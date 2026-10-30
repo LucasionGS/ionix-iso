@@ -1,0 +1,147 @@
+{
+  "bar": {
+    "_comment": "The Windows 11 taskbar: 48px, edge to edge, square, flat. barFill below is what paints it, so the Theme.barFill opacity key is not used.",
+    "height": 48,
+    "position": "bottom",
+    "floating": false,
+    "radius": 0,
+    "opacity": 0.85,
+    "nativeBlur": true,
+    "margin": {
+      "top": 0,
+      "left": 0,
+      "right": 0
+    }
+  },
+  "modules": {
+    "_comment": "Windows' arrangement of the shell's building blocks: start, search, Task View and apps centred; tray chevron, status cluster, clock and bell in the corner. Left stays empty as on a stock install. Each hosts the popouts it opens, so nothing else is needed in these lists.",
+    "left": [],
+    "center": [
+      "StartButton",
+      "SearchBox",
+      "TaskViewButton",
+      "AppTaskbar"
+    ],
+    "right": [
+      "TrayOverflow",
+      "StatusCluster",
+      "ClockCluster"
+    ]
+  },
+  "options": [
+    {
+      "_comment": "The setting Windows 11 itself offers: Taskbar alignment, Left. Right merges through untouched.",
+      "key": "taskbarLeft",
+      "title": "Left-aligned taskbar",
+      "subtitle": "Taskbar alignment: Left",
+      "glyph": "󰖳",
+      "default": false,
+      "on": {
+        "modules": {
+          "left": [
+            "StartButton",
+            "SearchBox",
+            "TaskViewButton",
+            "AppTaskbar"
+          ],
+          "center": []
+        },
+        "start": {
+          "align": ""
+        }
+      }
+    }
+  ],
+  "start": {
+    "_comment": "640 wide, as the Windows 11 flyout is before its 2025 enlargement.",
+    "layout": "sections",
+    "align": "center",
+    "width": 640,
+    "maxHeightFraction": 0.72,
+    "iconSize": 32,
+    "recommendCount": 6,
+    "columns": 6
+  },
+  "clock": {
+    "format": "HH:mm",
+    "dateFormat": "dd/MM/yyyy",
+    "showDate": true
+  },
+  "taskbar": {
+    "iconSize": 24,
+    "currentWorkspaceOnly": false
+  },
+  "osd": {
+    "margin": 72
+  },
+  "windowSwitcher": {
+    "currentWorkspaceOnly": false,
+    "cardWidth": 260,
+    "cardHeight": 190
+  },
+  "notifications": {
+    "width": 364
+  },
+  "theme": {
+    "_comment": "Fluent dark on the shell's generic tokens, values from WinUI's Common_themeresources_any.xaml: SolidBackgroundFillColor*, TextFillColor*, ControlFillColor*, SubtleFillColor*, ControlStrokeColor*, AccentFillColorDefault for the default blue (Light2). Alpha colours are #AARRGGBB. Winix UI is Selawik, Microsoft's open metric-compatible Segoe UI, with Fluent icons on the codepoints Icons.qml uses; see system/assets/winix/build-icon-font.py.",
+    "bgDeep": "#1c1c1c",
+    "bgWindow": "#2c2c2c",
+    "bgCard": "#2c2c2c",
+    "hover": "#3a3a3a",
+    "border": "#454545",
+    "muted": "#c5c5c5",
+    "text": "#ffffff",
+    "textBright": "#ffffff",
+    "accent": "#0078d4",
+    "accentBright": "#60cdff",
+    "accentLight": "#60cdff",
+    "green": "#6ccb5f",
+    "orange": "#fce100",
+    "red": "#ff99a4",
+    "cyan": "#60cdff",
+    "link": "#60cdff",
+    "onAccent": "#000000",
+    "barFill": "#d91c1c1c",
+    "panelFill": "#e62c2c2c",
+    "tooltipFill": "#f02c2c2c",
+    "pillFill": "#00000000",
+    "pillBorder": "#00000000",
+    "barBorder": "#14ffffff",
+    "panelBorder": "#66757575",
+    "divider": "#15ffffff",
+    "subtleHover": "#0fffffff",
+    "subtlePressed": "#0affffff",
+    "controlFill": "#0fffffff",
+    "controlStroke": "#12ffffff",
+    "footerFill": "#40000000",
+    "rSm": 4,
+    "rPill": 4,
+    "rPanel": 8,
+    "pillHeight": 40,
+    "fsXs": 11,
+    "fsSm": 12,
+    "fsMd": 12,
+    "fsBase": 14,
+    "fsLg": 14,
+    "fsXl": 18,
+    "fsIcon": 16,
+    "fsIconLg": 20,
+    "fsTitle": 20,
+    "durFast": 83,
+    "durNormal": 167,
+    "durSlide": 187,
+    "durSlow": 250,
+    "fontFamily": "Winix UI",
+    "fontMono": "Winix UI",
+    "flat": true,
+    "flyoutGap": 12,
+    "fieldFill": "#66000000",
+    "closeHover": "#c42b1c"
+  },
+  "lock": {
+    "_comment": "The Windows lock screen: no card, clock high and fixed.",
+    "layout": "bare",
+    "clockFormat": "HH:mm",
+    "dateFormat": "dddd, MMMM d"
+  }
+}
