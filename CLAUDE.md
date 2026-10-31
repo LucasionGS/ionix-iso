@@ -381,6 +381,23 @@ is not user-consentable in most tenants — an admin grants it once). Tokens go 
 (hence `libnotify` in `packages.x86_64`): the shell is the notification server, so the toast lands
 in its own centre and the blocked `notify-send` printing `join` is the cue to open the link.
 
+**The idle lock is hypridle, driven by a setting.** `idle.enabled` (default on) and `idle.minutes`
+(default 10) are the "Lock screen" rows on the settings page. `services/Idle.qml` calls
+`bin/ionix-idle on <MINUTES>` or `off` on every shell start and on any change, which writes hypridle's
+config and enables or disables `hypridle.service`, so the setting is what decides and no skel link or
+migration is needed. All of this lives in the shell's package, since it needs `ionix-lock` too.
+
+- hypridle cannot change its timeout while running, so a changed value restarts the unit. An unchanged one
+  only `start`s it, so a shell restart under a running lock changes nothing.
+- The config goes in `~/.local/state/ionix/idle/hypr/`, which the unit's drop-in
+  (`hypridle.service.d/ionix.conf`) adds as `XDG_CONFIG_DIRS`. hypridle searches `~/.config/hypr` first, so a
+  `hypridle.conf` of the user's own wins, and the Idle time row then says so and locks.
+- `lock_cmd` must stay `systemd-run --user --scope`: stopping a unit kills its cgroup, and a lock screen
+  inside it would die and leave the session on the compositor's crashed-lock page.
+- The drop-in's `ConditionPathExists=!/run/archiso` keeps it off the live medium, whose user has no
+  password and whose install outlasts any timeout. To test in a live VM, delete that line first.
+- Suspending does not lock; only idling does. Nothing here turns the screens off.
+
 **The shortcut list reads Hyprland, not a file of its own.** `Super+F1`, the start menu's keyboard
 button, `LogoMenu` or `qs -c ionix ipc call shortcuts toggle` open `osd/ShortcutsOverlay.qml`, and
 `services/Shortcuts.qml` runs `hyprctl binds -j` every time, so a changed key or a user's own bind is

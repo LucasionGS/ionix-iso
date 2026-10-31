@@ -417,6 +417,11 @@ hl.bind(mainMod .. " + code:60", hl.dsp.exec_cmd("yourapp"), { description = "Ap
 hl.monitor({ output = "DP-1", mode = "2560x1440@144", position = "0x0", scale = 1 })
 ```
 
+**Locking when idle.** The screen locks after 10 minutes without input. The start menu's settings page
+turns that off or picks another time, from 1 minute to an hour. Apps that ask the system to stay awake,
+like a playing video, hold it off. For more control, such as turning the screens off too, write your
+own `~/.config/hypr/hypridle.conf`, which replaces the time set there.
+
 **Sounds.** Ionix ships silent, but any desktop event can make a noise: drop an audio file named
 after the event into `~/.config/hypr/sounds/`, such as `openwindow.wav` or `shutdown.mp3`. It
 works from the next time that event happens, and sounds overlap rather than wait for each other.
