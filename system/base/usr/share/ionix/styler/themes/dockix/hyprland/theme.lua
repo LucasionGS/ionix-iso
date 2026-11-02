@@ -4,6 +4,13 @@
 -- ╚══════════════════════════════════════════════════════════════╝
 
 hl.config({
+  --- Maybe a feature???
+  -- A click is what focuses a window. Hovering one still reaches it (scrolling, tooltips)
+  -- without taking the keyboard from the window you are typing in.
+  -- input = {
+  --   follow_mouse = 2,
+  -- },
+
   general = {
     gaps_in = 4,
     gaps_out = 8,
