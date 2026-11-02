@@ -71,11 +71,6 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 5, bezier = "dockixS
 hl.layer_rule({ match = { namespace = "ionix-dock" }, animation = "slide bottom" })
 hl.layer_rule({ match = { namespace = "ionix-appgrid" }, animation = "fade" })
 
--- Search on Super+Space. Floating moves over one modifier to make room for it.
-hl.unbind("SUPER + Space")
-hl.bind("SUPER + Space", hl.dsp.exec_cmd("ioexplorer-spotlight"))
-hl.bind("SUPER + ALT + Space", hl.dsp.window.float({ action = "toggle" }))
-
 -- ── hyprbars ──────────────────────────────────────────────────
 -- Three plain coloured dots on the left, the title in the middle, and nothing drawn in
 -- the dots: the base config applies this from `config.reloaded`, after this file is
