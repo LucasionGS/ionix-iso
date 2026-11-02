@@ -103,7 +103,8 @@ Save a workspace as a named project - the apps on it, which folder each terminal
 where every window sat - and open it again later with one click. It opens on the next free
 workspace, so it never disturbs what you already have open, and the workspace carries the
 project's name in the bar and on the Alt-Tab cards. Projects live in the start menu
-(`Ctrl+Super+P`), in its search, and on the command line:
+(`Ctrl+Super+P`), in its search, in Task View on an empty desktop (click one to fill that
+desktop), and on the command line:
 
 ```bash
 ionix-project save "Ionix ISO"     # this workspace, as a project
