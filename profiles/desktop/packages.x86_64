@@ -81,6 +81,8 @@ libgtop
 gtksourceview3
 libsoup3
 brightnessctl
+# The lock screen dims external monitors over DDC/CI (ionix-dim)
+ddcutil
 power-profiles-daemon
 matugen
 

@@ -397,6 +397,19 @@ migration is needed. All of this lives in the shell's package, since it needs `i
 - The drop-in's `ConditionPathExists=!/run/archiso` keeps it off the live medium, whose user has no
   password and whose install outlasts any timeout. To test in a live VM, delete that line first.
 - Suspending does not lock; only idling does. Nothing here turns the screens off.
+- **The lock dims, the shell does not.** `idle.dim` (default on), `idle.dimAfter` (seconds since the last
+  input *on the lock*, default 60) and `idle.dimLevel` (0.1) are read by `lock/LockState.qml`, so they apply
+  to every lock, `Super+L` included, and never to the greeter. Dimmed, the lock runs `bin/ionix-dim hold
+  <level>` as a child `Process` with stdin open: it fades each backlight (`brightnessctl -l -c backlight`,
+  floor 1% because some panels switch off at 0) and sets each DDC/CI monitor (`ddcutil`, VCP 0x10) to
+  `level` of what it was, then waits. Input or unlock sets `running: false`, which is a SIGTERM; a lock
+  that dies closes the pipe, and the EOF restores too. The originals are in
+  `$XDG_RUNTIME_DIR/ionix-dim/state`, and `ionix-lock` runs `ionix-dim restore` after the lock process
+  and before a hyprlock fallback, which covers a holder killed with it (Quickshell SIGKILLs children
+  on exit). The DDC branch runs in its own process group, so a stop kills a write that is forking at that
+  moment instead of letting it land after the restore (seen in testing). `ddcutil` is on the desktop ISO
+  (its package loads `i2c-dev` and gives the seat its i2c devices); the settings rows say so when
+  `ionix-dim status` finds nothing to dim.
 
 **The shortcut list reads Hyprland, not a file of its own.** `Super+F1`, the start menu's keyboard
 button, `LogoMenu` or `qs -c ionix ipc call shortcuts toggle` open `osd/ShortcutsOverlay.qml`, and
