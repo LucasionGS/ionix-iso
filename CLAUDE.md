@@ -362,6 +362,33 @@ command line no longer carries `ionix.desktop=`; choosing a session is meant to 
 - `greetd.service` `Conflicts=` getty@tty1; enabling it with `--force` is deliberate (another display manager may hold
   `display-manager.service`).
 
+**Screen sharing asks the shell's own picker.** xdg-desktop-portal-hyprland runs `custom_picker_binary` from
+`~/.config/hypr/xdph.conf` (the only place it looks; skel ships it, and the user migration `003-share-picker`, which ships in the shell's
+package next to the picker, rewrites the old `hyprland-preview-share-picker` line the ISO never even installed) and blocks until it exits.
+`submodules/ionix-quickshell/bin/ionix-share-picker` runs `ionix/picker.qml`, a fourth entry point, as its own
+`qs -p` process. The contract, read from xdph 1.4's `ScreencopyShared.cpp` and verified in the rig through a
+real portal `Start`:
+
+- In: `--allow-token` (pre-ticks *Remember*), `XDPH_WINDOW_SHARING_LIST` =
+  `handle[HC>]class[HT>]title[HE>]address[HA>]` per window, where `handle` is what a window answer must name and
+  `address` is Hyprland's window address **in decimal** (0 without a mapping). The rest of xdph's environment is
+  inherited (`setenv` on top, then `execvp`).
+- Out: one stdout line, `[SELECTION]<r?>/screen:NAME`, `…/window:HANDLE` or `…/region:NAME@x,y,w,h` (logical px
+  from that output's corner), ending in exactly one newline: xdph `pop_back()`s the screen name. Anything else is a
+  refusal. QML writes the line to `IONIX_PICKER_OUT` and the wrapper prints it, so Quickshell's logging can never
+  reach stdout; that goes to `journalctl -t ionix-share-picker`. A picker that never answers (no qs, QML error,
+  killed) falls back to the stock `hyprland-share-picker`; a 10-minute timeout counts as a refusal.
+
+Traps found in the rig: the dialog must not map until its own monitor's card has a frame (`live: false`, taken
+before the overlay shows), or the preview is the picker inside the picker; tab switches hide the screen cards
+rather than rebuild them, which would retake that still. A `PanelWindow` mask set back to `null` keeps the old
+empty region, so no pointer or key ever arrives: switch between two explicit `Region`s. Quickshell's
+`Hyprland.focusedMonitor` starts on the first monitor until an event corrects it, so the wrapper passes
+`hyprctl activeworkspace`'s monitor as `IONIX_PICKER_MONITOR`. Every dim stays under the `ionix-.*` blur rule's
+`ignore_alpha` (0.2) or the whole screen blurs. Test it in the rig with a fake list and the checkout's wrapper
+(it finds `../ionix/picker.qml` next to itself), or end to end by starting `pipewire` (no WirePlumber, which would
+take the real audio devices) and `xdg-desktop-portal(-hyprland)` inside the rig's bus.
+
 **The calendar is a daemon plus two files, never HTTP in QML.** `submodules/ionix-quickshell/bin/ionix-calendar`
 (stdlib-only Python, no msal) is spawned by `services/Calendar.qml` as a child of the shell whenever
 `calendar.provider` is not `none` (default `local`), takes commands on stdin (`sync`, `reload`,
@@ -623,6 +650,8 @@ QEMU no longer takes `serial=` on `-drive`; a by-id name needs `-device virtio-b
 - `ionix-install` — Launches the Calamares installer
 - `ionix-post-install` — Post-installation system configuration (runs inside chroot)
 - `ionix-first-login` — One-time user environment setup
+- `ionix-share-picker` — (from ionix-quickshell, `/usr/bin`) xdph's screen-share picker (see "Screen
+  sharing" above)
 - `ionix-lock` — (from ionix-quickshell, `/usr/bin`) the lock screen; `Super+L`, the power menu and
   the session-start lock in `init.sh` all go through it
 - `grub-install` — PATH-priority wrapper adding `--no-nvram`, so a plain `grub-install` call
@@ -797,7 +826,13 @@ More building blocks of the same kind, any theme can use them. `dockix` is the a
 `WLR_BACKENDS=headless` hosting a nested Hyprland, then `hyprctl output create headless` for a virtual
 monitor. Hyprland alone cannot run headless (aquamarine needs a DRM fd for its allocator) and cannot nest in
 cage as is: it binds `xdg_wm_base` v6 and wlroots offers v5, so a small `LD_PRELOAD` lowers that one bind.
-Input needs one long-lived `zwlr_virtual_pointer_v1`; one device per click loses button events. Isolating
+On the NVIDIA machine the same preload must also keep GBM off `GBM_BO_USE_LINEAR` and drop the LINEAR
+modifier from `gbm_bo_create_with_modifiers2`'s list: NVIDIA's GBM refuses both (every other flag allocates),
+so the headless outputs never get a buffer and `grim` hangs. `AQ_NO_MODIFIERS=1` is no fix, since aquamarine
+then labels block-linear buffers LINEAR. The nested `WAYLAND-1` output never becomes a monitor there; use
+the headless ones. Input needs one long-lived `zwlr_virtual_pointer_v1`; one device per click loses button
+events. `wtype` makes a new virtual keyboard per call and its first key is sometimes lost: lead with a
+throwaway `-k Shift_L` and send the rest from the same call. Isolating
 the environment is not enough, because some commands reach outside it: shim `ionix-greeter-sync` (it writes
 `/var/lib/ionix-greeter`, so a test theme becomes the real login screen), `brightnessctl set`, `ionix-lock`,
 `pkill`/`killall`, `crontab`, `sudo`, and point `power.*` in the test `config.json` at `true`. Stop it by finding processes whose environ holds the rig's `XDG_RUNTIME_DIR`: `kill`ing cage alone leaves the compositor and its session helpers running. Killing a test `lock.qml` leaves the compositor on its crashed-lock page; `hyprctl eval 'hl.clear_crashed_lockscreen()'` clears it. System-bus

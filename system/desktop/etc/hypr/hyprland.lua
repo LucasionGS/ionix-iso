@@ -508,6 +508,8 @@ hl.layer_rule({ match = { namespace = "ionix-osd" }, animation = "fade" })
 -- whole screen.
 hl.layer_rule({ match = { namespace = "ionix-switcher" }, animation = "fade" })
 hl.layer_rule({ match = { namespace = "ionix-taskview" }, animation = "fade" })
+-- The screen-share picker and its area tool (ionix-share-picker-region).
+hl.layer_rule({ match = { namespace = "ionix-share-picker.*" }, animation = "fade" })
 
 
 -- ══════════════════════════════════════════════════════════════
