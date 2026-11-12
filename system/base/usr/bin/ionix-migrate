@@ -21,7 +21,8 @@ set -euo pipefail
 IONIX_MIGRATE_VERSION="1.0.0"
 MIGRATIONS_DIR="${IONIX_MIGRATIONS_DIR:-/usr/share/ionix/migrations}"
 SYSTEM_STATE="${IONIX_MIGRATE_SYSTEM_STATE:-/var/lib/ionix/migrations}"
-USER_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/ionix/migrations"
+# HOME can be unset when pacman runs the hook from a systemd unit; `system` never needs it.
+USER_STATE="${XDG_STATE_HOME:-${HOME:-$(getent passwd "$(id -u)" | cut -d: -f6)}/.local/state}/ionix/migrations"
 QUIET=false
 
 # Print usage
