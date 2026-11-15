@@ -545,6 +545,24 @@ the former, so change it in the same commit as the code.
   `config.json`), sends the sixteen colour tokens, radii and `flat`, and pushes again when the files
   change. A token added to `Theme.qml` that the app should follow has to be added to the base palette in
   `bin/ionix-link` and to PROTOCOL.md 8.8 too.
+- **Phone desktop** (plugin `desktop`, PROTOCOL.md 8.11) gives the phone a monitor of its own: a headless
+  output `IONIX-LINK-1` in the running session, sized to the phone's window and scaled so things are
+  finger-sized, streamed as 60 fps H.264 (`screen` cap `hires`) and touched through a uinput multitouch
+  device mapped to it with `hl.device`. The package ships a udev rule giving the seat user `/dev/uinput`.
+  The shell draws a phone layout on any output named `IONIX-LINK-*` instead of the bar
+  (`ionix/phone/`: status strip, nav bar, home grid, overview; `qs ipc call phone back|home|overview <output>`),
+  and everything that follows the focused monitor asks `Compositor.focusedDesktopName`, so Super and
+  Alt+Tab stay on a real monitor while the phone has focus. Verified on a live session:
+  - everything goes through `hyprctl eval` (`hl.monitor`, `hl.device`, `hl.workspace_rule` with
+    `layout = "monocle"`); the output sits far from every real monitor so the mouse cannot reach it;
+  - Hyprland wants whole logical pixels and reports any other scale as a config error on screen, so the
+    daemon snaps the scale itself (steps of 1/120) before asking;
+  - a new window lands wherever the seat's focus is, which is the desk as soon as the mouse moves, so the
+    daemon moves the first tiled window after a touch, and any from a process started right after one;
+  - a touch at an unmapped touch device goes to the focused real monitor: a failed mapping destroys the
+    device, and `hl.device` rules made by `eval` outlive their output until `hyprctl reload`;
+  - `hl.dsp.focus` warps the cursor onto the headless output, where it is stranded. Never use it in a
+    test there; a tap gives focus without moving the cursor.
 - Test the daemon without touching the session: every path has an `IONIX_LINK_*` override and every
   tool an `IONIX_LINK_BIN_<TOOL>` one; give it its own `XDG_RUNTIME_DIR` with a headless `cage`, or its
   virtual pointer binds to the real compositor. The app's screens render headless on Linux from
