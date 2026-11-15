@@ -40,7 +40,7 @@ done
 # Fetch git submodules before entering the container.
 # This has to happen on the host: build.sh runs as root inside the container,
 # where git refuses to operate on a tree owned by another user (safe.directory).
-if [[ "$VARIANT" == desktop && ! -f "$SCRIPT_DIR/submodules/ionix-quickshell/PKGBUILD" ]]; then
+if [[ "$VARIANT" == desktop ]] && [[ ! -f "$SCRIPT_DIR/submodules/ionix-quickshell/PKGBUILD" || ! -f "$SCRIPT_DIR/submodules/ionix-link/PKGBUILD" ]]; then
     echo "==> Fetching git submodules..."
     git -C "$SCRIPT_DIR" submodule update --init --recursive
 fi

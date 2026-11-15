@@ -2,3 +2,7 @@
 	path = submodules/ionix-quickshell
 	url = https://github.com/LucasionGS/ionix-quickshell.git
 	branch = main
+[submodule "submodules/ionix-link"]
+	path = submodules/ionix-link
+	url = https://github.com/LucasionGS/ionix-link.git
+	branch = main

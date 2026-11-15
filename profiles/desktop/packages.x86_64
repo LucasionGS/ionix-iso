@@ -175,6 +175,11 @@ ionix-file-manager-git
 ioexplorer-git
 ionterm-git
 ionix-quickshell-git
+# Ionix Link, the phone companion's desktop daemon (submodules/ionix-link), and the
+# tools its features use that nothing else pulls in: typing, and the pairing QR code.
+ionix-link-git
+wtype
+qrencode
 # ionix-desktop-git is built from system/, like ionix-base-git in common.
 ionix-desktop-git
 grim-hyprland-git

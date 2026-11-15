@@ -22,6 +22,7 @@
     "center": [],
     "right": [
       "Tray",
+      "LinkIndicator",
       "BatteryIndicator",
       "NetworkIndicator",
       "SearchButton",

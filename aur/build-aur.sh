@@ -63,6 +63,7 @@ AUR_PACKAGES=(
 # below rather than assumed from the path.
 LOCAL_PACKAGES=(
     "submodules/ionix-quickshell"
+    "submodules/ionix-link"            # ionix-link-git: the daemon only, not the phone app
     "system"                           # ionix-base-git, ionix-desktop-git, ionix-server-git
     "aur/local/shim-signed"            # AUR version 404s; see that PKGBUILD's header
 )
@@ -293,7 +294,14 @@ for pkgpath in "${LOCAL_PACKAGES[@]}"; do
     PKG_DIR="$BUILD_DIR/$pkg"
     rm -rf "$PKG_DIR"
     mkdir -p "$PKG_DIR"
-    cp -a "$src/." "$PKG_DIR/"
+    # A package can list paths it does not need (one tar pattern per line) in
+    # .pkgexclude: ionix-link's Flutter app has gigabytes of build output beside
+    # a daemon that is one file.
+    if [[ -f "$src/.pkgexclude" ]]; then
+        tar -C "$src" --exclude-from="$src/.pkgexclude" -cf - . | tar -C "$PKG_DIR" -xf -
+    else
+        cp -a "$src/." "$PKG_DIR/"
+    fi
     # Drop anything a previous in-tree `makepkg` left behind. A stale
     # *.pkg.tar.* in particular makes makepkg refuse with "A package has already
     # been built", and the copy loop would then ship that stale artifact.

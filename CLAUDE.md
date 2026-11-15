@@ -522,6 +522,34 @@ never prefixed with `exec`, it may be several commands — and saving the worksp
 again carries each `exec` over to the first new window of the same class. A changed `--class`
 is what the loader then waits for, so a command that opens something else needs both.
 
+**Ionix Link is a daemon on the desktop and a Flutter app on the phone, in one submodule.**
+`submodules/ionix-link` builds `ionix-link-git` (the same local-package-that-is-also-an-AUR-package
+arrangement as the shell): `bin/ionix-link`, one stdlib-only Python file that is both the daemon and its
+CLI, and `systemd/ionix-link.service`, a user unit enabled for new accounts by a skel
+`graphical-session.target.wants` link (only new ones, on purpose: an existing account
+enables it itself, no migration). The phone app in `app/` is not part of the package or the ISO;
+`.pkgexclude` keeps its gigabytes of build output out of `build-aur.sh`'s scratch copy. The wire
+contract is the submodule's `PROTOCOL.md`, the layout its `STRUCTURE.md`; both sides are coded against
+the former, so change it in the same commit as the code.
+
+- TLS on TCP 47110 with a self-signed certificate the phone pins at pairing (`ionix-link pair` prints a
+  QR code with the fingerprint and a one-time token; the no-camera path compares six digits), then an
+  HMAC challenge per connection. UDP 47110 answers discovery. Local network only.
+- Each feature is a plugin negotiated at connect, and one whose tool is missing is not offered:
+  `notifications` (`busctl monitor`, only while a phone is connected), `media` (`playerctl`, `wpctl`),
+  `commands` (`~/.config/ionix/link/commands.json` plus lock/power; the phone sends an id, never a
+  command line), `clipboard`, `input` (its own Wayland client for `zwlr_virtual_pointer_v1`, `wtype`
+  for text), `screen` (`grim` JPEG frames, one per ack), `status`, `theme`.
+- **The app wears the desktop's theme.** The `theme` plugin resolves the palette in the shell's order
+  (`Theme.qml`'s base values, `~/.config/quickshell/ionix/theme.json`, enabled options, `settings.json`,
+  `config.json`), sends the sixteen colour tokens, radii and `flat`, and pushes again when the files
+  change. A token added to `Theme.qml` that the app should follow has to be added to the base palette in
+  `bin/ionix-link` and to PROTOCOL.md 8.8 too.
+- Test the daemon without touching the session: every path has an `IONIX_LINK_*` override and every
+  tool an `IONIX_LINK_BIN_<TOOL>` one; give it its own `XDG_RUNTIME_DIR` with a headless `cage`, or its
+  virtual pointer binds to the real compositor. The app's screens render headless on Linux from
+  `lib/ui/preview/preview_main.dart`; Flutter is not an ISO build dependency.
+
 **First-login setup:** `ionix-first-login` is a marker-file-based one-time script that runs on first Hyprland session (e.g., clones NvChad config for neovim).
 
 **SVG asset pipeline:** Branding is stored as SVG and converted to PNG at build time: the wallpaper and the GRUB logo by `system/Makefile` (into makepkg's `$srcdir`), the installer's logo and welcome hero by `build.sh` (into the staged profile). Nothing generated is written to the source tree.
@@ -659,6 +687,8 @@ QEMU no longer takes `serial=` on `-drive`; a by-id name needs `-device virtio-b
 - `ionix-arrange-workspace` — workspace helper
 - `ionix-project` — save/load labeled project workspaces (see "Project workspaces" above)
 - `ionix-sounds` — plays `~/.config/hypr/sounds/` on desktop events (see "Event sounds" above)
+- `ionix-link` — (from ionix-link, `/usr/bin`) phone companion daemon and CLI: `pair`, `devices`,
+  `unpair`, `ring` (see "Ionix Link" above)
 - `ionix-login-mode` — greeter / autologin / locked; survives onto the installed system
 - `ionix-fingerprint` — fingerprint reader support; survives onto the installed system
 - `ionix-extras` — installs the optional bundles; survives onto the installed system

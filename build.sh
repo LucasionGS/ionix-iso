@@ -83,8 +83,8 @@ echo ""
 # ── Preflight: submodules ────────────────────────────────────
 # Fail fast rather than fetching: this script runs as root, and git refuses to
 # operate on a checkout owned by another user. Fetch on the host instead.
-if [[ "$VARIANT" == desktop && ! -f "${SCRIPT_DIR}/submodules/ionix-quickshell/PKGBUILD" ]]; then
-    echo "ERROR: submodules/ionix-quickshell is empty."
+if [[ "$VARIANT" == desktop ]] && [[ ! -f "${SCRIPT_DIR}/submodules/ionix-quickshell/PKGBUILD" || ! -f "${SCRIPT_DIR}/submodules/ionix-link/PKGBUILD" ]]; then
+    echo "ERROR: submodules/ionix-quickshell or submodules/ionix-link is empty."
     echo "       Run this as your normal user first:"
     echo "         git submodule update --init --recursive"
     exit 1
