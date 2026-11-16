@@ -443,8 +443,10 @@ bind_exec("CTRL + SHIFT + " .. mainMod .. " + Print", "ioexplorer-shot stop &>2 
 -- ║  Window Rules                                              ║
 -- ══════════════════════════════════════════════════════════════
 
--- Center all floating windows
-hl.window_rule({ match = { float = true }, center = true })
+-- Center all floating windows, except untitled ones: Steam's menus (and other
+-- XWayland popups that are not override-redirect) are floating windows with an
+-- empty title, and centring them moved every context menu to the screen's middle
+hl.window_rule({ match = { float = true, title = "negative:^$" }, center = true })
 
 -- Picture in Picture
 hl.window_rule({ match = { title = "(Picture in picture)" }, float = true })
